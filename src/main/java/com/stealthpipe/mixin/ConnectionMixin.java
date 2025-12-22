@@ -58,6 +58,7 @@ public abstract class ConnectionMixin {
         pipeline.addFirst( "stealth_relay_send", new StealthChannelOutboundHandlerAdapter(label));
     }
 
+
     @Inject(method = "connect", at = @At("HEAD"), cancellable = true)
     private static void injectConnect(InetSocketAddress inetSocketAddress, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
 

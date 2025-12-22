@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -25,68 +26,80 @@ public class IntegratedServerMixin {
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
 
+
+
+    @Unique
+    private void establishConnection(HttpRequest request) throws Exception {
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assert response.statusCode() == 200;
+
+        System.out.printf("Field data is: %s%n", response.body());
+
+        assert !response.body().isEmpty();
+
+        ResponseModel data = GSON.fromJson(response.body(), ResponseModel.class);
+
+        if (data == null) {
+            throw new IllegalArgumentException("Server returned invalid JSON!");
+        }
+
+        if (data.ok) {
+            String gameId = data.message;
+
+            assert Minecraft.getInstance().player != null;
+
+            UXHelper.sendSystemMessage(
+                    String.format(
+                            "[StealthPipe]: Join with the mod on another client using: %s.stealth.link", gameId
+                    ),
+                    ChatFormatting.GREEN
+            );
+
+            UXHelper.sendSystemMessage(
+                    "StealthPipe is experimental! You may need to restart the client to join another world after leaving this one.",
+                    ChatFormatting.RED
+            );
+
+
+            ModState.gameId.set(gameId);
+
+            WebSocketHelper.connectToServer();
+
+        }
+    }
+
     @Inject(method="publishServer", at=@At("HEAD"))
     private void injectPublishServer(GameType gameType, boolean bl, int i, CallbackInfoReturnable<Boolean> cir) {
 
         System.out.println("Server now open to LAN! Connecting via websocket");
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(Config.RELAY_IP + "/create"))
-                .version(HttpClient.Version.HTTP_1_1)
-                .GET()
-                .build();
 
-        ModState.gameOpenToLan.set(true);
+        new Thread(() -> {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(Config.RELAY_IP + "/create"))
+                    .version(HttpClient.Version.HTTP_1_1)
+                    .GET()
+                    .build();
 
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            ModState.gameOpenToLan.set(true);
 
-            assert response.statusCode() == 200;
+            try {
+                establishConnection(request);
 
-            System.out.printf("Field data is: %s%n", response.body());
+            } catch (Exception e) {
+                System.out.printf("An error occurred while trying to create room ID: %s%n", e.toString());
 
-            assert !response.body().isEmpty();
-
-            ResponseModel data = GSON.fromJson(response.body(), ResponseModel.class);
-
-            if (data == null) {
-                throw new IllegalArgumentException("Server returned invalid JSON!");
-            }
-
-            if (data.ok) {
-                String gameId = data.message;
-
-                assert Minecraft.getInstance().player != null;
+                String stackTrace = StackTraceHelper.getStackTraceAsString(e);
 
                 UXHelper.sendSystemMessage(
-                        String.format(
-                                "[StealthPipe]: Join with the mod on another client using: %s.stealth.link", gameId
-                        ),
-                        ChatFormatting.GREEN
-                );
-
-                UXHelper.sendSystemMessage(
-                        "StealthPipe is experimental! You may need to restart the client to join another world after leaving this one.",
+                        String.format("[STEALTH]: An error occurred while trying to create room ID: %s%n%s", e.toString(), stackTrace),
                         ChatFormatting.RED
                 );
-
-
-                ModState.gameId.set(gameId);
-
-                WebSocketHelper.connectToServer();
-
             }
+        }).start();
 
-        } catch (Exception e) {
-            System.out.printf("An error occurred while trying to create room ID: %s%n", e.toString());
 
-            String stackTrace = StackTraceHelper.getStackTraceAsString(e);
-
-            UXHelper.sendSystemMessage(
-                    String.format("[STEALTH]: An error occurred while trying to create room ID: %s%n%s", e.toString(), stackTrace),
-                    ChatFormatting.RED
-            );
-        }
 
 
 
