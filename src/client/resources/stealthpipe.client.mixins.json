@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "com.stealthpipe.mixin.client",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"ExampleClientMixin",
+		"IntegratedServerMixin",
+		"ServerNameResolverMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

@@ -1,0 +1,18 @@
+{
+	"required": true,
+	"package": "com.stealthpipe.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"ExampleMixin",
+		"ConnectionMixin",
+		"ConnectionChannelAccessor",
+		"ServerConnectionListenerMixin",
+		"MinecraftServerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

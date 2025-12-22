@@ -1,0 +1,37 @@
+{
+	"schemaVersion": 1,
+	"id": "stealthpipe",
+	"version": "${version}",
+	"name": "StealthPipe",
+	"description": "StealthPipe is an experimental mod that allows you to open to LAN on restricted networks by routing packets to an external relay server and disguising Minecraft's traffic as normal web browsing.",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/stealthpipe/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.stealthpipe.StealthPipe"
+		],
+		"client": [
+			"com.stealthpipe.StealthPipeClient"
+		]
+	},
+	"mixins": [
+		"stealthpipe.mixins.json",
+		{
+			"config": "stealthpipe.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.18.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
