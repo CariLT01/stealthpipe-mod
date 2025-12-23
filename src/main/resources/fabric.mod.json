@@ -3,7 +3,7 @@
 	"id": "stealthpipe",
 	"version": "${version}",
 	"name": "StealthPipe",
-	"description": "StealthPipe is an experimental mod that allows you to open to LAN on restricted networks by routing packets to an external relay server and disguising Minecraft's traffic as normal web browsing.",
+	"description": "A specialized Minecraft connectivity mod designed to bypass restrictive network environments by bridging game traffic through a secure WebSocket tunnel.",
 	"authors": [
 		"Me!"
 	],
