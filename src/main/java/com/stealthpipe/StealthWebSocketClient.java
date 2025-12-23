@@ -14,6 +14,7 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.Socket;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -32,9 +33,14 @@ public class StealthWebSocketClient extends WebSocketClient {
 
     }
 
+
+
     @Override
     public void onOpen(ServerHandshake handshakeData) {
         // Logic for when the HTTP Upgrade succeeds
+
+        LOGGER.info("Disabling Nagle's algorithm");
+        setTcpNoDelay(true);
 
         LOGGER.info("WS Handshake success");
         this.connected = true;
