@@ -1,6 +1,6 @@
 # Stealth Relay Mod
 
-A specialized Minecraft connectivity tool designed to bypass restrictive network environments by bridging game traffic through a secure WebSocket tunnel.
+A specialized Minecraft connectivity mod designed to bypass restrictive network environments by bridging game traffic through a secure WebSocket tunnel.
 
 ## General Information
 
