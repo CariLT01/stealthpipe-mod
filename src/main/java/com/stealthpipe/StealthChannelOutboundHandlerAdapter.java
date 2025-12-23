@@ -132,9 +132,10 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
         if (isWSConnected) {
             boolean success = handleRelayForwarding(label, msg, id);
 
-            promise.setSuccess();
+
 
             if (success) {
+                promise.setSuccess();
                 return;
             }
 
