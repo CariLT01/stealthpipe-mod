@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 public class StealthPipeClient implements ClientModInitializer {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
+	private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
 	@Override
 	public void onInitializeClient() {

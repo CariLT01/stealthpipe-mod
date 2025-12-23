@@ -1,7 +1,8 @@
 package com.stealthpipe.mixin.client;
 
 
-import com.stealthpipe.Config;
+import com.stealthpipe.StealthPipe;
+import com.stealthpipe.StealthPipeConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import org.slf4j.Logger;
@@ -14,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(targets = "net.fabricmc.fabric.impl.command.client.ClientCommandInternals", remap = false)
 public class FabricCommandDispatcherFix {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     @Shadow
     private static CommandDispatcher<Object> activeDispatcher;

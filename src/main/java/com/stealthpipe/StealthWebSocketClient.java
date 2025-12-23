@@ -14,7 +14,6 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.Socket;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +22,7 @@ import java.util.List;
 
 public class StealthWebSocketClient extends WebSocketClient {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
     private final List<byte[]> queuedPackets = new ArrayList<>();
     private boolean connected = false;
 

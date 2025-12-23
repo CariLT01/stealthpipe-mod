@@ -30,7 +30,7 @@ public abstract class ConnectionMixin {
     private Set<String> warnedIDs = new HashSet<>();
 
     @Unique
-    private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     @Shadow
     @Final
@@ -66,13 +66,13 @@ public abstract class ConnectionMixin {
 
         String host = inetSocketAddress.getHostString();
 
-        if (host.endsWith(Config.CONNECTION_SUFFIX)) {
+        if (host.endsWith(StealthPipe.config.CONNECTION_SUFFIX)) {
 
             // Connect to relay
 
             EventLoop eventLoop = eventLoopGroupHolder.eventLoopGroup().next();
 
-            String gameId = host.substring(0, host.length() - Config.CONNECTION_SUFFIX.length());
+            String gameId = host.substring(0, host.length() - StealthPipe.config.CONNECTION_SUFFIX.length());
 
             ModState.isClientConnectingToStealthServer.set(true);
 

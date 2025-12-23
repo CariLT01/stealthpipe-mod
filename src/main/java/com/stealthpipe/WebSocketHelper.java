@@ -7,7 +7,7 @@ import java.net.URI;
 
 public class WebSocketHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     public static void connectToServer() throws Exception {
 
@@ -23,7 +23,7 @@ public class WebSocketHelper {
 
         String hostQuery = !isClient ? "&host=true" : "";
 
-        URI uri = new URI(Config.RELAY_IP_WS + "/join?id=" + gameId + hostQuery);
+        URI uri = new URI(StealthPipe.config.RELAY_IP_WS + "/join?id=" + gameId + hostQuery);
 
         StealthWebSocketClient wsClient = new StealthWebSocketClient(uri);
         wsClient.connect();

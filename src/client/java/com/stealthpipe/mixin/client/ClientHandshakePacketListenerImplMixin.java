@@ -1,6 +1,7 @@
 package com.stealthpipe.mixin.client;
 
-import com.stealthpipe.Config;
+import com.stealthpipe.StealthPipe;
+import com.stealthpipe.StealthPipeConfig;
 import com.stealthpipe.ModState;
 import com.stealthpipe.mixin.ConnectionChannelAccessor;
 import io.netty.channel.Channel;
@@ -26,7 +27,7 @@ import java.util.function.Consumer;
 public class ClientHandshakePacketListenerImplMixin {
 
     @Unique
-    private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     @Inject(method="<init>", at=@At("HEAD"))
     private static void onInit(Connection connection, Minecraft minecraft, ServerData serverData, Screen screen, boolean bl, Duration duration, Consumer consumer, LevelLoadTracker levelLoadTracker, TransferState transferState, CallbackInfo ci) {

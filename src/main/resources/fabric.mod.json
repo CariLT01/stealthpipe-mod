@@ -19,7 +19,8 @@
 		],
 		"client": [
 			"com.stealthpipe.StealthPipeClient"
-		]
+		],
+		"modmenu": [ "com.stealthpipe.ModMenuIntegration" ]
 	},
 	"mixins": [
 		"stealthpipe.mixins.json",

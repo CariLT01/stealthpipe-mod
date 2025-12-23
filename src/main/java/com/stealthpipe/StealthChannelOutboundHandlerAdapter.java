@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     private static final Set<Channel> warnedIDs = new HashSet<>();
     private final String label;

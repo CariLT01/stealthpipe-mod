@@ -1,6 +1,7 @@
 package com.stealthpipe.mixin;
 
-import com.stealthpipe.Config;
+import com.stealthpipe.StealthPipe;
+import com.stealthpipe.StealthPipeConfig;
 import com.stealthpipe.IConnectionInjector;
 import com.stealthpipe.StealthChannelOutboundHandlerAdapter;
 import io.netty.channel.Channel;
@@ -25,7 +26,7 @@ import java.util.List;
 @Mixin(ServerConnectionListener.class)
 public class ServerConnectionListenerMixin implements IConnectionInjector {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     @Shadow
     @Final

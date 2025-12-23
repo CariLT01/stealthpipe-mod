@@ -5,7 +5,6 @@ import com.stealthpipe.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.GameType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -29,7 +27,7 @@ public class IntegratedServerMixin {
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
 
 
@@ -98,7 +96,7 @@ public class IntegratedServerMixin {
 
         new Thread(() -> {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(Config.RELAY_IP + "/create"))
+                    .uri(URI.create(StealthPipe.config.RELAY_IP + "/create"))
                     .version(HttpClient.Version.HTTP_1_1)
                     .GET()
                     .build();
