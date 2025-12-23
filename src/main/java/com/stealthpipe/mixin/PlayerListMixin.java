@@ -29,7 +29,7 @@ public class PlayerListMixin {
         String channelId = channel.id().asLongText();
 
         ModState.relayUuidToChannelMap.put(pendingUuid, channel);
-        ModState.minecraftChannelUuidToRelayUuidMap.put(channelId, pendingUuid);
+        ModState.minecraftChannelUuidToRelayUuidMap.put(channel, pendingUuid);
         ModState.pendingChannelUuid.set("");
 
 

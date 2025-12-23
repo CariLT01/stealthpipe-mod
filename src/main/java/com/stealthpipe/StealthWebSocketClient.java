@@ -81,7 +81,7 @@ public class StealthWebSocketClient extends WebSocketClient {
                 LOGGER.info("Successfully injected fake connection into server, UUID {}", uuidString);
 
                 ModState.relayUuidToChannelMap.put(uuidString, virtualChannel);
-                ModState.minecraftChannelUuidToRelayUuidMap.put(virtualChannel.id().asLongText(), uuidString);
+                ModState.minecraftChannelUuidToRelayUuidMap.put(virtualChannel, uuidString);
 
                 ModState.pendingChannelUuid.set("");
 

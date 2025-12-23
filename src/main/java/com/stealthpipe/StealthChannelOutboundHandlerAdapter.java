@@ -2,6 +2,7 @@ package com.stealthpipe;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -18,7 +19,7 @@ import java.util.Set;
 public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
 
-    private static final Set<String> warnedIDs = new HashSet<>();
+    private static final Set<Channel> warnedIDs = new HashSet<>();
     private final String label;
 
     public StealthChannelOutboundHandlerAdapter(String label) {
@@ -40,7 +41,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
     }
 
     @Unique
-    private void forwardDataToRelay(byte[] bytes, StealthWebSocketClient wsClient, String destination) {
+    private void forwardDataToRelay(byte[] bytes, StealthWebSocketClient wsClient, Channel destination) {
 
         boolean isClient = ModState.isClientConnectingToStealthServer.get();
 
@@ -70,7 +71,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
     }
 
     @Unique
-    private boolean handleRelayForwarding(String label, Object msg, String destination) {
+    private boolean handleRelayForwarding(String label, Object msg, Channel destination) {
 
         StealthWebSocketClient wsClient = ModState.relayClient.get();
 
@@ -120,7 +121,9 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
 
-        String id = ctx.channel().id().asLongText();
+
+
+        Channel id = ctx.channel();
 
         // System.out.printf("Writing to: %s%n", id);
 
@@ -161,7 +164,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
             // Kicked player, send it to relay to disconnect the client-server connection
 
-            String clientUUID = ModState.minecraftChannelUuidToRelayUuidMap.get(ctx.channel().id().asLongText());
+            String clientUUID = ModState.minecraftChannelUuidToRelayUuidMap.get(ctx.channel());
 
             if (clientUUID == null) {
                 LOGGER.error("Failed to disconnect client, UUID not found");

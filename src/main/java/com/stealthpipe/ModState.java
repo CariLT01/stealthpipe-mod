@@ -15,7 +15,7 @@ public class ModState {
     public static AtomicReference<Channel> serverChannel = new AtomicReference<>(null);
     public static AtomicReference<String> gameId = new AtomicReference<>("");
     public static AtomicBoolean webSocketOpen = new AtomicBoolean(false);
-    public static ConcurrentHashMap<String, String> minecraftChannelUuidToRelayUuidMap = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Channel, String> minecraftChannelUuidToRelayUuidMap = new ConcurrentHashMap<>();
     public static AtomicReference<String> pendingChannelUuid = new AtomicReference<>("");
     public static AtomicBoolean isClientConnectingToStealthServer = new AtomicBoolean(false);
     public static AtomicReference<Channel> relayClientChannel = new AtomicReference<>(null);
