@@ -5,6 +5,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerConnectionListener;
 import org.java_websocket.client.WebSocketClient;
@@ -82,6 +84,7 @@ public class StealthWebSocketClient extends WebSocketClient {
 
                 ModState.relayUuidToChannelMap.put(uuidString, virtualChannel);
                 ModState.minecraftChannelUuidToRelayUuidMap.put(virtualChannel, uuidString);
+                ModState.reverseChannelToRelayUUIDMap.put(uuidString, virtualChannel);
 
                 ModState.pendingChannelUuid.set("");
 
@@ -92,6 +95,29 @@ public class StealthWebSocketClient extends WebSocketClient {
         }
     }
 
+    private boolean checkClientClosePrefix(byte[] data) {
+        String prefix = "CLOSECONNECTION_";
+        String dataAsString = new String(data, java.nio.charset.StandardCharsets.UTF_8);
+
+        if (dataAsString.startsWith(prefix)) {
+            // Extract the part after "CLOSECONNECTION_"
+            String uuidString = dataAsString.substring(prefix.length());
+
+            Channel virtualChannel = ModState.reverseChannelToRelayUUIDMap.get(uuidString);
+
+            if (virtualChannel == null) {
+                LOGGER.error("Cannot find disconnect uuid");
+
+                return true;
+            }
+
+            virtualChannel.disconnect();
+
+            LOGGER.info("Disconnected channel per request");
+        }
+
+        return false;
+    }
 
 
     private void processMessageServer(byte[] data) {
@@ -163,15 +189,22 @@ public class StealthWebSocketClient extends WebSocketClient {
 
 
         if (!ModState.isClientConnectingToStealthServer.get()) {
-            // Client connecting to server
+            // Server logic
+
 
             if (newString.startsWith("CLIENTUUID_")) {
                 checkClientUUIDPrefix(data);
             } else {
-                this.processMessageServer(data);
+
+                if (newString.startsWith("CLOSECONNECTION_")) {
+                    checkClientClosePrefix(data);
+                } else {
+                    this.processMessageServer(data);
+                }
+
             }
         } else {
-            // Server connecting to relay
+            // Client logic
 
 
 
@@ -203,11 +236,9 @@ public class StealthWebSocketClient extends WebSocketClient {
 
             Channel clientChannel = ModState.relayClientChannel.get();
 
-            clientChannel.eventLoop().execute(() -> {
-                clientChannel.disconnect();
-            });
+            clientChannel.eventLoop().execute(clientChannel::disconnect);
 
-            LOGGER.info("Client disconnected channel");
+            LOGGER.info("WS Disconnected client channel");
 
 
         }
@@ -217,10 +248,18 @@ public class StealthWebSocketClient extends WebSocketClient {
 
     @Override
     public void onError(Exception ex) {
-        // This is where you put that .displayClientMessage code!
+
 
         LOGGER.error("Error occurred in stealth WS: ", ex);
 
+        if (!ModState.isClientConnectingToStealthServer.get()) {
+            MinecraftServer server = ModState.minecraftServer.get();
+
+            server.getPlayerList().broadcastSystemMessage(
+                    Component.literal("[StealthPipe] Error occurred in tunnel. Please restart the world and create a new session.").withStyle(ChatFormatting.RED),
+                    false
+            );
+        }
 
     }
 

@@ -7,10 +7,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.GameType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.IOException;
@@ -25,6 +28,8 @@ public class IntegratedServerMixin {
     @Unique
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Config.MOD_ID);
 
 
 
@@ -68,6 +73,22 @@ public class IntegratedServerMixin {
 
         }
     }
+
+    @Inject(method="stopServer", at=@At("HEAD"))
+    private void stopServer(CallbackInfo ci) {
+
+        boolean wsConnected = ModState.webSocketOpen.get();
+
+        if (wsConnected) {
+
+            ModState.relayClient.get().close();
+
+            LOGGER.info("Detected integrated server closed");
+
+        }
+
+    }
+
 
     @Inject(method="publishServer", at=@At("HEAD"))
     private void injectPublishServer(GameType gameType, boolean bl, int i, CallbackInfoReturnable<Boolean> cir) {
