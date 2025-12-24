@@ -27,6 +27,9 @@ public class ModMenuIntegration implements ModMenuApi {
                             Component.literal("Relay IP"), StealthPipe.config.RELAY_IP
                     ).setDefaultValue(DefaultConfigValues.RELAY_IP)
                             .setSaveConsumer(newValue -> StealthPipe.config.RELAY_IP = newValue)
+                            .setTooltip(Component.literal(
+                                    "Controls which server StealthPipe will connect to in order to forward your game traffic. Must be a StealthPipe relay server."
+                            ))
                             .build()
             );
 
@@ -34,6 +37,21 @@ public class ModMenuIntegration implements ModMenuApi {
                     entryBuilder.startStrField(Component.literal("Relay IP WebSocket"), StealthPipe.config.RELAY_IP_WS)
                             .setDefaultValue(DefaultConfigValues.RELAY_IP_WS)
                             .setSaveConsumer(newValue -> StealthPipe.config.RELAY_IP_WS = newValue)
+                            .setTooltip(
+                                    Component.literal(
+                                            "Controls which server StealthPipe will connect to in order to forward your game traffic. Must be a StealthPipe relay server. Same URL as above, just with the 'wss://' prefix."
+                                    )
+                            )
+                            .build()
+            );
+
+            general.addEntry(
+                    entryBuilder.startIntField(Component.literal("Number of attempts to reach relay"), StealthPipe.config.RELAY_PING_ATTEMPTS)
+                            .setDefaultValue(DefaultConfigValues.RELAY_PING_ATTEMPTS)
+                            .setSaveConsumer(newValue -> StealthPipe.config.RELAY_PING_ATTEMPTS = newValue)
+                            .setTooltip(
+                                    Component.literal("Controls the number of attempts to reach the relay before giving up")
+                            )
                             .build()
             );
 

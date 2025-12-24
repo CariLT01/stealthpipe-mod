@@ -9,6 +9,8 @@ public class WebSocketHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
+
+
     public static void connectToServer() throws Exception {
 
         LOGGER.info("Connecting to stealth websocket...");
