@@ -111,13 +111,18 @@ public class IntegratedServerMixin {
 
             LOGGER.info("Ping: {}ms", pingMs);
 
-            if (pingMs > 100 && pingMs <= 150) {
+            if (pingMs <= 100) {
+                UXHelper.sendSystemMessage(
+                        String.format("[StealthPipe]: Ping is low (%sms).", pingMs),
+                        ChatFormatting.GREEN
+                );
+            } else if (pingMs <= 150) {
                 UXHelper.sendSystemMessage(
                         String.format("[StealthPipe]: Warning: ping to relay is moderately high (%sms).", pingMs),
                         ChatFormatting.YELLOW
                 );
                 hostRelayMessage();
-            } else if (pingMs > 150 && pingMs <= 250) {
+            } else if (pingMs <= 250) {
                 UXHelper.sendSystemMessage(
                         String.format("[StealthPipe]: Warning: ping to relay is high (%sms).", pingMs),
                         ChatFormatting.RED
