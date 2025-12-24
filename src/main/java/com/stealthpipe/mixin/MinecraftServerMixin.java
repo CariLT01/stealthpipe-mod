@@ -12,6 +12,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
 
+    // Disable onlineMode to prevent issues in development mode
+    // Only applies to Integrated LAN servers; public server authentication is unaffected
+
     @Shadow
     private boolean onlineMode;
 
