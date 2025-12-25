@@ -55,6 +55,8 @@ dependencies {
 
 
 	modRuntimeOnly "me.shedaniel.cloth:cloth-config-fabric:15.0.140"
+
+	implementation 'com.auth0:java-jwt:4.4.0'
 }
 
 processResources {

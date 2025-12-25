@@ -1,5 +1,7 @@
 package com.stealthpipe.mixin.client;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
 import com.stealthpipe.*;
 import net.minecraft.ChatFormatting;
@@ -20,6 +22,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -186,6 +190,7 @@ public class IntegratedServerMixin {
         }
     }
 
+
     @Inject(method="stopServer", at=@At("HEAD"))
     private void stopServer(CallbackInfo ci) {
 
@@ -201,6 +206,91 @@ public class IntegratedServerMixin {
 
     }
 
+    @Unique
+    private static boolean checkPoW(String salt, String nonce, int difficulty) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest((salt + nonce).getBytes(StandardCharsets.UTF_8));
+
+            int fullBytesToCheck = difficulty / 2;
+
+            for (int i = 0; i < fullBytesToCheck; i++) {
+                if (hash[i] != 0) return false;
+            }
+
+            if (difficulty % 2 != 0) {
+                // The byte at index 'fullBytesToCheck' must have its first 4 bits as 0.
+                // This means the byte value must be between 0 and 15 (0x0F).
+                return (hash[fullBytesToCheck] & 0xFF) <= 0x0F;
+            }
+
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Unique
+    private ProofOfWorkChallengeResult doProofOfWorkChallenge() throws Exception {
+
+        UXHelper.sendSystemMessage(
+                "[StealthPipe]: Authenticating client...",
+                ChatFormatting.GRAY
+        );
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(StealthPipe.config.RELAY_IP + "/pow"))
+                .version(HttpClient.Version.HTTP_1_1)
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assert response.statusCode() == 200;
+
+        ProofOfWorkChallengePayload data = GSON.fromJson(response.body(), ProofOfWorkChallengePayload.class);
+
+        DecodedJWT jwt = JWT.decode(data.token);
+        String salt = jwt.getClaim("salt").asString();
+        int difficulty = jwt.getClaim("diff").asInt();
+
+        // Warn user about high difficulty and slow authentication
+        switch (difficulty) {
+            case 6:
+                UXHelper.sendSystemMessage(
+                        "The relay has issued a challenge with a higher difficulty than usual to throttle traffic and protect itself from potential ongoing attacks. This will make authenticating slower. Please wait...",
+                        ChatFormatting.GRAY
+                );
+                break;
+
+            case 7:
+                UXHelper.sendSystemMessage(
+                        "The relay has issued a challenge with a very high difficulty than usual to throttle traffic and protect itself from the ongoing attacks. This will make authentication take a lot longer than usual. Please hold...",
+                        ChatFormatting.GRAY
+                );
+                break;
+
+            default:
+                break;
+        }
+
+        LOGGER.info("Doing proof of work challenge. Salt: {} Difficulty: {}", salt, difficulty);
+
+        int nonce = 0;
+        while (true) {
+
+            boolean valid = checkPoW(salt, Integer.toString(nonce), difficulty);
+
+            if (valid) break;
+
+            nonce++;
+        }
+
+        LOGGER.info("Proof of work nonce: {}", nonce);
+
+        return new ProofOfWorkChallengeResult(data.token, nonce);
+
+    }
 
     @Inject(method="publishServer", at=@At("HEAD"))
     private void injectPublishServer(GameType gameType, boolean bl, int i, CallbackInfoReturnable<Boolean> cir) {
@@ -210,18 +300,24 @@ public class IntegratedServerMixin {
 
         new Thread(() -> {
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(StealthPipe.config.RELAY_IP + "/create"))
-                    .version(HttpClient.Version.HTTP_1_1)
-                    .GET()
-                    .build();
+
 
             ModState.gameOpenToLan.set(true);
 
             try {
 
                 boolean isAvailable = pingRelay();
+                ProofOfWorkChallengeResult powResult = doProofOfWorkChallenge();
                 getRoundTripLatency();
+
+
+
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(StealthPipe.config.RELAY_IP + String.format("/create?token=%s&nonce=%s", powResult.token, powResult.nonce)))
+                        .version(HttpClient.Version.HTTP_1_1)
+                        .GET()
+                        .build();
+
                 if (!isAvailable) {
                     LOGGER.error("Could not connect to the relay: pinging failed");
 
@@ -229,6 +325,12 @@ public class IntegratedServerMixin {
 
                     return;
                 }
+
+
+                UXHelper.sendSystemMessage(
+                        "[StealthPipe]: Synchronizing slots...",
+                        ChatFormatting.GRAY
+                );
 
                 establishConnection(request);
 
