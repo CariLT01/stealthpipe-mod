@@ -322,6 +322,8 @@ public class IntegratedServerMixin {
                     LOGGER.error("Could not connect to the relay: pinging failed");
 
                     UXHelper.sendSystemMessage("[StealthPipe]: Failed to reach the relay, connection failed", ChatFormatting.RED);
+                    UXHelper.sendSystemMessage("[StealthPipe]: Alternative relays are available in the mod's description, feel free to try them. And remember, you can always host your own :D You can change the Relay IP in the mod's config menu.", ChatFormatting.WHITE);
+
 
                     return;
                 }

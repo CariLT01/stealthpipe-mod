@@ -12,7 +12,6 @@ import java.nio.file.Path;
 public class StealthPipeConfig {
 
     public String RELAY_IP = DefaultConfigValues.RELAY_IP;
-    public String RELAY_IP_WS = DefaultConfigValues.RELAY_IP_WS;
     public int RELAY_PING_ATTEMPTS = DefaultConfigValues.RELAY_PING_ATTEMPTS;
     // public static final String RELAY_IP = "http://127.0.0.1:7860";
     // public static final String RELAY_IP_WS = "ws://127.0.0.1:7860";
