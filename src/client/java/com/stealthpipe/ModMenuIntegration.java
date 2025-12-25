@@ -33,6 +33,8 @@ public class ModMenuIntegration implements ModMenuApi {
                             .build()
             );
 
+
+
             general.addEntry(
                     entryBuilder.startIntField(Component.literal("Number of attempts to reach relay"), StealthPipe.config.RELAY_PING_ATTEMPTS)
                             .setDefaultValue(DefaultConfigValues.RELAY_PING_ATTEMPTS)
