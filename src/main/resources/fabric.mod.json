@@ -3,7 +3,7 @@
 	"id": "stealthpipe",
 	"version": "${version}",
 	"name": "StealthPipe",
-	"description": "A specialized Minecraft connectivity mod designed to bypass restrictive network environments by bridging game traffic through a secure WebSocket tunnel.",
+	"description": "Minecraft mod that allows Open to LAN multiplayer to work on networks that block peer-to-peer connections and non-standard ports.",
 	"authors": [
 		"Me!"
 	],
