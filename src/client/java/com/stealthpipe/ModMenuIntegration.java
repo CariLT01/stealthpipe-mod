@@ -33,6 +33,17 @@ public class ModMenuIntegration implements ModMenuApi {
                             .build()
             );
 
+            general.addEntry(
+                    entryBuilder.startBooleanToggle(
+                            Component.literal("Use Online Mode"), StealthPipe.config.ONLINE_MODE
+                    ).setDefaultValue(DefaultConfigValues.ONLINE_MODE)
+                            .setSaveConsumer(newValue -> StealthPipe.config.ONLINE_MODE = newValue)
+                            .setTooltip(Component.literal(
+                                    "Controls if online mode is enabled for singleplayer worlds. Solves issues with invalid session in development."
+                            ))
+                            .build()
+            );
+
 
 
             general.addEntry(

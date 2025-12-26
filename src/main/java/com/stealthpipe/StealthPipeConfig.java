@@ -13,6 +13,7 @@ public class StealthPipeConfig {
 
     public String RELAY_IP = DefaultConfigValues.RELAY_IP;
     public int RELAY_PING_ATTEMPTS = DefaultConfigValues.RELAY_PING_ATTEMPTS;
+    public boolean ONLINE_MODE = DefaultConfigValues.ONLINE_MODE;
     // public static final String RELAY_IP = "http://127.0.0.1:7860";
     // public static final String RELAY_IP_WS = "ws://127.0.0.1:7860";
 

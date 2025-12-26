@@ -1,6 +1,7 @@
 package com.stealthpipe.mixin;
 
 
+import com.stealthpipe.StealthPipe;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,14 +21,20 @@ public class MinecraftServerMixin {
 
     @Inject(method="setUsesAuthentication", at=@At("HEAD"), cancellable = true)
     public void forceOfflineMode(boolean bl, CallbackInfo ci) {
-        // Force set use authentication to false
-        this.onlineMode = false;
 
-        ci.cancel();
+        if (!StealthPipe.config.ONLINE_MODE) {
+            // Force set use authentication to false
+            this.onlineMode = false;
+
+            ci.cancel();
+        }
+
     }
 
     @Inject(method="usesAuthentication", at=@At("HEAD"), cancellable = true)
     public void forceOfflineMode2(CallbackInfoReturnable<Boolean> cir){
-        cir.setReturnValue(false);
+        if (!StealthPipe.config.ONLINE_MODE) {
+            cir.setReturnValue(false);
+        }
     }
 }
