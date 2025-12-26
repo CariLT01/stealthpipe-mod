@@ -7,6 +7,7 @@ import com.stealthpipe.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.GameType;
 import org.slf4j.Logger;
@@ -78,6 +79,7 @@ public class IntegratedServerMixin {
                         "[StealthPipe]: Failed to reach relay",
                         ChatFormatting.RED
                 );
+
             }
 
 
@@ -307,6 +309,28 @@ public class IntegratedServerMixin {
             try {
 
                 boolean isAvailable = pingRelay();
+
+                if (!isAvailable) {
+                    LOGGER.error("Could not connect to the relay: pinging failed");
+
+                    UXHelper.sendSystemMessage("[StealthPipe]: Failed to reach the relay, connection failed", ChatFormatting.RED);
+                    UXHelper.sendSystemMessage("[StealthPipe]: Alternative relays are available in the mod's description, feel free to try them. And remember, you can always host your own :D You can change the Relay IP in the mod's config menu.", ChatFormatting.WHITE);
+                    UXHelper.sendSystemMessageComponent(
+                            Component.literal("https://github.com/CariLT01/stealthpipe-mod/blob/main/ALTERNATIVE_RELAYS.md")
+                                    .withStyle(style -> style.withClickEvent(
+                                            new ClickEvent.OpenUrl(URI.create("https://github.com/CariLT01/stealthpipe-mod/blob/main/ALTERNATIVE_RELAYS.md"))
+                                    )),
+                            ChatFormatting.WHITE
+                    );
+
+                    return;
+                } else {
+                    UXHelper.sendSystemMessage(
+                            "[StealthPipe]: Found connection to reach relay",
+                            ChatFormatting.GREEN
+                    );
+                }
+
                 ProofOfWorkChallengeResult powResult = doProofOfWorkChallenge();
                 getRoundTripLatency();
 
@@ -318,15 +342,7 @@ public class IntegratedServerMixin {
                         .GET()
                         .build();
 
-                if (!isAvailable) {
-                    LOGGER.error("Could not connect to the relay: pinging failed");
 
-                    UXHelper.sendSystemMessage("[StealthPipe]: Failed to reach the relay, connection failed", ChatFormatting.RED);
-                    UXHelper.sendSystemMessage("[StealthPipe]: Alternative relays are available in the mod's description, feel free to try them. And remember, you can always host your own :D You can change the Relay IP in the mod's config menu.", ChatFormatting.WHITE);
-
-
-                    return;
-                }
 
 
                 UXHelper.sendSystemMessage(

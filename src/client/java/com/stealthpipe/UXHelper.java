@@ -18,4 +18,17 @@ public class UXHelper {
 
     }
 
+
+    public static void sendSystemMessageComponent(Component message, ChatFormatting style) {
+        assert Minecraft.getInstance().player != null;
+        Minecraft.getInstance().execute(() -> {
+            Minecraft.getInstance().player.displayClientMessage(
+                    message,
+                    false
+            );
+        });
+
+
+    }
+
 }
