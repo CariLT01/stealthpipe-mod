@@ -12,19 +12,19 @@ public class ModState {
 
     public static AtomicBoolean gameOpenToLan = new AtomicBoolean(false);
     public static AtomicReference<StealthWebSocketClient> relayClient = new AtomicReference<>(null);
-    public static AtomicReference<Channel> serverChannel = new AtomicReference<>(null);
     public static AtomicReference<String> gameId = new AtomicReference<>("");
     public static AtomicBoolean webSocketOpen = new AtomicBoolean(false);
-    public static ConcurrentHashMap<Channel, String> minecraftChannelUuidToRelayUuidMap = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<String, Channel> reverseChannelToRelayUUIDMap = new ConcurrentHashMap<>();
 
-    public static AtomicReference<String> pendingChannelUuid = new AtomicReference<>("");
     public static AtomicBoolean isClientConnectingToStealthServer = new AtomicBoolean(false);
     public static AtomicReference<Channel> relayClientChannel = new AtomicReference<>(null);
-    public static ConcurrentHashMap<String, Channel> relayUuidToChannelMap = new ConcurrentHashMap<>();
-    public static AtomicReference<String> relayClientUuid = new AtomicReference<>("");
     public static AtomicReference<MinecraftServer> minecraftServer = new AtomicReference<>(null);
+
+    public static ConcurrentHashMap<Channel, StealthWebSocketClient> channelToWSClient = new ConcurrentHashMap<>();
 
     // Allows client executor to be accessible in common code
     public static AtomicReference<Executor> clientThreadExecutor = new AtomicReference<>(null);
+
+    public static void resetState() {
+
+    }
 }

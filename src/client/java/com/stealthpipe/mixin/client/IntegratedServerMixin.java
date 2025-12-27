@@ -44,6 +44,8 @@ public class IntegratedServerMixin {
             ModState.relayClient.get().close();
             LOGGER.info("Detected integrated server closed");
         }
+
+        ModState.resetState();
     }
 
     @Inject(method="publishServer", at=@At("HEAD"))

@@ -57,6 +57,14 @@ dependencies {
 	modRuntimeOnly "me.shedaniel.cloth:cloth-config-fabric:15.0.140"
 
 	implementation 'com.auth0:java-jwt:4.4.0'
+	include 'com.auth0:java-jwt:4.4.0'
+
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+	include 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+
+	// Sometimes you also need the annotations and core
+	include 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
+	include 'com.fasterxml.jackson.core:jackson-core:2.15.2'
 }
 
 processResources {

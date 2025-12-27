@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,14 +47,11 @@ public abstract class ConnectionMixin {
 
 
 
-        System.out.println("Inject into network pipeline");
+       LOGGER.info("Inject into network pipeline");
 
         boolean isClientSending = (this.receiving == PacketFlow.CLIENTBOUND);
         String label = isClientSending ? "CLIENT_OUT" : "SERVER_OUT";
 
-        if (!isClientSending) {
-            ModState.serverChannel.set(this.channel);
-        }
 
         pipeline.addFirst( "stealth_relay_send", new StealthChannelOutboundHandlerAdapter(label));
     }
@@ -76,16 +74,6 @@ public abstract class ConnectionMixin {
 
             ModState.isClientConnectingToStealthServer.set(true);
 
-            // Connect to stealth relay, if possible
-
-            try {
-                LOGGER.info("Attempting to connect to relay...");
-                connectToStealthRelay(gameId);
-            } catch (Exception e) {
-                LOGGER.error("Failed to connect to relay: ", e);
-                return;
-            }
-
             // Create a fake channel
 
 
@@ -100,6 +88,18 @@ public abstract class ConnectionMixin {
             loop.register(fakeChannel);
             fakeChannel.pipeline().fireChannelRegistered();
             fakeChannel.pipeline().fireChannelActive();
+
+            // Connect to stealth relay, if possible
+
+            try {
+                LOGGER.info("Attempting to connect to relay...");
+                connectToStealthRelay(gameId, fakeChannel);
+            } catch (Exception e) {
+                LOGGER.error("Failed to connect to relay: ", e);
+                return;
+            }
+
+
 
             DefaultChannelPromise promise = new DefaultChannelPromise(fakeChannel, eventLoop);
             promise.setSuccess();
@@ -132,11 +132,11 @@ public abstract class ConnectionMixin {
     }
 
     @Unique
-    private static void connectToStealthRelay(String gameId) throws Exception {
+    private static void connectToStealthRelay(String gameId, Channel gameChannel) throws Exception {
 
-        ModState.gameId.set(gameId);
+        /*ModState.gameId.set(gameId);
 
-        WebSocketHelper.connectToServer();
+        // WebSocketHelper.connectToServer();
 
         StealthWebSocketClient wsClient = ModState.relayClient.get();
 
@@ -149,7 +149,15 @@ public abstract class ConnectionMixin {
 
         LOGGER.info("Sent initial relay client packet: {}", relayClientPacket);
 
-        wsClient.send(packetInBytes);
+        wsClient.send(packetInBytes);*/
+
+
+
+        StealthWebSocketClient wsClient = new StealthWebSocketClient(URI.create(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
+        wsClient.connect();
+
+
+        ModState.relayClient.set(wsClient);
     }
 
 }

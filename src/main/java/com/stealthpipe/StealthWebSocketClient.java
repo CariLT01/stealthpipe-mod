@@ -17,19 +17,52 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class StealthWebSocketClient extends WebSocketClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
     private final List<byte[]> queuedPackets = new ArrayList<>();
     private boolean connected = false;
+    private final WebsocketClientType relayType;
+    private final URI relayUrl;
+    private final String gameId;
 
-    public StealthWebSocketClient(URI serverUri) {
+    private Optional<Channel> gameChannel = Optional.empty();
+
+    public StealthWebSocketClient(URI serverUri, WebsocketClientType clientType, Channel channel, String gameId) {
+
+
         super(serverUri);
 
+        if (clientType == WebsocketClientType.RELAY_SIGNALING) {
+            throw new IllegalArgumentException("Relay signaling cannot have channel argument");
+        }
 
+        this.relayType = clientType;
+        this.gameChannel = Optional.of(channel);
+        this.relayUrl = serverUri;
+        this.gameId = gameId;
+
+        LOGGER.info("New WS client created");
+
+
+    }
+
+
+    public StealthWebSocketClient(URI serverUri, WebsocketClientType type, String gameId) {
+        super(serverUri);
+
+        if (type != WebsocketClientType.RELAY_SIGNALING) {
+            throw new IllegalArgumentException("Must be relay signaling");
+        }
+
+        this.relayType = WebsocketClientType.RELAY_SIGNALING;
+        this.relayUrl = serverUri;
+        this.gameId = gameId;
     }
 
 
@@ -44,18 +77,26 @@ public class StealthWebSocketClient extends WebSocketClient {
         LOGGER.info("WS Handshake success");
         this.connected = true;
 
-        for (byte[] packet : queuedPackets) {
-            this.send(packet);
+
+
+        if (relayType == WebsocketClientType.CLIENT_TO_RELAY) {
+            ModState.webSocketOpen.set(true);
         }
 
-        queuedPackets.clear();
+        if (relayType == WebsocketClientType.CLIENT_TO_RELAY || relayType == WebsocketClientType.SERVER_TO_RELAY) {
+            for (byte[] packet : queuedPackets) {
+                this.send(packet);
+            }
 
-        ModState.webSocketOpen.set(true);
+            queuedPackets.clear();
+        }
+
+
     }
 
 
 
-    private void checkClientUUIDPrefix(byte[] data) {
+    /*private void checkClientUUIDPrefix(byte[] data) {
         String prefix = "CLIENTUUID_";
         String dataAsString = new String(data, java.nio.charset.StandardCharsets.UTF_8);
 
@@ -98,9 +139,11 @@ public class StealthWebSocketClient extends WebSocketClient {
                 LOGGER.error("Error occured while authenticating player: ", e);
             }
         }
-    }
+    }*/
 
-    private boolean checkClientClosePrefix(byte[] data) {
+
+
+    /*private boolean checkClientClosePrefix(byte[] data) {
         String prefix = "CLOSECONNECTION_";
         String dataAsString = new String(data, java.nio.charset.StandardCharsets.UTF_8);
 
@@ -122,11 +165,14 @@ public class StealthWebSocketClient extends WebSocketClient {
         }
 
         return false;
-    }
+    }*/
 
 
     private void processMessageServer(byte[] data) {
-        int offset = 0;
+
+        // LOGGER.info("Received {} bytes as server", data.length);
+
+        /*int offset = 0;
 
 
         if (data.length < offset + 36) {
@@ -159,22 +205,66 @@ public class StealthWebSocketClient extends WebSocketClient {
 
 
 
-        // LOGGER.info("[SERVER]: Received binary message, length: {}", remainingData.length);
+        // LOGGER.info("[SERVER]: Received binary message, length: {}", remainingData.length);*/
+
+
+        // COnnection type is CLIENT_TO_SERVER (where we are the server)
+        // Fire in the current player channel
+
+        if (this.gameChannel.isEmpty()) {
+            throw new IllegalArgumentException("Game channel is empty");
+        }
+
+        ModState.minecraftServer.get().execute(() -> {
+            this.gameChannel.get().pipeline().fireChannelRead(Unpooled.wrappedBuffer(data));
+        });
+
+
+
+
     }
 
     private void processMessageClient(byte[] data) {
-        Channel clientChannel = ModState.relayClientChannel.get();
-        if (clientChannel == null) {
-            return;
-        }
+
+        // LOGGER.info("Received {} bytes as client", data.length);
+
         ByteBuf buf = Unpooled.wrappedBuffer(data);
 
+        if (gameChannel.isEmpty()) {
+            throw new IllegalArgumentException("Game channel is empty");
+        }
+
+        Channel clientChannel = gameChannel.get();
 
         ModState.clientThreadExecutor.get().execute(() -> {
             clientChannel.pipeline().fireChannelRead(buf);
         });
 
         // LOGGER.info("[CLIENT]: Received binary message, length: {}", data.length);
+    }
+
+    private void processMessageSignaling(byte[] data) {
+        String newString = new String(data, StandardCharsets.UTF_8);
+
+        if (!newString.startsWith("REQUESTCONNECTION_")) return;
+
+        // We need to create a fake channel
+
+        MinecraftServer server = ModState.minecraftServer.get();
+
+        EmbeddedChannel virtualChannel = new EmbeddedChannel();
+        ServerConnectionListener listener = server.getConnection();
+
+        ((IConnectionInjector) listener).injectVirtualConnection(virtualChannel);
+
+        String url = String.format(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=%s&host=true&request=%s", this.gameId, newString);
+
+        StealthWebSocketClient newClient = new StealthWebSocketClient(URI.create(url), WebsocketClientType.SERVER_TO_RELAY, virtualChannel, gameId);
+        newClient.connect();
+
+        ModState.channelToWSClient.put(virtualChannel, newClient);
+
+        LOGGER.info("Created new channel to relay");
     }
 
     @Override
@@ -186,35 +276,19 @@ public class StealthWebSocketClient extends WebSocketClient {
         byte[] data = new byte[byteBuf.remaining()];
         byteBuf.get(data);
 
-        String newString = new String(data, StandardCharsets.UTF_8);
+
 
         // LOGGER.info("Server received: {}", newString);
         // LOGGER.info("Server got packet of length: {}", data.length);
 
 
 
-        if (!ModState.isClientConnectingToStealthServer.get()) {
-            // Server logic
-
-
-            if (newString.startsWith("CLIENTUUID_")) {
-                checkClientUUIDPrefix(data);
-            } else {
-
-                if (newString.startsWith("CLOSECONNECTION_")) {
-                    checkClientClosePrefix(data);
-                } else {
-                    this.processMessageServer(data);
-                }
-
-            }
-        } else {
-            // Client logic
-
-
-
+        if (relayType == WebsocketClientType.CLIENT_TO_RELAY) {
             this.processMessageClient(data);
-
+        } else if (relayType == WebsocketClientType.SERVER_TO_RELAY) {
+            this.processMessageServer(data);
+        } else {
+            this.processMessageSignaling(data);
         }
 
 
@@ -239,9 +313,8 @@ public class StealthWebSocketClient extends WebSocketClient {
 
             // Disconnect the channel
 
-            Channel clientChannel = ModState.relayClientChannel.get();
+            this.gameChannel.ifPresent(Channel::disconnect);
 
-            clientChannel.eventLoop().execute(clientChannel::disconnect);
 
             LOGGER.info("WS Disconnected client channel");
 

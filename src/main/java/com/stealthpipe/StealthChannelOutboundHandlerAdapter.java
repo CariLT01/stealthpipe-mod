@@ -41,55 +41,44 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
     }
 
     @Unique
-    private void forwardDataToRelay(byte[] bytes, StealthWebSocketClient wsClient, Channel destination) {
+    private boolean forwardDataToRelay(byte[] bytes, Channel destination) {
 
         boolean isClient = ModState.isClientConnectingToStealthServer.get();
 
+
+
+
+
         if (isClient) {
-            // Send to server, with MY relay client uuid
+            // Send it to server
+            StealthWebSocketClient relayClient = ModState.relayClient.get();
 
-            String myUuid = ModState.relayClientUuid.get();
+            relayClient.send(bytes);
 
-            byte[] packet = concatUuidAndData(myUuid, bytes);
+            // LOGGER.info("Forwarding {} bytes to the relay as a client", bytes.length);
 
-
-            wsClient.send(packet);
+            return true;
 
         } else {
-            // Send it to the client, with relay client UUID
+            // Send it to the client
 
-            String clientUuid = ModState.minecraftChannelUuidToRelayUuidMap.get(destination);
-
-            if (clientUuid == null) {
-                return;
+            StealthWebSocketClient wsClient = ModState.channelToWSClient.get(destination);
+            if (wsClient == null) {
+                return false;
             }
 
-            byte[] packet = concatUuidAndData(clientUuid, bytes);
+            wsClient.send(bytes);
 
-            wsClient.send(packet);
+            // LOGGER.info("Forwarding {} bytes to the relay as a server", bytes.length);
+
+            return true;
         }
     }
 
     @Unique
     private boolean handleRelayForwarding(String label, Object msg, Channel destination) {
 
-        StealthWebSocketClient wsClient = ModState.relayClient.get();
-
-        if (wsClient == null) {
-            return false;
-        }
         boolean isClient = ModState.isClientConnectingToStealthServer.get();
-
-        if (!isClient && !ModState.minecraftChannelUuidToRelayUuidMap.containsKey(destination)) {
-
-            if (!warnedIDs.contains(destination)) {
-                LOGGER.warn("Destination does not have corresponding mapped relay ID");
-
-                warnedIDs.add(destination);
-            }
-
-            return false;
-        }
 
 
 
@@ -99,7 +88,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
             byteBuf.getBytes(byteBuf.readerIndex(), bytes);
 
 
-            this.forwardDataToRelay(bytes, wsClient, destination);
+            return this.forwardDataToRelay(bytes, destination);
 
 
         } else if (msg instanceof ByteBuf buf) {
@@ -107,7 +96,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
             byte[] bytes = new byte[buf.readableBytes()];
             buf.getBytes(buf.readerIndex(), bytes);
 
-            this.forwardDataToRelay(bytes, wsClient, destination);
+            return this.forwardDataToRelay(bytes, destination);
 
         }
 
@@ -160,23 +149,23 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
             ModState.webSocketOpen.set(false);
             ModState.relayClient.set(null);
 
+            ModState.resetState();
+
+            ModState.channelToWSClient.clear();
+
             LOGGER.info("Connection closed, detected channel inactive");
         } else {
 
-            // Kicked player, send it to relay to disconnect the client-server connection
+            // Kicked player, close the WS connection
 
-            String clientUUID = ModState.minecraftChannelUuidToRelayUuidMap.get(ctx.channel());
-
-            if (clientUUID == null) {
-                LOGGER.error("Failed to disconnect client, UUID not found");
+            StealthWebSocketClient wsClient = ModState.channelToWSClient.get(ctx.channel());
+            if (wsClient != null) {
+                LOGGER.info("2: Connection closed, detected channel inactive");
+                wsClient.close();
+            } else {
+                LOGGER.info("Destination not found, no WS client to close");
             }
 
-            String packet = "CLOSECONNECTION_" + clientUUID;
-            byte[] packetAsBytes = packet.getBytes(StandardCharsets.UTF_8);
-
-            ModState.relayClient.get().send(packetAsBytes);
-
-            LOGGER.info("Sent signal to relay to disconnect connection");
 
         }
 
