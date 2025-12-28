@@ -45,6 +45,8 @@ public class IntegratedServerMixin {
             LOGGER.info("Detected integrated server closed");
         }
 
+        ModState.channelToWSClient.clear();
+
         ModState.resetState();
     }
 

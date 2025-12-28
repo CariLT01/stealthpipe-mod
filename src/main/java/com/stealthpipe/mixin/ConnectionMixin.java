@@ -47,11 +47,12 @@ public abstract class ConnectionMixin {
 
 
 
-       LOGGER.info("Inject into network pipeline");
+       LOGGER.info("Configure network pipeline");
 
         boolean isClientSending = (this.receiving == PacketFlow.CLIENTBOUND);
         String label = isClientSending ? "CLIENT_OUT" : "SERVER_OUT";
 
+        LOGGER.info("Injecting adapter");
 
         pipeline.addFirst( "stealth_relay_send", new StealthChannelOutboundHandlerAdapter(label));
     }
@@ -117,41 +118,32 @@ public abstract class ConnectionMixin {
 
     @Unique
     private static void setupPipeline(Channel channel, Connection connection) {
+
+        LOGGER.info("Setting up pipeline");
+
         ChannelPipeline pipeline = channel.pipeline();
 
+        LOGGER.info("Inject timeout");
+
         pipeline.addLast("timeout", new io.netty.handler.timeout.ReadTimeoutHandler(30));
-        pipeline.addFirst("stealth_relay_send_" + channel.id().asShortText(), new StealthChannelOutboundHandlerAdapter("CLIENT_OUT"));
+
+        LOGGER.info("Inject adapter");
+
+        // pipeline.addFirst("stealth_relay_send_" + channel.id().asShortText(), new StealthChannelOutboundHandlerAdapter("CLIENT_OUT"));
 
 
 
         Connection.configureSerialization(pipeline, PacketFlow.CLIENTBOUND, false, null);
         connection.configurePacketHandler(pipeline); // This also configures writing injection, mixin above
 
-
+        LOGGER.info("Finished pipeline setup");
 
     }
 
     @Unique
     private static void connectToStealthRelay(String gameId, Channel gameChannel) throws Exception {
 
-        /*ModState.gameId.set(gameId);
-
-        // WebSocketHelper.connectToServer();
-
-        StealthWebSocketClient wsClient = ModState.relayClient.get();
-
-        UUID clientUuid = UUID.randomUUID();
-        String relayClientPacket = "CLIENTUUID_" + clientUuid.toString();
-
-        ModState.relayClientUuid.set(clientUuid.toString());
-
-        byte[] packetInBytes = relayClientPacket.getBytes(StandardCharsets.UTF_8);
-
-        LOGGER.info("Sent initial relay client packet: {}", relayClientPacket);
-
-        wsClient.send(packetInBytes);*/
-
-
+        LOGGER.info("Connect to stealth relay");
 
         StealthWebSocketClient wsClient = new StealthWebSocketClient(URI.create(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
         wsClient.connect();

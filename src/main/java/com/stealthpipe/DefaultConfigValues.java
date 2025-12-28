@@ -7,6 +7,4 @@ public class DefaultConfigValues {
     public static final boolean ONLINE_MODE = true;
     // public static final String RELAY_IP = "http://127.0.0.1:7860";
     // public static final String RELAY_IP_WS = "ws://127.0.0.1:7860";
-
-    public static final String CONNECTION_SUFFIX = ".stealth.link";
 }

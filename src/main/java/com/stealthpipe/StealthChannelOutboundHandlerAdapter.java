@@ -26,6 +26,8 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
         super();
 
         this.label = label;
+
+        LOGGER.info("Created new adapter");
     }
 
     private byte[] concatUuidAndData(String uuid, byte[] data) {
@@ -53,6 +55,11 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
             // Send it to server
             StealthWebSocketClient relayClient = ModState.relayClient.get();
 
+            if (relayClient == null) {
+                LOGGER.warn("No WS client found");
+                return false;
+            }
+
             relayClient.send(bytes);
 
             // LOGGER.info("Forwarding {} bytes to the relay as a client", bytes.length);
@@ -64,6 +71,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
             StealthWebSocketClient wsClient = ModState.channelToWSClient.get(destination);
             if (wsClient == null) {
+                // LOGGER.error("No WS! Cannot forward");
                 return false;
             }
 
@@ -118,7 +126,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
         boolean isWSConnected = ModState.webSocketOpen.get();
 
-        if (isWSConnected) {
+        if (ModState.isClientConnectingToStealthServer.get() || isWSConnected) { // Temporary fix
             boolean success = handleRelayForwarding(label, msg, id);
 
 
@@ -130,6 +138,8 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
             // Don't return if it isn't success, probably means it is the original client, so forward the writing back to the original pipeline.
 
+        } else {
+            // LOGGER.info("Websocket not open yet, not writing");
         }
 
 
@@ -148,6 +158,8 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
             ModState.relayClient.get().close();
             ModState.webSocketOpen.set(false);
             ModState.relayClient.set(null);
+            ModState.relayClientChannel.set(null);
+            ModState.isClientConnectingToStealthServer.set(false);
 
             ModState.resetState();
 

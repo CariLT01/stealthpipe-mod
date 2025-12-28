@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +55,10 @@ public class StealthWebSocketClient extends WebSocketClient {
     public StealthWebSocketClient(URI serverUri, WebsocketClientType type, String gameId) {
         super(serverUri);
 
+        if (ModState.isClientConnectingToStealthServer.get()) {
+            LOGGER.warn("Instructed to open SIGNALING socket when state is client!");
+        }
+
         if (type != WebsocketClientType.RELAY_SIGNALING) {
             throw new IllegalArgumentException("Must be relay signaling");
         }
@@ -64,7 +67,6 @@ public class StealthWebSocketClient extends WebSocketClient {
         this.relayUrl = serverUri;
         this.gameId = gameId;
     }
-
 
 
     @Override
@@ -231,6 +233,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         ByteBuf buf = Unpooled.wrappedBuffer(data);
 
         if (gameChannel.isEmpty()) {
+            LOGGER.error("Game channel is empty!");
             throw new IllegalArgumentException("Game channel is empty");
         }
 
@@ -276,6 +279,9 @@ public class StealthWebSocketClient extends WebSocketClient {
         byte[] data = new byte[byteBuf.remaining()];
         byteBuf.get(data);
 
+        ModState.inboundData.getAndAdd(data.length);
+        ModState.inboundBandwidthCounter.getAndAdd(data.length);
+
 
 
         // LOGGER.info("Server received: {}", newString);
@@ -304,6 +310,12 @@ public class StealthWebSocketClient extends WebSocketClient {
     }
 
     @Override
+    public void close() {
+        LOGGER.info("Close called on WS client");
+        super.close();
+    }
+
+    @Override
     public void onClose(int code, String reason, boolean remote) {
         // Logic for when the connection ends
 
@@ -317,6 +329,16 @@ public class StealthWebSocketClient extends WebSocketClient {
 
 
             LOGGER.info("WS Disconnected client channel");
+
+
+        } else {
+
+            if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
+                ModState.minecraftServer.get().getPlayerList().broadcastSystemMessage(
+                        Component.literal("[StealthPipe]: Signaling connection to relay disconnected. Room closed.").withStyle(ChatFormatting.RED),
+                        false
+                );
+            }
 
 
         }
@@ -344,10 +366,17 @@ public class StealthWebSocketClient extends WebSocketClient {
     @Override
     public void send(byte[] data) {
 
-
+        ModState.outboundData.getAndAdd(data.length);
+        ModState.outboundBandwidthCounter.getAndAdd(data.length);
 
         if (this.connected) {
-            // LOGGER.info("Sending {} bytes", data.length);
+            /* this is some code: if (ModState.isClientConnectingToStealthServer.get()) {
+                LOGGER.info("Sending {} bytes", data.length);
+            } */
+
+
+
+
             super.send(data);
         } else {
             LOGGER.info("Queueing {} bytes to be sent", data.length);
