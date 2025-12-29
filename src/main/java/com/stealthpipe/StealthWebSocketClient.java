@@ -17,9 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class StealthWebSocketClient extends WebSocketClient {
 
@@ -33,9 +31,7 @@ public class StealthWebSocketClient extends WebSocketClient {
     private Optional<Channel> gameChannel = Optional.empty();
 
     public StealthWebSocketClient(URI serverUri, WebsocketClientType clientType, Channel channel, String gameId) {
-
-
-        super(serverUri);
+        super(serverUri, createHeaders());
 
         if (clientType == WebsocketClientType.RELAY_SIGNALING) {
             throw new IllegalArgumentException("Relay signaling cannot have channel argument");
@@ -51,6 +47,12 @@ public class StealthWebSocketClient extends WebSocketClient {
 
     }
 
+    private static Map<String, String> createHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        // Using the Chrome 143 string we discussed
+        headers.put("User-Agent", StealthPipe.USER_AGENT);
+        return headers;
+    }
 
     public StealthWebSocketClient(URI serverUri, WebsocketClientType type, String gameId) {
         super(serverUri);

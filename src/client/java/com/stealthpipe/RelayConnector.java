@@ -35,6 +35,7 @@ public class RelayConnector {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping"))
                 .version(HttpClient.Version.HTTP_1_1)
+                .header("User-Agent", StealthPipe.USER_AGENT)
                 .GET()
                 .build();
 
@@ -106,6 +107,7 @@ public class RelayConnector {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping"))
                     .version(HttpClient.Version.HTTP_1_1)
+                    .header("User-Agent", StealthPipe.USER_AGENT)
                     .GET()
                     .build();
 
@@ -232,6 +234,7 @@ public class RelayConnector {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(StealthPipe.config.RELAY_IP + "/pow"))
                 .version(HttpClient.Version.HTTP_1_1)
+                .header("User-Agent", StealthPipe.USER_AGENT)
                 .GET()
                 .build();
 
@@ -323,6 +326,7 @@ public class RelayConnector {
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(StealthPipe.config.RELAY_IP + String.format("/create?token=%s&nonce=%s", powResult.token(), powResult.nonce())))
                         .version(HttpClient.Version.HTTP_1_1)
+                        .header("User-Agent", StealthPipe.USER_AGENT)
                         .GET()
                         .build();
 
