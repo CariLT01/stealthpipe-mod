@@ -5,12 +5,12 @@
 	"name": "StealthPipe",
 	"description": "Minecraft mod that allows Open to LAN multiplayer to work on networks that block peer-to-peer connections and non-standard ports.",
 	"authors": [
-		"Me!"
+		"publicuser222"
 	],
 	"contact": {
 
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/stealthpipe/icon.png",
 	"environment": "*",
 	"entrypoints": {
