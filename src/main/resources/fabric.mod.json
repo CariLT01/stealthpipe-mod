@@ -8,7 +8,8 @@
 		"publicuser222"
 	],
 	"contact": {
-
+		"sources": "https://github.com/CariLT01/stealthpipe-mod",
+		"issues": "https://github.com/CariLT01/stealthpipe-mod/issues"
 	},
 	"license": "MIT",
 	"icon": "assets/stealthpipe/icon.png",
