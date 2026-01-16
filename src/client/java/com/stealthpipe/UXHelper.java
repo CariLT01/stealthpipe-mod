@@ -6,7 +6,7 @@ import net.minecraft.network.chat.Component;
 
 public class UXHelper {
 
-    public static void sendSystemMessage(String message, ChatFormatting style) {
+    public static void _sendSystemMessage(String message, ChatFormatting style) {
         assert Minecraft.getInstance().player != null;
         Minecraft.getInstance().execute(() -> {
             Minecraft.getInstance().player.displayClientMessage(
@@ -16,6 +16,17 @@ public class UXHelper {
         });
 
 
+    }
+
+    public static void sendStealthPipeSystemMessage(String message) {
+        assert Minecraft.getInstance().player != null;
+
+        Minecraft.getInstance().execute(() -> {
+            Minecraft.getInstance().player.displayClientMessage(
+                    Component.literal(String.format("§8[StealthPipe] : §7%s", message)),
+                    false
+            );
+        });
     }
 
 

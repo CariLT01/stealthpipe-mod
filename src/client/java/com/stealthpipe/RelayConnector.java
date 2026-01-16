@@ -30,7 +30,7 @@ public class RelayConnector {
     @Unique
     private boolean pingRelay() {
 
-        UXHelper.sendSystemMessage("[StealthPipe]: Connecting to the relay...", ChatFormatting.GRAY);
+        UXHelper.sendStealthPipeSystemMessage("Connecting to the relay...");
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping"))
@@ -46,9 +46,8 @@ public class RelayConnector {
             try {
 
                 if (i != 0) {
-                    UXHelper.sendSystemMessage(
-                            String.format("[StealthPipe]: Attempt %s...", (i + 1)),
-                            ChatFormatting.GRAY
+                    UXHelper.sendStealthPipeSystemMessage(
+                            String.format("Attempt %s...", (i + 1))
                     );
                 }
 
@@ -61,9 +60,8 @@ public class RelayConnector {
                     if (response.statusCode() == 200) {
                         return true;
                     } else {
-                        UXHelper.sendSystemMessage(
-                                String.format("[StealthPipe]: Relay is in an unhealthy state and is unavailable to serve your request. Message: %s%nPlease try again later.", response.body()),
-                                ChatFormatting.RED
+                        UXHelper.sendStealthPipeSystemMessage(
+                                String.format("§cRelay is in an unhealthy state and is unavailable to serve your request. Message: %s%nPlease try again later.", response.body())
                         );
 
                         return false;
@@ -74,9 +72,8 @@ public class RelayConnector {
 
                 LOGGER.error("An error occurred while trying to reach relay: ", e);
 
-                UXHelper.sendSystemMessage(
-                        "[StealthPipe]: Failed to reach relay",
-                        ChatFormatting.RED
+                UXHelper.sendStealthPipeSystemMessage(
+                        "§cFailed to reach relay"
                 );
 
             }
@@ -121,31 +118,9 @@ public class RelayConnector {
 
             LOGGER.info("Ping: {}ms", pingMs);
 
-            if (pingMs <= 100) {
-                UXHelper.sendSystemMessage(
-                        String.format("[StealthPipe]: Ping is low (%sms).", pingMs),
-                        ChatFormatting.GREEN
-                );
-            } else if (pingMs <= 150) {
-                UXHelper.sendSystemMessage(
-                        String.format("[StealthPipe]: Warning: ping to relay is moderately high (%sms).", pingMs),
-                        ChatFormatting.YELLOW
-                );
-                hostRelayMessage();
-            } else if (pingMs <= 250) {
-                UXHelper.sendSystemMessage(
-                        String.format("[StealthPipe]: Warning: ping to relay is high (%sms).", pingMs),
-                        ChatFormatting.RED
-                );
-                hostRelayMessage();
-            } else {
-                // if pingMs > 250
-                UXHelper.sendSystemMessage(
-                        String.format("[StealthPipe]: Warning: ping to relay is extremely high (%sms). It is highly recommended to host your own relay or switch relay.", pingMs),
-                        ChatFormatting.RED
-                );
-                hostRelayMessage();
-            }
+            UXHelper.sendStealthPipeSystemMessage(
+                    String.format("Ping is at (%sms).", pingMs)
+            );
 
 
         } catch (Exception e) {
@@ -176,16 +151,14 @@ public class RelayConnector {
 
             assert Minecraft.getInstance().player != null;
 
-            UXHelper.sendSystemMessage(
+            UXHelper.sendStealthPipeSystemMessage(
                     String.format(
-                            "[StealthPipe]: Join with the mod on another client using: %s.stealth.link", gameId
-                    ),
-                    ChatFormatting.GREEN
+                            "Join with the mod on another client using: §a%s.stealth.link", gameId
+                    )
             );
 
-            UXHelper.sendSystemMessage(
-                    "StealthPipe is experimental! You may need to restart the client to join another world after leaving this one.",
-                    ChatFormatting.RED
+            UXHelper.sendStealthPipeSystemMessage(
+                    "§cStealthPipe is experimental!\n§6Note: you will be disconnected if your room is idle for more than 15 minutes."
             );
 
 
@@ -226,9 +199,8 @@ public class RelayConnector {
     @Unique
     private ProofOfWorkChallengeResult doProofOfWorkChallenge() throws Exception {
 
-        UXHelper.sendSystemMessage(
-                "[StealthPipe]: Authenticating client...",
-                ChatFormatting.GRAY
+        UXHelper.sendStealthPipeSystemMessage(
+                "Authenticating client..."
         );
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -251,16 +223,14 @@ public class RelayConnector {
         // Warn user about high difficulty and slow authentication
         switch (difficulty) {
             case 6:
-                UXHelper.sendSystemMessage(
-                        "The relay has issued a challenge with a higher difficulty than usual to throttle traffic and protect itself from potential ongoing attacks. This will make authenticating slower. Please wait...",
-                        ChatFormatting.GRAY
+                UXHelper.sendStealthPipeSystemMessage(
+                        "The relay has issued a challenge with a higher difficulty than usual to throttle traffic and protect itself from potential ongoing attacks. This will make authenticating slower. Please wait..."
                 );
                 break;
 
             case 7:
-                UXHelper.sendSystemMessage(
-                        "The relay has issued a challenge with a very high difficulty than usual to throttle traffic and protect itself from the ongoing attacks. This will make authentication take a lot longer than usual. Please hold...",
-                        ChatFormatting.GRAY
+                UXHelper.sendStealthPipeSystemMessage(
+                        "The relay has issued a challenge with a very high difficulty than usual to throttle traffic and protect itself from the ongoing attacks. This will make authentication take a lot longer than usual. Please hold..."
                 );
                 break;
 
@@ -300,8 +270,8 @@ public class RelayConnector {
                 if (!isAvailable) {
                     LOGGER.error("Could not connect to the relay: pinging failed");
 
-                    UXHelper.sendSystemMessage("[StealthPipe]: Failed to reach the relay, connection failed", ChatFormatting.RED);
-                    UXHelper.sendSystemMessage("[StealthPipe]: Alternative relays are available in the mod's description, feel free to try them. And remember, you can always host your own :D You can change the Relay IP in the mod's config menu.", ChatFormatting.WHITE);
+                    UXHelper.sendStealthPipeSystemMessage("§cFailed to reach the relay, connection failed");
+                    UXHelper.sendStealthPipeSystemMessage("Alternative relays are available in the mod's description, feel free to try them. And remember, you can always host your own :D You can change the Relay IP in the mod's config menu.");
                     UXHelper.sendSystemMessageComponent(
                             Component.literal("https://github.com/CariLT01/stealthpipe-mod/blob/main/ALTERNATIVE_RELAYS.md")
                                     .withStyle(style -> style.withClickEvent(
@@ -312,9 +282,8 @@ public class RelayConnector {
 
                     return;
                 } else {
-                    UXHelper.sendSystemMessage(
-                            "[StealthPipe]: Found connection to reach relay",
-                            ChatFormatting.GREEN
+                    UXHelper.sendStealthPipeSystemMessage(
+                            "Found connection to reach relay"
                     );
                 }
 
@@ -333,9 +302,8 @@ public class RelayConnector {
 
 
 
-                UXHelper.sendSystemMessage(
-                        "[StealthPipe]: Creating WebSocket connection... (if this takes too long, server might be in a deadlock!)",
-                        ChatFormatting.GRAY
+                UXHelper.sendStealthPipeSystemMessage(
+                        "Creating WebSocket connection..."
                 );
 
                 establishConnection(request);
@@ -345,9 +313,8 @@ public class RelayConnector {
 
                 String stackTrace = StackTraceHelper.getStackTraceAsString(e);
 
-                UXHelper.sendSystemMessage(
-                        String.format("[StealthPipe]: An error occurred while trying to create room ID: %s%n%s", e.toString(), stackTrace),
-                        ChatFormatting.RED
+                UXHelper.sendStealthPipeSystemMessage(
+                        String.format("[StealthPipe]: An error occurred while trying to create room ID: %s%n%s", e.toString(), stackTrace)
                 );
             }
         }).start();

@@ -37,6 +37,8 @@ public class ModState {
 
     public static AtomicLong lastBandwidthTick = new AtomicLong(0);
 
+
+
     public static void resetState() {
         outboundData.set(0);
         inboundData.set(0);

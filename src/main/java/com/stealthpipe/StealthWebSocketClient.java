@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerConnectionListener;
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class StealthWebSocketClient extends WebSocketClient {
 
@@ -27,6 +29,8 @@ public class StealthWebSocketClient extends WebSocketClient {
     private final WebsocketClientType relayType;
     private final URI relayUrl;
     private final String gameId;
+
+    private final ReentrantLock writeLock = new ReentrantLock();
 
     private Optional<Channel> gameChannel = Optional.empty();
 
@@ -89,13 +93,59 @@ public class StealthWebSocketClient extends WebSocketClient {
 
         if (relayType == WebsocketClientType.CLIENT_TO_RELAY || relayType == WebsocketClientType.SERVER_TO_RELAY) {
             for (byte[] packet : queuedPackets) {
+                this.writeLock.lock();
                 this.send(packet);
+                this.writeLock.unlock();
             }
 
             queuedPackets.clear();
         }
 
+        this.keepAliveLoop();
 
+
+    }
+
+    private void keepAliveLoop() {
+        if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
+
+            String keepAliveString = "keep-alive";
+            byte[] byteArray = keepAliveString.getBytes();
+
+            new Thread(() -> {
+
+                LOGGER.info("Starting keep-alive");
+
+                int numberOfErrorsDetected = 0;
+
+                while (this.connected) {
+
+                    try {
+                        Thread.sleep(1000);
+                        this.send(byteArray);
+                    } catch (WebsocketNotConnectedException e) {
+                        LOGGER.warn("Socket disconnected");
+                        break;
+                    }
+                    catch (Exception e) {
+                        LOGGER.error("Keep-alive signal failed to get sent: ", e);
+
+                        numberOfErrorsDetected += 1;
+
+                        if (numberOfErrorsDetected > 10) {
+                            LOGGER.error("more than 10 errors detected, keep-alive loop will be killed reducing connection reliability");
+                            break;
+                        }
+                    }
+
+
+                }
+
+                LOGGER.info("keep-alive stopped");
+            }).start();
+        } else {
+            LOGGER.info("Not signaling websocket, keep-alive not sent");
+        }
     }
 
 
@@ -222,7 +272,7 @@ public class StealthWebSocketClient extends WebSocketClient {
 
             if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
                 ModState.minecraftServer.get().getPlayerList().broadcastSystemMessage(
-                        Component.literal("[StealthPipe]: Signaling connection to relay disconnected. Room closed.").withStyle(ChatFormatting.RED),
+                        Component.literal("§8[StealthPipe§8] : §cSignaling connection to relay disconnected. Room closed.\n§7You need to create a new room by rejoining into this world and clicking on opening to LAN.").withStyle(ChatFormatting.RED),
                         false
                 );
             }
@@ -263,8 +313,9 @@ public class StealthWebSocketClient extends WebSocketClient {
 
 
 
-
+            this.writeLock.lock();
             super.send(data);
+            this.writeLock.unlock();
         } else {
             LOGGER.info("Queueing {} bytes to be sent", data.length);
             this.queuedPackets.add(data);
