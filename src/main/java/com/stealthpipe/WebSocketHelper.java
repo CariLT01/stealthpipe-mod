@@ -25,8 +25,9 @@ public class WebSocketHelper {
         boolean isClient = ModState.isClientConnectingToStealthServer.get();
 
         String hostQuery = !isClient ? "&host=true" : "";
+        String versionQuery = "&version=" + StealthPipe.config.MOD_VERSION;
 
-        URI uri = new URI(StealthPipe.config.RELAY_IP.replace("https://", "wss://").replace("http://", "ws://") + "/join?id=" + gameId + hostQuery);
+        URI uri = new URI(StealthPipe.config.RELAY_IP.replace("https://", "wss://").replace("http://", "ws://") + "/join?id=" + gameId + hostQuery + versionQuery);
 
         StealthWebSocketClient wsClient = new StealthWebSocketClient(uri, WebsocketClientType.RELAY_SIGNALING, gameId);
         wsClient.connect();

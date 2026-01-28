@@ -18,6 +18,7 @@ public class StealthPipeConfig {
     // public static final String RELAY_IP_WS = "ws://127.0.0.1:7860";
 
     public String CONNECTION_SUFFIX = ".stealth.link";
+    public String MOD_VERSION = "4.0.0";
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("stealthpipe.json");

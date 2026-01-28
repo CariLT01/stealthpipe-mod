@@ -7,6 +7,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerConnectionListener;
 import org.java_websocket.client.WebSocketClient;
@@ -29,6 +30,7 @@ public class StealthWebSocketClient extends WebSocketClient {
     private final WebsocketClientType relayType;
     private final URI relayUrl;
     private final String gameId;
+    private boolean gotMessages = false;
 
     private final ReentrantLock writeLock = new ReentrantLock();
 
@@ -45,6 +47,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         this.gameChannel = Optional.of(channel);
         this.relayUrl = serverUri;
         this.gameId = gameId;
+        this.gotMessages = false;
 
         LOGGER.info("New WS client created");
 
@@ -212,6 +215,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         // Logic for when the server sends data to your mod
 
 
+        this.gotMessages = true;
 
         byte[] data = new byte[byteBuf.remaining()];
         byteBuf.get(data);
@@ -261,6 +265,17 @@ public class StealthWebSocketClient extends WebSocketClient {
         if (isClient) {
 
             // Disconnect the channel
+
+
+            if (StealthPipe.CLIENT_PROXY != null) {
+                if (this.gotMessages) {
+                    StealthPipe.CLIENT_PROXY.disconnectWithReason("§cStealthPipe connection disconnected unexpectedly.\nTry reconnecting.");
+                } else {
+                    StealthPipe.CLIENT_PROXY.disconnectWithReason("§cStealthPipe failed to connect.\nCheck room code and try again.\n\nMake sure you are using the latest client version.");
+                }
+            }
+
+
 
             this.gameChannel.ifPresent(Channel::disconnect);
 

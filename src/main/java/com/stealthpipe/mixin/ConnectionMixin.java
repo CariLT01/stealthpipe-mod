@@ -112,7 +112,6 @@ public abstract class ConnectionMixin {
 
             ModState.relayClientChannel.set(fakeChannel);
 
-
         }
     }
 
@@ -145,7 +144,7 @@ public abstract class ConnectionMixin {
 
         LOGGER.info("Connect to stealth relay");
 
-        StealthWebSocketClient wsClient = new StealthWebSocketClient(URI.create(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
+        StealthWebSocketClient wsClient = new StealthWebSocketClient(URI.create(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&version=" + StealthPipe.config.MOD_VERSION),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
         wsClient.connect();
 
 

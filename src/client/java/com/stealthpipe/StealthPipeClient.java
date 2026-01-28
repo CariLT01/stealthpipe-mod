@@ -15,6 +15,8 @@ public class StealthPipeClient implements ClientModInitializer {
 		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
 
 
+		StealthPipe.CLIENT_PROXY = new ClientProxyImpl();
+
 		ModState.clientThreadExecutor.set(Minecraft.getInstance());
 
 		LOGGER.info("Client initialized stealth");

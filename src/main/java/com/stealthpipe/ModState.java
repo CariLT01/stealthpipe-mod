@@ -1,6 +1,7 @@
 package com.stealthpipe;
 
 import io.netty.channel.Channel;
+import net.minecraft.network.Connection;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +38,7 @@ public class ModState {
 
     public static AtomicLong lastBandwidthTick = new AtomicLong(0);
 
-
+    public static AtomicReference<Connection> clientConnectionInstance = new AtomicReference<>(null);
 
     public static void resetState() {
         outboundData.set(0);
