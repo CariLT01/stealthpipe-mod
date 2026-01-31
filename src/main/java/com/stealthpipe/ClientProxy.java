@@ -1,5 +1,6 @@
 package com.stealthpipe;
 
 public interface ClientProxy {
-    void disconnectWithReason(String reason);
+    void disconnectWithReason(String reason, int delayInMs);
+    void connectToRelay();
 }

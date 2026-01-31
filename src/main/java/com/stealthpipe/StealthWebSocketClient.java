@@ -269,9 +269,9 @@ public class StealthWebSocketClient extends WebSocketClient {
 
             if (StealthPipe.CLIENT_PROXY != null) {
                 if (this.gotMessages) {
-                    StealthPipe.CLIENT_PROXY.disconnectWithReason("§cStealthPipe connection disconnected unexpectedly.\nTry reconnecting.");
+                    StealthPipe.CLIENT_PROXY.disconnectWithReason("§cStealthPipe connection disconnected.\nThe host may have closed the room. If not, try reconnecting.", 250);
                 } else {
-                    StealthPipe.CLIENT_PROXY.disconnectWithReason("§cStealthPipe failed to connect.\nCheck room code and try again.\n\nMake sure you are using the latest client version.");
+                    StealthPipe.CLIENT_PROXY.disconnectWithReason("§cStealthPipe failed to connect.\nCheck room code and try again.\n\nMake sure you are using the latest client version.", 0);
                 }
             }
 
@@ -287,9 +287,11 @@ public class StealthWebSocketClient extends WebSocketClient {
 
             if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
                 ModState.minecraftServer.get().getPlayerList().broadcastSystemMessage(
-                        Component.literal("§8[StealthPipe§8] : §cSignaling connection to relay disconnected. Room closed.\n§7You need to create a new room by rejoining into this world and clicking on opening to LAN.").withStyle(ChatFormatting.RED),
+                        Component.literal("§8[StealthPipe§8] : §cSignaling connection to relay disconnected. Attempting to reconnect...").withStyle(ChatFormatting.RED),
                         false
                 );
+
+                StealthPipe.CLIENT_PROXY.connectToRelay();
             }
 
 

@@ -12,13 +12,40 @@ import static net.fabricmc.fabric.impl.networking.client.ClientNetworkingImpl.PL
 
 public class ClientProxyImpl implements ClientProxy {
 
-    @Override
-    public void disconnectWithReason(String reason) {
-        // Cursed way to show a disconnect message, please don't copy
+    private void displayDisconnectScreen(String reason) {
         Minecraft.getInstance().execute(() -> {
             assert Minecraft.getInstance().screen != null;
             Minecraft.getInstance().setScreen(new DisconnectedScreen(Minecraft.getInstance().screen, Component.literal("StealthPipe"), Component.literal(reason)));
         });
+    }
+
+    @Override
+    public void disconnectWithReason(String reason, int delayInMs) {
+        // Cursed way to show a disconnect message, please don't copy
+        if (delayInMs > 0) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(delayInMs);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                displayDisconnectScreen(reason);
+            }).start();
+        } else {
+            displayDisconnectScreen(reason);
+        }
+
+
+    }
+
+    @Override
+    public void connectToRelay() {
+        if (!ModState.gameOpenToLan.get()) {
+            System.out.println("Cancel reconnect attempt, game not open to lan");
+            return;
+        }
+        RelayConnector connector = new RelayConnector();
+        connector.connectToRelay();
     }
 }
 

@@ -38,6 +38,10 @@ public class ModState {
 
     public static AtomicLong lastBandwidthTick = new AtomicLong(0);
 
+    public static AtomicReference<String> reuseToken = new AtomicReference<>(null); // Reuse token, allows auto-reconnect and keeping the same room code
+
+
+
     public static AtomicReference<Connection> clientConnectionInstance = new AtomicReference<>(null);
 
     public static void resetState() {
@@ -46,5 +50,6 @@ public class ModState {
         isClientConnectingToStealthServer.set(false);
         gameOpenToLan.set(false);
         webSocketOpen.set(false);
+        reuseToken.set(null);
     }
 }

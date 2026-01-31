@@ -49,6 +49,7 @@ public class RelayConnector {
                     UXHelper.sendStealthPipeSystemMessage(
                             String.format("Attempt %s...", (i + 1))
                     );
+                    Thread.sleep(2000);
                 }
 
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -148,6 +149,11 @@ public class RelayConnector {
 
         if (data.ok) {
             String gameId = data.message;
+            if (data.reuseToken != null && !Objects.equals(data.reuseToken, "")) {
+                LOGGER.info("Set reuse token to: {}", data.reuseToken);
+                ModState.reuseToken.set(data.reuseToken);
+            }
+
 
             assert Minecraft.getInstance().player != null;
 
@@ -292,8 +298,12 @@ public class RelayConnector {
 
 
 
+                String reuseTokenParam = (ModState.reuseToken.get() != null && !Objects.equals(ModState.reuseToken.get(), ""))? "&reuseToken=" + ModState.reuseToken.get() : "";
+
+                LOGGER.info("Reuse token param: {}", reuseTokenParam);
+
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(StealthPipe.config.RELAY_IP + String.format("/create?token=%s&nonce=%s", powResult.token(), powResult.nonce())))
+                        .uri(URI.create(StealthPipe.config.RELAY_IP + String.format("/create?token=%s&nonce=%s%s", powResult.token(), powResult.nonce(), reuseTokenParam)))
                         .version(HttpClient.Version.HTTP_1_1)
                         .header("User-Agent", StealthPipe.USER_AGENT)
                         .GET()
