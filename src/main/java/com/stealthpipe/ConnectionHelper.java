@@ -113,4 +113,16 @@ public class ConnectionHelper {
 
         pipeline.addFirst( "stealth_relay_send", new StealthChannelOutboundHandlerAdapter(label));
     }
+
+    public static void handleDisconnectEvent() {
+        LOGGER.info("Detected disconnect via Fabric EVENT");
+
+        StealthWebSocketClient wsClient = ModState.relayClient.get();
+
+        if (wsClient != null) {
+            wsClient.close();
+        }
+
+        ModState.resetState();
+    }
 }

@@ -1,6 +1,7 @@
 plugins {
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
+	id("dev.kikugie.fletching-table.fabric") version "0.1.0-alpha.22"
 }
 
 version = project.mod_version
@@ -11,14 +12,33 @@ base {
 }
 
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
-
 	maven { url "https://maven.shedaniel.me/" }
 	maven { url "https://maven.terraformersmc.com/releases/" }
+
+	// Groovy version of the 'strict' helper
+	exclusiveContent {
+		forRepository {
+			maven {
+				url "https://api.modrinth.com/maven"
+				name "Modrinth"
+			}
+		}
+		filter {
+			includeGroup "maven.modrinth"
+		}
+	}
+
+	exclusiveContent {
+		forRepository {
+			maven {
+				url "https://www.cursemaven.com"
+				name "Curseforge"
+			}
+		}
+		filter {
+			includeGroup "curse.maven"
+		}
+	}
 }
 
 loom {
@@ -33,14 +53,20 @@ loom {
 
 }
 
+var requiredFabric =
+	sc.current.version == "1.21.11" ? "0.140.0+1.21.11" :
+	sc.current.version == "1.21.10" ? "0.138.4+1.21.10" : ""
+
+
 dependencies {
 	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	minecraft "com.mojang:minecraft:${sc.current.version}"
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
+
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${requiredFabric}"
 
 	implementation "org.java-websocket:Java-WebSocket:1.5.3"
 	include "org.java-websocket:Java-WebSocket:1.5.3"
@@ -49,9 +75,9 @@ dependencies {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
 
-	modCompileOnly "com.terraformersmc:modmenu:17.0.0-beta.1"
+	modCompileOnly fletchingTable.modrinth("modmenu", "${sc.current.version}")
 	// Actually puts the mod in your dev game
-	modRuntimeOnly "com.terraformersmc:modmenu:17.0.0-beta.1"
+	modRuntimeOnly fletchingTable.modrinth("modmenu", "${sc.current.version}")
 
 
 	modRuntimeOnly "me.shedaniel.cloth:cloth-config-fabric:15.0.140"
@@ -71,7 +97,10 @@ processResources {
 	inputs.property "version", project.version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
+		expand(
+				"version": project.version,
+				"minecraft_version": sc.current.version
+		)
 	}
 }
 

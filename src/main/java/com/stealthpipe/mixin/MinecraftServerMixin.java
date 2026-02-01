@@ -1,6 +1,7 @@
 package com.stealthpipe.mixin;
 
 
+import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,6 +19,14 @@ public class MinecraftServerMixin {
 
     @Shadow
     private boolean onlineMode;
+
+    @Inject(method="runServer", at=@At("HEAD"))
+    public void onServerStarting(CallbackInfo ci) {
+        MinecraftServer server = (MinecraftServer) (Object) this;
+
+        ModState.minecraftServer.set(server);
+        StealthPipe.LOGGER.info("Registered Minecraft Server instance via Mixin");
+    }
 
     @Inject(method="setUsesAuthentication", at=@At("HEAD"), cancellable = true)
     public void forceOfflineMode(boolean bl, CallbackInfo ci) {
