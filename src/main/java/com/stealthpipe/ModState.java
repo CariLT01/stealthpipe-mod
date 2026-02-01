@@ -36,6 +36,12 @@ public class ModState {
     public static AtomicInteger inboundBandwidth = new AtomicInteger(0);
     public static AtomicInteger outboundBandwidth = new AtomicInteger(0);
 
+    public static AtomicInteger inboundPPSCounter = new AtomicInteger(0);
+    public static AtomicInteger outboundPPSCounter = new AtomicInteger(0);
+
+    public static AtomicInteger inboundPPSd = new AtomicInteger(0);
+    public static AtomicInteger outboundPPSd = new AtomicInteger(0);
+
     public static AtomicLong lastBandwidthTick = new AtomicLong(0);
 
     public static AtomicReference<String> reuseToken = new AtomicReference<>(null); // Reuse token, allows auto-reconnect and keeping the same room code

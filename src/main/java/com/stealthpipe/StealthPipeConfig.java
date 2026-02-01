@@ -20,6 +20,9 @@ public class StealthPipeConfig {
     public String CONNECTION_SUFFIX = ".stealth.link";
     public String MOD_VERSION = "4.0.0";
 
+    public boolean ENABLE_BATCHED_PACKETS = DefaultConfigValues.ENABLE_BATCHED_PACKETS;
+    public int PACKET_BATCHING_INTERVAL_MS = DefaultConfigValues.PACKET_BATCHING_INTERVAL_MS;
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("stealthpipe.json");
 

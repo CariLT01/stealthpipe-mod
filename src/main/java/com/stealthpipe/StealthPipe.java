@@ -1,10 +1,14 @@
 package com.stealthpipe;
 
+import io.netty.channel.Channel;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 public class StealthPipe implements ModInitializer {
 	public static final String MOD_ID = "stealthpipe";
@@ -35,6 +39,14 @@ public class StealthPipe implements ModInitializer {
 
 
 			LOGGER.info("Registered Minecraft Server instance");
+		});
+
+		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			// Make sure we fire packets in queue that are lingering
+			if (!ModState.gameOpenToLan.get()) return;
+			for (Map.Entry<Channel, StealthWebSocketClient> entry : ModState.channelToWSClient.entrySet()) {
+				entry.getValue().firePacketsInQueue();
+			}
 		});
 
 

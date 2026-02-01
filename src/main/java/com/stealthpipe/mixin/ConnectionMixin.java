@@ -5,14 +5,12 @@ import io.netty.channel.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.network.Connection;
-import net.minecraft.network.DisconnectionDetails;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
 
 
 
 //? if =1.21.11
-//import net.minecraft.server.network.EventLoopGroupHolder;
+import net.minecraft.server.network.EventLoopGroupHolder;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,8 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.InetSocketAddress;
 
-import static net.minecraft.network.Connection.NETWORK_EPOLL_WORKER_GROUP;
-import static net.minecraft.network.Connection.NETWORK_WORKER_GROUP;
+//? if <=1.21.10
+//import static net.minecraft.network.Connection.NETWORK_EPOLL_WORKER_GROUP;
+//? if <=1.21.10
+//import static net.minecraft.network.Connection.NETWORK_WORKER_GROUP;
 
 @Mixin(Connection.class)
 @Environment(EnvType.CLIENT) // Run on INTEGRATED SERVER only, but not on DEDICATED SERVER
@@ -38,12 +38,12 @@ public abstract class ConnectionMixin {
     }
 
     /*? if =1.21.11 { */
-    /*@Inject(method = "connect", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "connect", at = @At("HEAD"), cancellable = true)
     private static void injectConnect(InetSocketAddress inetSocketAddress, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
         ConnectionHelper.connectToRelay(inetSocketAddress, eventLoopGroupHolder.eventLoopGroup().next(), connection, cir);
     }
-    *//*? } else if =1.21.10 { */
-    @Inject(method = "connect", at = @At("HEAD"), cancellable = true)
+    /*? } else { */
+    /*@Inject(method = "connect", at = @At("HEAD"), cancellable = true)
     private static void injectConnect2(InetSocketAddress inetSocketAddress, boolean bl, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
         io.netty.channel.EventLoopGroup group;
         if (io.netty.channel.epoll.Epoll.isAvailable() && bl) {
@@ -54,7 +54,7 @@ public abstract class ConnectionMixin {
 
         ConnectionHelper.connectToRelay(inetSocketAddress, group.next(), connection, cir);
     }
-    /*? } */
+    *//*? } */
 
 
 

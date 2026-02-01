@@ -1,7 +1,9 @@
 package com.stealthpipe;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,13 @@ public class StealthPipeClient implements ClientModInitializer {
 
 			ModState.resetState();
 
+		});
+
+		ClientTickEvents.END_CLIENT_TICK.register((client) -> {
+			// Fire lingering packets in queue
+			if (ModState.relayClient.get() != null && ModState.webSocketOpen.get()) {
+				ModState.relayClient.get().firePacketsInQueue();
+			}
 		});
 	}
 }

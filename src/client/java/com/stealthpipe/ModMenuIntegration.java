@@ -56,6 +56,31 @@ public class ModMenuIntegration implements ModMenuApi {
                             .build()
             );
 
+            // Add section "Optimization"
+            var optimization = entryBuilder.startSubCategory(Component.literal("Optimization"));
+
+            optimization.add(
+                    entryBuilder.startBooleanToggle(Component.literal("Enable Packets Batching"), StealthPipe.config.ENABLE_BATCHED_PACKETS)
+                            .setDefaultValue(DefaultConfigValues.ENABLE_BATCHED_PACKETS)
+                            .setSaveConsumer(newValue -> StealthPipe.config.ENABLE_BATCHED_PACKETS = newValue)
+                            .setTooltip(
+                                    Component.literal("Groups of packets that are sent at roughly the same time will be batched. Decreases overhead, but slightly increases ping.")
+                            )
+                            .build()
+            );
+
+            optimization.add(
+                    entryBuilder.startIntField(Component.literal("Packet Batching Interval"), StealthPipe.config.PACKET_BATCHING_INTERVAL_MS)
+                            .setDefaultValue(DefaultConfigValues.PACKET_BATCHING_INTERVAL_MS)
+                            .setSaveConsumer(newValue -> StealthPipe.config.PACKET_BATCHING_INTERVAL_MS = newValue)
+                            .setTooltip(
+                                    Component.literal("Controls the number of milliseconds to hold on to these packets until it is sent altogether. Higher number will increases batching efficiency but will also increase ping.")
+                            )
+                            .build()
+            );
+
+            general.addEntry(optimization.build());
+
             builder.setSavingRunnable(() -> {
                 StealthPipe.config.save();
             });
