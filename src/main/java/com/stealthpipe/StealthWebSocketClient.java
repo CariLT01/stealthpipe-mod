@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class StealthWebSocketClient extends WebSocketClient {
@@ -72,12 +73,18 @@ public class StealthWebSocketClient extends WebSocketClient {
     private void sendLoop() {
         new Thread(() -> {
             while (this.connected && this.isOpen()) {
+                long start = System.nanoTime();
                 this.sendQueuedSendPackets();
-                try {
-                    // Busy loop
-                    Thread.sleep(StealthPipe.config.PACKET_BATCHING_INTERVAL_MS);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                long elapsed = System.nanoTime() - start;
+                long toWait = this.BATCHING_INTERVAL - elapsed;
+                if (toWait > 0) {
+                    if (toWait > 2_000_000L) { // >2ms -> park to save CPU
+                        LockSupport.parkNanos(toWait - 500_000L); // park most of it
+                    }
+                    // short busy-spin to improve precision for the remaining nanos
+                    while (System.nanoTime() - start < this.BATCHING_INTERVAL) {
+                        Thread.onSpinWait();
+                    }
                 }
             }
         }).start();
