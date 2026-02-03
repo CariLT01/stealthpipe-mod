@@ -69,6 +69,20 @@ public class StealthWebSocketClient extends WebSocketClient {
 
     }
 
+    private void sendLoop() {
+        new Thread(() -> {
+            while (this.connected && this.isOpen()) {
+                this.sendQueuedSendPackets();
+                try {
+                    // Busy loop
+                    Thread.sleep(StealthPipe.config.PACKET_BATCHING_INTERVAL_MS);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
+    }
+
     private void sendQueuedSendPacketsBatched() {
         int PACKET_SIZE_LIMIT = 2 * 1024 * 1024; // 2MB
 
@@ -161,7 +175,12 @@ public class StealthWebSocketClient extends WebSocketClient {
     }
 
     private void checkShouldFire() {
-        long currentTime = System.nanoTime();
+
+        if (!StealthPipe.config.ENABLE_BATCHED_PACKETS) {
+            this.sendQueuedSendPackets();
+        }
+
+        /* Don`t do anything: long currentTime = System.nanoTime();
         long previousTick = lastTick.get();
 
         if (!StealthPipe.config.ENABLE_BATCHED_PACKETS || currentTime - lastTick.get() >= this.BATCHING_INTERVAL) {
@@ -176,7 +195,8 @@ public class StealthWebSocketClient extends WebSocketClient {
             }
 
 
-        }
+        } */
+
     }
 
     private void sendPacket(byte[] data) {
@@ -231,6 +251,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         LOGGER.info("WS Handshake success");
         this.connected = true;
 
+        this.sendLoop();
 
 
         if (relayType == WebsocketClientType.CLIENT_TO_RELAY) {
