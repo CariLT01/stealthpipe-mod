@@ -21,6 +21,9 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -39,6 +42,7 @@ public class StealthWebSocketClient extends WebSocketClient {
     private final URI relayUrl;
     private final String gameId;
     private boolean gotMessages = false;
+    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     private final ReentrantLock writeLock = new ReentrantLock();
 
@@ -48,6 +52,8 @@ public class StealthWebSocketClient extends WebSocketClient {
     private final AtomicLong lastTick = new AtomicLong(System.nanoTime());
 
     private final long BATCHING_INTERVAL = StealthPipe.config.PACKET_BATCHING_INTERVAL_MS * 1_000_000L; // 2 milliseconds
+
+    private final int DEFAULT_PING_INTERVAL = 300 * 1000; // 5 minutes
 
     public StealthWebSocketClient(URI serverUri, WebsocketClientType clientType, Channel channel, String gameId) {
         super(serverUri, createHeaders());
@@ -68,6 +74,41 @@ public class StealthWebSocketClient extends WebSocketClient {
 
 
 
+    }
+
+    private void pingRelay() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping"))
+                .version(HttpClient.Version.HTTP_1_1)
+                .header("User-Agent", StealthPipe.USER_AGENT)
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        LOGGER.info("Pinged relay");
+
+        if (response.statusCode() != 200) {
+            LOGGER.warn("Ping did not return status code 200");
+        }
+    }
+
+    private void relayPingLoop() {
+        new Thread(() -> {
+            while (this.connected && this.isOpen()) {
+                try {
+                    this.pingRelay();
+                } catch (Exception e) {
+                    LOGGER.error("Failed to ping relay: ", e);
+                }
+
+                try {
+                    Thread.sleep(DEFAULT_PING_INTERVAL);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
     }
 
     private void sendLoop() {
@@ -259,6 +300,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         this.connected = true;
 
         this.sendLoop();
+        this.relayPingLoop();
 
 
         if (relayType == WebsocketClientType.CLIENT_TO_RELAY) {
