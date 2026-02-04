@@ -42,7 +42,6 @@ public class StealthWebSocketClient extends WebSocketClient {
     private final URI relayUrl;
     private final String gameId;
     private boolean gotMessages = false;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     private final ReentrantLock writeLock = new ReentrantLock();
 
@@ -77,10 +76,14 @@ public class StealthWebSocketClient extends WebSocketClient {
     }
 
     private void pingRelay() throws Exception {
+
+        HttpClient httpClient = HttpClient.newHttpClient();
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping"))
                 .version(HttpClient.Version.HTTP_1_1)
                 .header("User-Agent", StealthPipe.USER_AGENT)
+                .header("Connection", "close")
                 .GET()
                 .build();
 
