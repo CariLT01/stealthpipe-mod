@@ -2,6 +2,7 @@ package com.stealthpipe.mixin.client;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.stealthpipe.ModState;
+import com.stealthpipe.StealthPipe;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,6 +36,17 @@ public class DebugScreenMixin {
         return String.format("%.2f %s", value, unit);
     }
 
+    @Unique
+    private String getColorFromPing(int ping) {
+        if (ping <= 100) {
+            return "§a";
+        } else if (ping <= 150) {
+            return "§e";
+        } else {
+            return "§c";
+        }
+    }
+
     /*? if >=1.21.9 {*/
     @Inject(
             method = "render",
@@ -61,11 +73,14 @@ public class DebugScreenMixin {
 
         }
 
-        list2.add("-- §aStealthPipe§r --");
+        list2.add("§aStealthPipe " + StealthPipe.config.REAL_MOD_VERSION);
         list2.add("Usage in out: " + formatBytes(ModState.inboundData.get()) + " " + formatBytes(ModState.outboundData.get()));
-        list2.add("Bandwidth in out: " + formatBytes(ModState.inboundBandwidth.get()) + "/s " + formatBytes(ModState.outboundBandwidth.get()) + "/s");
+        list2.add("Data in out: " + formatBytes(ModState.inboundBandwidth.get()) + "/s " + formatBytes(ModState.outboundBandwidth.get()) + "/s");
+        list2.add(
+                String.format("Ping/RTT: %s%s", this.getColorFromPing(ModState.ping.get()), ModState.ping.get() + "ms")
+        );
+
         list2.add("PPS in out: " + ModState.inboundPPSd.get() + "/s " + ModState.outboundPPSd.get() + "/s");
-        list2.add("-- Mod state: --");
         list2.add("Is Client: " + ModState.isClientConnectingToStealthServer.get());
         list2.add("WS Open: " + ModState.webSocketOpen.get());
         list2.add("Game open to LAN: " + ModState.gameOpenToLan.get());

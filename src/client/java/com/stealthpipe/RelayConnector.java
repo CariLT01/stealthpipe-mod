@@ -7,6 +7,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Unique;
@@ -47,10 +48,15 @@ public class RelayConnector {
             try {
 
                 if (i != 0) {
+
+                    int retryDelay = Math.min(30, (int) Math.pow(2, i + 1));
+                    UXHelper.sendStealthPipeSystemMessage(
+                            String.format("Retrying in %s seconds...", (retryDelay))
+                    );
+                    Thread.sleep(retryDelay * 1000L);
                     UXHelper.sendStealthPipeSystemMessage(
                             String.format("Attempt %s...", (i + 1))
                     );
-                    Thread.sleep(2000);
                 }
 
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -142,7 +148,13 @@ public class RelayConnector {
 
         assert !response.body().isEmpty();
 
-        ResponseModel data = GSON.fromJson(response.body(), ResponseModel.class);
+        ResponseModel data;
+        try {
+            data = GSON.fromJson(response.body(), ResponseModel.class);
+        } catch (Exception e) {
+            throw new Exception("Server returned unexpected response: " + response.body());
+        }
+
 
         if (data == null) {
             throw new IllegalArgumentException("Server returned invalid JSON!");
@@ -158,11 +170,15 @@ public class RelayConnector {
 
             assert Minecraft.getInstance().player != null;
 
-            UXHelper.sendStealthPipeSystemMessage(
-                    String.format(
-                            "Join with the mod on another client using: §a%s.stealth.link", gameId
-                    )
-            );
+            UXHelper.sendStealthPipeSystemMessage("Join with the mod on another client using: ");
+            UXHelper.sendSystemMessageComponent(Component.literal(gameId + ".stealth.link").withStyle(style -> style
+                            .withUnderlined(true)
+                            .withColor(ChatFormatting.LIGHT_PURPLE)
+                            .withClickEvent(
+                                    new ClickEvent.CopyToClipboard(gameId + ".stealth.link")
+                            )
+                            .withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy to clipboard")))),
+                    ChatFormatting.WHITE);
 
             UXHelper.sendStealthPipeSystemMessage(
                     "§cStealthPipe is experimental!\n§6Note: you will be disconnected if your room is idle for more than 15 minutes."
@@ -338,13 +354,14 @@ public class RelayConnector {
                 establishConnection(request);
 
             } catch (Exception e) {
-                System.out.printf("An error occurred while trying to create room ID: %s%n", e.toString());
+                System.out.printf("An error occurred while trying to create room ID: %s%n", e.getMessage());
 
-                String stackTrace = StackTraceHelper.getStackTraceAsString(e);
+                Minecraft.getInstance().execute(() -> {
+                    UXHelper.sendStealthPipeSystemMessage(
+                            String.format("§cAn error occurred while trying to create room ID: %s", e.getMessage())
+                    );
+                });
 
-                UXHelper.sendStealthPipeSystemMessage(
-                        String.format("[StealthPipe]: An error occurred while trying to create room ID: %s%n%s", e.toString(), stackTrace)
-                );
             }
         }).start();
     }

@@ -29,6 +29,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
@@ -50,9 +52,22 @@ public class StealthWebSocketClient extends WebSocketClient {
 
     private final AtomicLong lastTick = new AtomicLong(System.nanoTime());
 
+    private final AtomicLong sentBegin = new AtomicLong(System.nanoTime());
+    private final AtomicLong sentEnd = new AtomicLong(System.nanoTime());
+    private final AtomicInteger pingMilliseconds = new AtomicInteger(0);
+
+    // alert time, allow alerting 2 minutes after connection instead of 15 at first alert
+    private final AtomicLong lastAlertTime = new AtomicLong(System.currentTimeMillis() - 13 * 60 * 1000);
+
     private final long BATCHING_INTERVAL = StealthPipe.config.PACKET_BATCHING_INTERVAL_MS * 1_000_000L; // 2 milliseconds
 
     private final int DEFAULT_PING_INTERVAL = 300 * 1000; // 5 minutes
+
+    private final RoundTripTimeMonitor RTTMonitor = new RoundTripTimeMonitor(
+            10,
+            120,
+            50
+    );
 
     public StealthWebSocketClient(URI serverUri, WebsocketClientType clientType, Channel channel, String gameId) {
         super(serverUri, createHeaders());
@@ -327,8 +342,8 @@ public class StealthWebSocketClient extends WebSocketClient {
     private void keepAliveLoop() {
         if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
 
-            String keepAliveString = "keep-alive";
-            byte[] byteArray = keepAliveString.getBytes();
+
+            byte[] data = new byte[] {0x01};
 
             new Thread(() -> {
 
@@ -340,7 +355,23 @@ public class StealthWebSocketClient extends WebSocketClient {
 
                     try {
                         Thread.sleep(1000);
-                        this.send(byteArray);
+                        this.sentBegin.set(System.nanoTime());
+                        this.send(data);
+
+                        // check unstable and send message
+                        if (System.currentTimeMillis() - lastAlertTime.get() > 15 * 60 * 1000) {
+                            // alert if needed
+                            if (this.RTTMonitor.isUnstable()) {
+
+
+                                StealthPipe.CLIENT_PROXY.sendStealthPipeMessage(String.format("§cYour connection might be unstable and cause stuttering for other players. (average: %sms, standard deviation: %sms)",
+                                        (int) this.RTTMonitor.getAverage(),
+                                        (int) this.RTTMonitor.getStdDev()
+                                        ));
+                                lastAlertTime.set(System.currentTimeMillis());
+                            }
+                        }
+
                     } catch (WebsocketNotConnectedException e) {
                         LOGGER.warn("Socket disconnected");
                         break;
@@ -424,7 +455,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         // LOGGER.info("[CLIENT]: Received binary message, length: {}", data.length);
     }
 
-    private void processMessageSignaling(byte[] data) {
+    private void processConnectionRequest(byte[] data) {
         String newString = new String(data, StandardCharsets.UTF_8);
 
         if (!newString.startsWith("REQUESTCONNECTION_")) return;
@@ -446,6 +477,26 @@ public class StealthWebSocketClient extends WebSocketClient {
         ModState.channelToWSClient.put(virtualChannel, newClient);
 
         LOGGER.info("Created new channel to relay");
+    }
+
+    private void processMessageSignaling(byte[] data) {
+        String newString = new String(data, StandardCharsets.UTF_8);
+
+        if (newString.startsWith("REQUESTCONNECTION_")) {
+            this.processConnectionRequest(data);
+        } else if (data.length >= 1 && data[0] == 0x02) {
+            this.sentEnd.set(System.nanoTime());
+
+            // calculate time taken
+            long timeElapsed = this.sentEnd.get() - this.sentBegin.get();
+            int millisecondsElapsed = Math.toIntExact(TimeUnit.NANOSECONDS.toMillis(timeElapsed));
+
+            this.pingMilliseconds.set(millisecondsElapsed);
+
+            // LOGGER.info("Ping to relay is: {}", millisecondsElapsed);
+            ModState.ping.set(millisecondsElapsed);
+            this.RTTMonitor.addSample((double) millisecondsElapsed);
+        }
     }
 
     @Override

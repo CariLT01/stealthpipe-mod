@@ -42,6 +42,8 @@ public class ModState {
     public static AtomicInteger inboundPPSd = new AtomicInteger(0);
     public static AtomicInteger outboundPPSd = new AtomicInteger(0);
 
+    public static AtomicInteger ping = new AtomicInteger(0);
+
     public static AtomicLong lastBandwidthTick = new AtomicLong(0);
 
     public static AtomicReference<String> reuseToken = new AtomicReference<>(null); // Reuse token, allows auto-reconnect and keeping the same room code
@@ -57,5 +59,6 @@ public class ModState {
         gameOpenToLan.set(false);
         webSocketOpen.set(false);
         reuseToken.set(null);
+        ping.set(0);
     }
 }

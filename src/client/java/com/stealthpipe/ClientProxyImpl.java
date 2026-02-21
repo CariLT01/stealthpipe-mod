@@ -14,6 +14,13 @@ public class ClientProxyImpl implements ClientProxy {
     }
 
     @Override
+    public void sendStealthPipeMessage(String message) {
+        Minecraft.getInstance().execute(() -> {
+            UXHelper.sendStealthPipeSystemMessage(message);
+        });
+    }
+
+    @Override
     public void disconnectWithReason(String reason, int delayInMs) {
         // Cursed way to show a disconnect message, please don't copy
         if (delayInMs > 0) {
