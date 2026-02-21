@@ -83,7 +83,6 @@ public class StealthWebSocketClient extends WebSocketClient {
                 .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping"))
                 .version(HttpClient.Version.HTTP_1_1)
                 .header("User-Agent", StealthPipe.USER_AGENT)
-                .header("Connection", "close")
                 .GET()
                 .build();
 

@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Unique;
 
+import java.io.File;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -274,17 +275,35 @@ public class RelayConnector {
                 boolean isAvailable = pingRelay();
 
                 if (!isAvailable) {
+
+                    File logFile = new File(Minecraft.getInstance().gameDirectory, "logs/latest.log");
+
                     LOGGER.error("Could not connect to the relay: pinging failed");
 
                     UXHelper.sendStealthPipeSystemMessage("§cFailed to reach the relay, connection failed");
-                    UXHelper.sendStealthPipeSystemMessage("Alternative relays are available in the mod's description, feel free to try them. And remember, you can always host your own :D You can change the Relay IP in the mod's config menu.");
+                    UXHelper.sendStealthPipeSystemMessage("§r--- §nTroubleshooting§r --");
+                    UXHelper.sendStealthPipeSystemMessage("Please try the following:");
+                    UXHelper.sendStealthPipeSystemMessage(" - Try starting a new session again");
+                    UXHelper.sendStealthPipeSystemMessage(" - Try using a different Java Runtime at a different installation location");
+                    UXHelper.sendStealthPipeSystemMessage(" - Check your antivirus or firewall settings");
+                    UXHelper.sendStealthPipeSystemMessage(" - Try connecting to an alternative relay");
+                    UXHelper.sendStealthPipeSystemMessage(" - Try restarting your computer");
                     UXHelper.sendSystemMessageComponent(
-                            Component.literal("https://github.com/CariLT01/stealthpipe-mod/blob/main/ALTERNATIVE_RELAYS.md")
+                            Component.literal("§a§nOpen Alternative Relays List")
                                     .withStyle(style -> style.withClickEvent(
                                             new ClickEvent.OpenUrl(URI.create("https://github.com/CariLT01/stealthpipe-mod/blob/main/ALTERNATIVE_RELAYS.md"))
                                     )),
                             ChatFormatting.WHITE
                     );
+                    UXHelper.sendStealthPipeSystemMessage("To help us fix the issue, please attach your Minecraft log file (latest.log) when reporting a problem.");
+                    UXHelper.sendSystemMessageComponent(
+                            Component.literal("§a§nOpen latest.log")
+                                    .withStyle(style -> style.withClickEvent(
+                                            new ClickEvent.OpenFile(logFile)
+                                    )),
+                            ChatFormatting.WHITE
+                    );
+
 
                     return;
                 } else {
