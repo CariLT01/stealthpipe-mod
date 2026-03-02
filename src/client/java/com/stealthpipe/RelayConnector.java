@@ -81,7 +81,7 @@ public class RelayConnector {
                 LOGGER.error("An error occurred while trying to reach relay: ", e);
 
                 UXHelper.sendStealthPipeSystemMessage(
-                        "§cFailed to reach relay"
+                        "§cFailed to reach the relay. Check the logs for more info."
                 );
 
             }
@@ -108,7 +108,7 @@ public class RelayConnector {
     @Unique
     private void getRoundTripLatency() {
 
-        try {
+        /* try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping"))
                     .version(HttpClient.Version.HTTP_1_1)
@@ -133,7 +133,7 @@ public class RelayConnector {
 
         } catch (Exception e) {
             LOGGER.error("Failed to measure round-trip latency: ", e);
-        }
+        } */
 
 
     }
@@ -322,10 +322,6 @@ public class RelayConnector {
 
 
                     return;
-                } else {
-                    UXHelper.sendStealthPipeSystemMessage(
-                            "Found connection to reach relay"
-                    );
                 }
 
                 ProofOfWorkChallengeResult powResult = doProofOfWorkChallenge();
@@ -343,9 +339,6 @@ public class RelayConnector {
                         .header("User-Agent", StealthPipe.USER_AGENT)
                         .GET()
                         .build();
-
-
-
 
                 UXHelper.sendStealthPipeSystemMessage(
                         "Creating WebSocket connection..."
