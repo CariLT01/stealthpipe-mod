@@ -42,6 +42,8 @@ public class ModState {
     public static AtomicInteger inboundPPSd = new AtomicInteger(0);
     public static AtomicInteger outboundPPSd = new AtomicInteger(0);
 
+    public static AtomicBoolean isStealthPipeConnection = new AtomicBoolean(false);
+
     public static AtomicInteger ping = new AtomicInteger(0);
 
     public static AtomicLong lastBandwidthTick = new AtomicLong(0);
@@ -60,5 +62,6 @@ public class ModState {
         webSocketOpen.set(false);
         reuseToken.set(null);
         ping.set(0);
+        isStealthPipeConnection.set(false);
     }
 }

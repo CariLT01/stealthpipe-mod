@@ -34,13 +34,17 @@ public abstract class ConnectionMixin {
 
     @Inject(method = "configurePacketHandler", at = @At("RETURN"))
     private void injectRelay(ChannelPipeline pipeline, CallbackInfo ci) {
-        ConnectionHelper.injectInPipeline(pipeline, this.receiving);
+        if (ModState.isStealthPipeConnection.get()) {
+            ConnectionHelper.injectInPipeline(pipeline, this.receiving);
+        }
     }
 
     /*? if =1.21.11 { */
     @Inject(method = "connect", at = @At("HEAD"), cancellable = true)
     private static void injectConnect(InetSocketAddress inetSocketAddress, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
-        ConnectionHelper.connectToRelay(inetSocketAddress, eventLoopGroupHolder.eventLoopGroup().next(), connection, cir);
+        if (ModState.isStealthPipeConnection.get()) {
+            ConnectionHelper.connectToRelay(inetSocketAddress, eventLoopGroupHolder.eventLoopGroup().next(), connection, cir);
+        }
     }
     /*? } else { */
     /*@Inject(method = "connect", at = @At("HEAD"), cancellable = true)

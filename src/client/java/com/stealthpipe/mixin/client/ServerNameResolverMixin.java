@@ -1,5 +1,6 @@
 package com.stealthpipe.mixin.client;
 
+import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
 import com.stealthpipe.StealthPipeConfig;
 import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress;
@@ -18,7 +19,11 @@ public class ServerNameResolverMixin {
 
     @Inject(method = "resolveAddress", at=@At("HEAD"), cancellable = true)
     public void resolveAddress(ServerAddress serverAddress, CallbackInfoReturnable<Optional<ResolvedServerAddress>> cir) {
+        ModState.isStealthPipeConnection.set(false);
+
         if (serverAddress.getHost().endsWith(StealthPipe.config.CONNECTION_SUFFIX)) {
+
+            ModState.isStealthPipeConnection.set(true);
 
             // Make it try to connect to it
             Optional<ResolvedServerAddress> optional = Optional.of(
