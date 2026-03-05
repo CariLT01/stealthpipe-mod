@@ -9,6 +9,9 @@ on: [pull_request, push]
 jobs:
   build:
     runs-on: ubuntu-24.04
+    env:
+      # Increase heap size to 4GB (GitHub Runners have ~7GB total)
+      GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
