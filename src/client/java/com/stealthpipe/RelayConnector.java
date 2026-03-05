@@ -157,7 +157,7 @@ public class RelayConnector {
 
 
         if (data == null) {
-            throw new IllegalArgumentException("Server returned invalid JSON!");
+            throw new IllegalArgumentException("Server returned unexpected response: " + response.body());
         }
 
         if (data.ok) {
@@ -183,6 +183,12 @@ public class RelayConnector {
             UXHelper.sendStealthPipeSystemMessage(
                     "§cStealthPipe is experimental!\n§6Note: you will be disconnected if your room is idle for more than 15 minutes."
             );
+
+            if (Objects.equals(gameId, "676767")) {
+                UXHelper.sendStealthPipeSystemMessage(
+                        "§cWarning: §6Room privacy cannot be guaranteed for this session, and you will lose this room code if your internet connection disconnects. Restart the session to fix this."
+                );
+            }
 
 
             ModState.gameId.set(gameId);
