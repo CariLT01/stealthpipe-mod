@@ -20,7 +20,7 @@ public class StealthPipeConfig {
     public String CONNECTION_SUFFIX = ".stealth.link";
     public String MOD_VERSION = "4.0.0";
     public String PROTOCOL_VERSION = "5";
-    public String REAL_MOD_VERSION = "5.1.3";
+    public String REAL_MOD_VERSION = "5.1.4";
 
     public boolean ENABLE_BATCHED_PACKETS = DefaultConfigValues.ENABLE_BATCHED_PACKETS;
     public int PACKET_BATCHING_INTERVAL_MS = DefaultConfigValues.PACKET_BATCHING_INTERVAL_MS;

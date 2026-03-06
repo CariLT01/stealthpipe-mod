@@ -191,6 +191,8 @@ public class RelayConnector {
             }
 
 
+            DistanceWarner.warnDistance();
+
             ModState.gameId.set(gameId);
 
             WebSocketHelper.connectToServer();
