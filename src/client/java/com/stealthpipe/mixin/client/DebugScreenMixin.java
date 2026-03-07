@@ -73,7 +73,7 @@ public class DebugScreenMixin {
 
         }
 
-        list2.add("§aStealthPipe " + StealthPipe.config.REAL_MOD_VERSION);
+        list2.add("§aStealthPipe " + StealthPipe.REAL_MOD_VERSION);
         list2.add("Usage in out: " + formatBytes(ModState.inboundData.get()) + " " + formatBytes(ModState.outboundData.get()));
         list2.add("Data in out: " + formatBytes(ModState.inboundBandwidth.get()) + "/s " + formatBytes(ModState.outboundBandwidth.get()) + "/s");
         list2.add(

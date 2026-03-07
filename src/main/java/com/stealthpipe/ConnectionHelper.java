@@ -21,11 +21,11 @@ public class ConnectionHelper {
 
         String host = inetSocketAddress.getHostString();
 
-        if (host.endsWith(StealthPipe.config.CONNECTION_SUFFIX)) {
+        if (host.endsWith(StealthPipe.CONNECTION_SUFFIX)) {
 
             // Connect to relay
 
-            String gameId = host.substring(0, host.length() - StealthPipe.config.CONNECTION_SUFFIX.length());
+            String gameId = host.substring(0, host.length() - StealthPipe.CONNECTION_SUFFIX.length());
 
             ModState.isClientConnectingToStealthServer.set(true);
 
@@ -96,7 +96,7 @@ public class ConnectionHelper {
 
         LOGGER.info("Connect to stealth relay");
 
-        StealthWebSocketClient wsClient = new StealthWebSocketClient(URI.create(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&version=" + StealthPipe.config.MOD_VERSION),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
+        StealthWebSocketClient wsClient = new StealthWebSocketClient(URI.create(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&version=" + StealthPipe.MOD_VERSION),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
         wsClient.connect();
 
 

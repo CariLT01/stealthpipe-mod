@@ -35,7 +35,7 @@ public class RelayConnector {
         UXHelper.sendStealthPipeSystemMessage("Connecting to the relay...");
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping?version=" + StealthPipe.config.MOD_VERSION))
+                .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping?version=" + StealthPipe.MOD_VERSION))
                 .version(HttpClient.Version.HTTP_1_1)
                 .header("User-Agent", StealthPipe.USER_AGENT)
                 .GET()

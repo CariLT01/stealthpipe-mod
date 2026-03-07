@@ -21,7 +21,7 @@ public class ServerNameResolverMixin {
     public void resolveAddress(ServerAddress serverAddress, CallbackInfoReturnable<Optional<ResolvedServerAddress>> cir) {
         ModState.isStealthPipeConnection.set(false);
 
-        if (serverAddress.getHost().endsWith(StealthPipe.config.CONNECTION_SUFFIX)) {
+        if (serverAddress.getHost().endsWith(StealthPipe.CONNECTION_SUFFIX)) {
 
             ModState.isStealthPipeConnection.set(true);
 
