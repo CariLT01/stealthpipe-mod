@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class WebRTCClient {
@@ -31,6 +32,9 @@ public class WebRTCClient {
 
     private Consumer<byte[]> onMessageHook;
 
+    private final CompletableFuture<Void> offerFuture = new CompletableFuture<>();
+    private final CompletableFuture<Void> answerFuture = new CompletableFuture<>();
+
     public WebRTCClient(Consumer<byte[]> onMessage) {
         this.clientId = (byte) (Math.random() * 255);
         this.onMessageHook = onMessage;
@@ -44,12 +48,14 @@ public class WebRTCClient {
             String sdp = (String) ((Map) signal.get("data")).get("sdp");
             peerConnection.setRemoteDescription(new RTCSessionDescription(RTCSdpType.ANSWER, sdp), new SetSessionDescriptionObserver() {
                 @Override public void onSuccess() {
+                    answerFuture.complete(null);
                     LOGGER.info("WebRTC success");
                 }
 
                 @Override
                 public void onFailure(String s) {
                     LOGGER.error("WebRTC connection failed: {}", s);
+                    answerFuture.completeExceptionally(new RuntimeException("Failed to set remote description: "+ s));
                 }
             });
         } else if ("candidate".equals(type)) {
@@ -92,7 +98,7 @@ public class WebRTCClient {
 
         byte clientId = (byte)(Math.random() * 255);
 
-        RTCPeerConnection peerConnection = factory.createPeerConnection(config, new PeerConnectionObserver() {
+        peerConnection = factory.createPeerConnection(config, new PeerConnectionObserver() {
             @Override
             public void onIceCandidate(RTCIceCandidate candidate) {
                 sendToSignaling("candidate", Map.of(
@@ -103,6 +109,12 @@ public class WebRTCClient {
 
             }
         });
+
+        startCall();
+        offerFuture.join();
+        answerFuture.join();
+        setupDataChannel();
+
     }
 
     private byte[] prepareSignalingMessage(String message) {
@@ -134,11 +146,13 @@ public class WebRTCClient {
                     public void onSuccess() {
                         // Send the SDP Offer to the Go server
                         sendToSignaling("offer", Map.of("sdp", description.sdp));
+                        offerFuture.complete(null);
                     }
 
                     @Override
                     public void onFailure(String s) {
                         LOGGER.error("WebRTC set failed: {}", s);
+                        offerFuture.completeExceptionally(new RuntimeException(String.format("Failed to set local description: %s", s)));
                     }
                 });
             }
@@ -146,6 +160,7 @@ public class WebRTCClient {
             @Override
             public void onFailure(String s) {
                 LOGGER.error("WebRTC create failed: {}", s);
+                offerFuture.completeExceptionally(new RuntimeException("Failed to create offer: "+ s));
             }
         });
     }
