@@ -419,6 +419,7 @@ public class WebRTCClient {
         } catch (Exception e) {
             LOGGER.error("ReadyFuture failed: ", e);
             this.connectionFailed.set(true);
+            throw new RuntimeException("Host did not report status READY, timed out waiting for READY status");
         }
 
 

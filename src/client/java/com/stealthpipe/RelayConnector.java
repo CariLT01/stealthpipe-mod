@@ -181,7 +181,7 @@ public class RelayConnector {
                     ChatFormatting.WHITE);
 
             UXHelper.sendStealthPipeSystemMessage(
-                    "§cCaution: You are running the latest experimental build of StealthPipe (v6.0.0-alpha.1-WebRTC) that aims to add WebRTC support for fast, direct, peer-to-peer connection when possible. Connections are made to the staging relay instead of production. Expect bugs, issues, and glitches!\nDownload a stable build (version 5 and under) for a smoother experience. Version 6 clients are not compatible with version 5 clients.\n§6Note: you will be disconnected if your room is idle for more than 15 minutes."
+                    "§cCaution: You are running the latest experimental build of StealthPipe (v6.0.0-alpha.1-WebRTC). Expect bugs, issues, and glitches!\n§8Download a stable build (version 5 and under) for a smoother experience. Version 6 clients are not compatible with version 5 clients.\n§6Note: you will be disconnected if your room is idle for more than 15 minutes."
             );
 
             if (Objects.equals(gameId, "676767")) {
