@@ -53,26 +53,56 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
         if (isClient) {
             // Send it to server
-            StealthWebSocketClient relayClient = ModState.relayClient.get();
+            if (ModState.usingWebRTC.get()) {
+                WebRTCClient rtcClient = ModState.relayRTCClient.get();
+                if (rtcClient == null) {
+                    LOGGER.warn("dropped packet. no RTC client found");
+                    return false;
+                }
+                try {
+                    rtcClient.send(bytes);
+                    return true;
+                } catch (Exception e) {
+                    LOGGER.error("packet dropped. WebRTC send failed:", e);
+                    return false;
+                }
 
-            if (relayClient == null) {
-                LOGGER.warn("No WS client found");
-                return false;
+            } else {
+                StealthWebSocketClient relayClient = ModState.relayClient.get();
+
+                if (relayClient == null) {
+                    LOGGER.warn("No WS client found");
+                    return false;
+                }
+
+                relayClient.send(bytes);
+
+                // LOGGER.info("Forwarding {} bytes to the relay as a client", bytes.length);
+
+                return true;
             }
 
-            relayClient.send(bytes);
-
-            // LOGGER.info("Forwarding {} bytes to the relay as a client", bytes.length);
-
-            return true;
 
         } else {
             // Send it to the client
 
             StealthWebSocketClient wsClient = ModState.channelToWSClient.get(destination);
             if (wsClient == null) {
-                // LOGGER.error("No WS! Cannot forward");
-                return false;
+                // try webRTC
+
+                WebRTCClient rtcClient = ModState.channelToRTCClient.get(destination);
+                if (rtcClient == null) {
+                    LOGGER.error("Cannot find RTC connection or WS connection to forward (debug error)");
+                    return false;
+                    // cannot forward, probably a LAN person
+                }
+                try {
+                    rtcClient.send(bytes);
+                    return true;
+                } catch (Exception e) {
+                    LOGGER.error("packet dropped. send failed:", e);
+                    return false;
+                }
             }
 
             wsClient.send(bytes);

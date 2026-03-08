@@ -15,6 +15,8 @@ public class ModState {
 
     public static AtomicBoolean gameOpenToLan = new AtomicBoolean(false);
     public static AtomicReference<StealthWebSocketClient> relayClient = new AtomicReference<>(null);
+    public static AtomicReference<WebRTCClient> relayRTCClient = new AtomicReference<>(null);
+    public static AtomicBoolean usingWebRTC = new AtomicBoolean(false);
     public static AtomicReference<String> gameId = new AtomicReference<>("");
     public static AtomicBoolean webSocketOpen = new AtomicBoolean(false);
 
@@ -23,6 +25,7 @@ public class ModState {
     public static AtomicReference<MinecraftServer> minecraftServer = new AtomicReference<>(null);
 
     public static ConcurrentHashMap<Channel, StealthWebSocketClient> channelToWSClient = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Channel, WebRTCClient> channelToRTCClient = new ConcurrentHashMap<>();
 
     // Allows client executor to be accessible in common code
     public static AtomicReference<Executor> clientThreadExecutor = new AtomicReference<>(null);
@@ -49,10 +52,6 @@ public class ModState {
     public static AtomicLong lastBandwidthTick = new AtomicLong(0);
 
     public static AtomicReference<String> reuseToken = new AtomicReference<>(null); // Reuse token, allows auto-reconnect and keeping the same room code
-
-
-
-    public static AtomicReference<Connection> clientConnectionInstance = new AtomicReference<>(null);
 
     public static void resetState() {
         outboundData.set(0);

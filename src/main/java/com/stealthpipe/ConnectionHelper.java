@@ -2,6 +2,7 @@ package com.stealthpipe;
 
 import com.stealthpipe.mixin.ConnectionChannelAccessor;
 import dev.onvoid.webrtc.*;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.network.Connection;
@@ -104,11 +105,30 @@ public class ConnectionHelper {
 
         LOGGER.info("Connect to stealth relay");
 
-        StealthWebSocketClient wsClient = new StealthWebSocketClient(URI.create(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&version=" + StealthPipe.MOD_VERSION),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
-        wsClient.connect();
+        try {
+            WebRTCClient rtcClient = new WebRTCClient((byte[] msg) -> {
+                ModState.clientThreadExecutor.get().execute(() -> {
+                    gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(msg));
+                });
+            });
 
+            rtcClient.tryEstablishRTC(gameId);
 
-        ModState.relayClient.set(wsClient);
+            ModState.relayRTCClient.set(rtcClient);
+            ModState.usingWebRTC.set(true);
+            LOGGER.info("Successfully established a direct WebRTC connection");
+        } catch (Exception e) {
+            LOGGER.error("Failed to establish direct P2P WebRTC, falling back to WSS-relay based", e);
+
+            StealthWebSocketClient wsClient = new StealthWebSocketClient(URI.create(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&version=" + StealthPipe.MOD_VERSION),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
+            wsClient.connect();
+
+            ModState.relayClient.set(wsClient);
+            ModState.usingWebRTC.set(false);
+
+            LOGGER.info("Established a WebSocket relay based connection");
+        }
+
     }
 
     public static void injectInPipeline(ChannelPipeline pipeline, PacketFlow receiving) {

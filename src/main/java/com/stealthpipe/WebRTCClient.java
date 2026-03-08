@@ -13,49 +13,97 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class WebRTCClient {
 
     private final Gson gson = new Gson();
-    private PeerConnectionFactory factory;
+    private final PeerConnectionFactory factory = new PeerConnectionFactory();
     private RTCPeerConnection peerConnection;
     private StealthWebSocketClient signalingClient;
     private RTCDataChannel dataChannel;
 
     private final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
-    private final byte clientId;
+    private byte clientId;
 
     private final List<byte[]> queuedPackets = new ArrayList<>();
     private boolean open = false;
 
     private Consumer<byte[]> onMessageHook;
 
-    private final CompletableFuture<Void> offerFuture = new CompletableFuture<>();
-    private final CompletableFuture<Void> answerFuture = new CompletableFuture<>();
+    private final CompletableFuture<Void> connectionFuture = new CompletableFuture<>();
 
     public WebRTCClient(Consumer<byte[]> onMessage) {
         this.clientId = (byte) (Math.random() * 255);
         this.onMessageHook = onMessage;
     }
 
+    private void registerDataChannelObserver(RTCDataChannel channel) {
+        this.dataChannel = channel;
+        channel.registerObserver(new RTCDataChannelObserver() {
+            @Override
+            public void onBufferedAmountChange(long l) {}
+
+            @Override
+            public void onStateChange() {
+                LOGGER.info("WebRTC DataChannel State: {}", channel.getState());
+                if (channel.getState() == RTCDataChannelState.OPEN) {
+                    open = true;
+                    connectionFuture.complete(null);
+                    for (byte[] packet : queuedPackets) {
+                        try { onSendPacketInternal(packet); } catch (Exception e) { LOGGER.error("Queue flush failed", e); }
+                    }
+                    queuedPackets.clear();
+                }
+            }
+
+            @Override
+            public void onMessage(RTCDataChannelBuffer buffer) {
+                byte[] data = new byte[buffer.data.remaining()];
+                buffer.data.get(data);
+                onMessageRTC(data);
+            }
+        });
+    }
+
     private void handleSignalMessageStr(String message) {
         Map<String, Object> signal = gson.fromJson(message, Map.class);
         String type = (String) signal.get("type");
 
-        if ("answer".equals(type)) {
+        /* giant nesting */
+        if ("offer".equals(type)) {
+            String sdp = (String) ((Map) signal.get("data")).get("sdp");
+            peerConnection.setRemoteDescription(new RTCSessionDescription(RTCSdpType.OFFER, sdp), new SetSessionDescriptionObserver() {
+                @Override public void onSuccess() {
+                    RTCAnswerOptions options = new RTCAnswerOptions();
+                    peerConnection.createAnswer(options, new CreateSessionDescriptionObserver() {
+                        @Override public void onSuccess(RTCSessionDescription description) {
+                            peerConnection.setLocalDescription(description, new SetSessionDescriptionObserver() {
+                                @Override public void onSuccess() {
+                                    sendToSignaling("answer", Map.of("sdp", description.sdp));
+                                }
+                                @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
+                            });
+                        }
+                        @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
+                    });
+                }
+                @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
+            });
+        }
+        else if ("answer".equals(type)) {
             String sdp = (String) ((Map) signal.get("data")).get("sdp");
             peerConnection.setRemoteDescription(new RTCSessionDescription(RTCSdpType.ANSWER, sdp), new SetSessionDescriptionObserver() {
                 @Override public void onSuccess() {
-                    answerFuture.complete(null);
                     LOGGER.info("WebRTC success");
                 }
 
                 @Override
                 public void onFailure(String s) {
                     LOGGER.error("WebRTC connection failed: {}", s);
-                    answerFuture.completeExceptionally(new RuntimeException("Failed to set remote description: "+ s));
+                    connectionFuture.completeExceptionally(new RuntimeException("Failed to set remote description: "+ s));
                 }
             });
         } else if ("candidate".equals(type)) {
@@ -71,8 +119,12 @@ public class WebRTCClient {
     }
 
     private void handleSignalMessage(byte[] message) {
+        if (message.length < 2) {
+            LOGGER.warn("ignore message length < 2");
+            return;
+        }
         byte messageType = message[0];
-        byte[] messageContents = Arrays.copyOfRange(message, 1, message.length);
+        byte[] messageContents = Arrays.copyOfRange(message, 2, message.length);
         String messageStr = new String(messageContents, StandardCharsets.UTF_8);
         LOGGER.info("WebRTC received signaling message: {}", messageStr);
 
@@ -80,23 +132,28 @@ public class WebRTCClient {
 
     }
 
-    public void tryEstablishRTC(String gameId) throws Exception {
-        signalingClient = new StealthWebSocketClient(URI.create(
-                StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&signal=true&version=" + StealthPipe.MOD_VERSION),
-                WebsocketClientType.CLIENT_SIGNALING, gameId);
 
-        signalingClient.connect();
+    public void tryEstablishRTCHost(StealthWebSocketClient signalingClient, byte otherClientID) throws Exception {
+        LOGGER.info("Trying to establish RTC connection as a host");
 
-        signalingClient.hookOnMessage(this::handleSignalMessage);
+        this.clientId = otherClientID;
+        this.signalingClient = signalingClient;
+        this.hookMessage();
+        this.createRTC(false);
+    }
+
+    private void createRTC(boolean isOfferer) {
+
+        LOGGER.info("Creating RTC connection...");
+
+
 
         RTCConfiguration config = new RTCConfiguration();
         RTCIceServer stunServer = new RTCIceServer();
         stunServer.urls.add("stun:stun.l.google.com:19302");
         config.iceServers.add(stunServer);
 
-        PeerConnectionFactory factory = new PeerConnectionFactory();
 
-        byte clientId = (byte)(Math.random() * 255);
 
         peerConnection = factory.createPeerConnection(config, new PeerConnectionObserver() {
             @Override
@@ -108,12 +165,51 @@ public class WebRTCClient {
                 ));
 
             }
+            @Override
+            public void onDataChannel(RTCDataChannel remoteChannel) {
+                LOGGER.info("Host received remote DataChannel: {}", remoteChannel.getLabel());
+                registerDataChannelObserver(remoteChannel);
+            }
         });
 
-        startCall();
-        offerFuture.join();
-        answerFuture.join();
-        setupDataChannel();
+        if (isOfferer) {
+            RTCDataChannelInit init = new RTCDataChannelInit();
+            RTCDataChannel localChannel = peerConnection.createDataChannel("main", init);
+            registerDataChannelObserver(localChannel);
+            startCall();
+        }
+    }
+
+    private void hookMessage() {
+        signalingClient.hookOnMessage(this::handleSignalMessage);
+    }
+
+    public void tryEstablishRTC(String gameId) throws Exception {
+        signalingClient = new StealthWebSocketClient(URI.create(
+                StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&signal=true&version=" + StealthPipe.MOD_VERSION),
+                WebsocketClientType.CLIENT_SIGNALING, gameId);
+
+        signalingClient.connect();
+        CompletableFuture<Void> readyFuture = new CompletableFuture<>();
+        signalingClient.hookOnMessage((byte[] data) -> {
+            if (data[0] == SignalingMessageType.WebRTC_ConnectionReady.getPacketType()) {
+                LOGGER.info("Other side reported RTC negotiation start ready status");
+                readyFuture.complete(null);
+            }
+        });
+
+        this.createRTC(true);
+
+        byte[] message = {(byte) SignalingMessageType.WebRTC_RequestConnection.getPacketType(), clientId};
+        this.hookMessage();
+        signalingClient.send(message);
+
+        try {
+            connectionFuture.get(30, TimeUnit.SECONDS);
+            LOGGER.info("WebRTC Connection Success");
+        } catch (Exception e) {
+            throw new RuntimeException("WebRTC connection failed or timed out");
+        }
 
     }
 
@@ -146,13 +242,12 @@ public class WebRTCClient {
                     public void onSuccess() {
                         // Send the SDP Offer to the Go server
                         sendToSignaling("offer", Map.of("sdp", description.sdp));
-                        offerFuture.complete(null);
                     }
 
                     @Override
                     public void onFailure(String s) {
                         LOGGER.error("WebRTC set failed: {}", s);
-                        offerFuture.completeExceptionally(new RuntimeException(String.format("Failed to set local description: %s", s)));
+                        connectionFuture.completeExceptionally(new RuntimeException(String.format("Failed to set local description: %s", s)));
                     }
                 });
             }
@@ -160,7 +255,7 @@ public class WebRTCClient {
             @Override
             public void onFailure(String s) {
                 LOGGER.error("WebRTC create failed: {}", s);
-                offerFuture.completeExceptionally(new RuntimeException("Failed to create offer: "+ s));
+                connectionFuture.completeExceptionally(new RuntimeException("Failed to create offer: "+ s));
             }
         });
     }
@@ -169,45 +264,7 @@ public class WebRTCClient {
         LOGGER.info("WebRTC pipe received {} bytes of data", data.length);
     }
 
-    private void setupDataChannel() {
-        RTCDataChannelInit init = new RTCDataChannelInit();
-        dataChannel = peerConnection.createDataChannel("main", init);
 
-        dataChannel.registerObserver(new RTCDataChannelObserver() {
-            @Override
-            public void onBufferedAmountChange(long l) {
-                LOGGER.info("WebRTC buffered amount changed: {}", l);
-            }
-
-            @Override
-            public void onStateChange() {
-                LOGGER.info("WebRTC connection state changed: {}", dataChannel.getState());
-
-                if (dataChannel.getState() == RTCDataChannelState.OPEN) {
-                    open = true;
-
-                    for (byte[] packet : queuedPackets) {
-                        try {
-                            onSendPacketInternal(packet);
-                        } catch (Exception e) {
-                            LOGGER.error("webrtc emit packet queued failed:", e);
-                        }
-
-                    }
-                    queuedPackets.clear();
-                }
-            }
-
-            @Override
-            public void onMessage(RTCDataChannelBuffer buffer) {
-                byte[] data = new byte[buffer.data.remaining()];
-                buffer.data.get(data);
-
-                onMessageRTC(data);
-            }
-        });
-
-    }
     private void onSendPacketInternal(byte[] data) throws Exception {
         ByteBuffer buffer = ByteBuffer.wrap(data);
         dataChannel.send(new RTCDataChannelBuffer(buffer, true));

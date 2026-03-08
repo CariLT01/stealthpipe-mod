@@ -1,10 +1,13 @@
 package com.stealthpipe;
 
 public enum SignalingMessageType {
-    PING(1),
-    PONG(2),
-    WebRTC_HandshakeMessage(3),
-    WebRTC_ConnectionEstablished(4);
+    PING(0),
+    PONG(1),
+    WebRTC_HandshakeMessage(2),
+    WebRTC_ConnectionEstablished(3),
+    WebRTC_RequestConnection(4),
+    WebRTC_ConnectionFailed(5),
+    WebRTC_ConnectionReady(6);
 
     private final int signalingPacketType;
 

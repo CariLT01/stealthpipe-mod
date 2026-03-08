@@ -64,7 +64,7 @@ public class StealthWebSocketClient extends WebSocketClient {
 
     private final int DEFAULT_PING_INTERVAL = 300 * 1000; // 5 minutes
 
-    private Consumer<byte[]> hookedEvent = null;
+    private List<Consumer<byte[]>> hookedEvents = new ArrayList<>();
 
     private final RoundTripTimeMonitor RTTMonitor = new RoundTripTimeMonitor(
             10,
@@ -104,13 +104,13 @@ public class StealthWebSocketClient extends WebSocketClient {
             throw new IllegalArgumentException("Must be relay signaling");
         }
 
-        this.relayType = WebsocketClientType.RELAY_SIGNALING;
+        this.relayType = type;
         this.relayUrl = serverUri;
         this.gameId = gameId;
     }
 
     public void hookOnMessage(Consumer<byte[]> func) {
-        this.hookedEvent = func;
+        this.hookedEvents.add(func);
     }
 
     private void pingRelay() throws Exception {
@@ -319,6 +319,8 @@ public class StealthWebSocketClient extends WebSocketClient {
     public void onOpen(ServerHandshake handshakeData) {
         // Logic for when the HTTP Upgrade succeeds
 
+        LOGGER.info("WSS Connected successfully");
+
         LOGGER.info("Disabling Nagle's algorithm");
         setTcpNoDelay(true);
 
@@ -333,15 +335,22 @@ public class StealthWebSocketClient extends WebSocketClient {
             ModState.webSocketOpen.set(true);
         }
 
-        if (relayType == WebsocketClientType.CLIENT_TO_RELAY || relayType == WebsocketClientType.SERVER_TO_RELAY) {
-            //this.writeLock.lock();
-            //this.send(packet);
-            //this.writeLock.unlock();
+        if (relayType == WebsocketClientType.SERVER_TO_RELAY || relayType == WebsocketClientType.CLIENT_TO_RELAY) {
             for (byte[] packet : this.queuedPackets) {
+                LOGGER.info("Sending queued packet");
                 this.sendPacket(packet);
             }
             queuedPackets.clear();
+        } else {
+            for (byte[] packet : this.queuedPackets) {
+                LOGGER.info("Sending queued packet");
+                this.send(packet);
+            }
+            queuedPackets.clear();
         }
+
+
+
 
         this.keepAliveLoop();
 
@@ -352,7 +361,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
 
 
-            byte[] data = new byte[] {0x01};
+            byte[] data = new byte[] {(byte) SignalingMessageType.PING.getPacketType()};
 
             new Thread(() -> {
 
@@ -464,19 +473,23 @@ public class StealthWebSocketClient extends WebSocketClient {
         // LOGGER.info("[CLIENT]: Received binary message, length: {}", data.length);
     }
 
-    private void processConnectionRequest(byte[] data) {
-        String newString = new String(data, StandardCharsets.UTF_8);
-
-        if (!newString.startsWith("REQUESTCONNECTION_")) return;
-
-        // We need to create a fake channel
-
+    private Channel createVirtualChannel() {
         MinecraftServer server = ModState.minecraftServer.get();
 
         EmbeddedChannel virtualChannel = new EmbeddedChannel();
         ServerConnectionListener listener = server.getConnection();
 
         ((IConnectionInjector) listener).injectVirtualConnection(virtualChannel);
+
+        return virtualChannel;
+    }
+
+    private void processRequestConnectionRequest(byte[] data) {
+        // We need to create a fake channel
+
+        String newString = new String(data, StandardCharsets.UTF_8);
+
+        Channel virtualChannel = this.createVirtualChannel();
 
         String url = String.format(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=%s&host=true&request=%s&version=%s", this.gameId, newString, StealthPipe.MOD_VERSION);
 
@@ -488,12 +501,58 @@ public class StealthWebSocketClient extends WebSocketClient {
         LOGGER.info("Created new channel to relay");
     }
 
-    private void processMessageSignaling(byte[] data) {
+    private byte[] prepareSignalingMessage(byte clientId, byte messageType, byte[] message) {
+        byte[] newArray = new byte[message.length + 2];
+        newArray[0] = messageType;
+        newArray[1] = clientId;
+        System.arraycopy(message, 0, newArray, 2, message.length);
+
+        return newArray;
+    }
+
+    private void processWebRTCRequestConnectionRequest(byte[] data) {
+        LOGGER.info("Received a WebRTC Request Connection signal");
+
+        byte clientId = data[1];
+        Channel virtualChannel = this.createVirtualChannel();
+
+        WebRTCClient rtcClient = new WebRTCClient((byte[] message) -> {
+            // todo: fire in server thread
+           virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(message));
+        });
+
+        try {
+            rtcClient.tryEstablishRTCHost(this, clientId);
+        } catch (Exception e) {
+            LOGGER.error("RTC connection failed to establish");
+            this.send(this.prepareSignalingMessage(clientId, (byte)SignalingMessageType.WebRTC_ConnectionFailed.getPacketType(), new byte[0]));
+        }
+
+
+
+    }
+
+    private void processConnectionRequest(byte[] data) {
         String newString = new String(data, StandardCharsets.UTF_8);
 
         if (newString.startsWith("REQUESTCONNECTION_")) {
-            this.processConnectionRequest(data);
-        } else if (data.length >= 1 && data[0] == 0x02) {
+            processRequestConnectionRequest(data);
+        } else {
+            byte messageType = data[0];
+            if (messageType == (byte)SignalingMessageType.WebRTC_RequestConnection.getPacketType()) {
+                this.processWebRTCRequestConnectionRequest(data);
+            } else {
+                LOGGER.warn("Unknown message type: {}", messageType);
+            }
+        }
+
+
+    }
+
+    private void processMessageSignaling(byte[] data) {
+        String newString = new String(data, StandardCharsets.UTF_8);
+
+         if (data.length >= 1 && data[0] == SignalingMessageType.PONG.getPacketType()) {
             this.sentEnd.set(System.nanoTime());
 
             // calculate time taken
@@ -505,7 +564,9 @@ public class StealthWebSocketClient extends WebSocketClient {
             // LOGGER.info("Ping to relay is: {}", millisecondsElapsed);
             ModState.ping.set(millisecondsElapsed);
             this.RTTMonitor.addSample((double) millisecondsElapsed);
-        }
+        } else {
+             processConnectionRequest(data);
+         }
     }
 
     @Override
@@ -517,6 +578,11 @@ public class StealthWebSocketClient extends WebSocketClient {
 
         byte[] data = new byte[byteBuf.remaining()];
         byteBuf.get(data);
+
+        for (Consumer<byte[]> event : this.hookedEvents) {
+            LOGGER.info("sending data to consumer");
+            event.accept(data);
+        }
 
         ModState.inboundData.getAndAdd(data.length);
         ModState.inboundBandwidthCounter.getAndAdd(data.length);
@@ -546,9 +612,7 @@ public class StealthWebSocketClient extends WebSocketClient {
             this.processMessageSignaling(data);
         }
 
-        if (this.hookedEvent != null) {
-            this.hookedEvent.accept(data);
-        }
+
 
 
     }
@@ -556,8 +620,6 @@ public class StealthWebSocketClient extends WebSocketClient {
     @Override
     public void onMessage(String message) {
         // You can leave this empty if you don't expect text
-
-
 
         LOGGER.warn("Received string message: {}", message);
     }
