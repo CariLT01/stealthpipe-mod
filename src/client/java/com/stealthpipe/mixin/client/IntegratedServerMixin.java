@@ -47,12 +47,13 @@ public class IntegratedServerMixin {
             if(ModState.relayClient.get() != null) {
                 ModState.relayClient.get().close();
             }
-            for (Map.Entry<Channel, WebRTCClient> entry : ModState.channelToRTCClient.entrySet()) {
-                LOGGER.info("Disconnected RTC Connection");
-                entry.getValue().disconnect();
-            }
-            LOGGER.info("Detected integrated server closed");
         }
+
+        for (Map.Entry<Channel, WebRTCClient> entry : ModState.channelToRTCClient.entrySet()) {
+            LOGGER.info("Disconnected RTC Connection");
+            entry.getValue().disconnect();
+        }
+        LOGGER.info("Detected integrated server closed");
 
         ModState.channelToWSClient.clear();
         ModState.channelToRTCClient.clear();

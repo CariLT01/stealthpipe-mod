@@ -2,6 +2,8 @@ package com.stealthpipe;
 
 import com.google.gson.Gson;
 import dev.onvoid.webrtc.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,12 +11,13 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 public class WebRTCClient {
@@ -25,9 +28,11 @@ public class WebRTCClient {
     private StealthWebSocketClient signalingClient;
     private RTCDataChannel dataChannel;
 
-    private final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     private byte clientId;
+
+    private final long BATCHING_INTERVAL = StealthPipe.config.PACKET_BATCHING_INTERVAL_MS * 1_000_000L; // 2 milliseconds
 
     private boolean isHost = false;
 
@@ -35,12 +40,159 @@ public class WebRTCClient {
     private boolean open = false;
 
     private Consumer<byte[]> onMessageHook;
+    private Consumer<WebRTCClient> onClosed;
+    private final AtomicBoolean loopStarted = new AtomicBoolean(false);
+
+    private final AtomicBoolean connectionFailed = new AtomicBoolean(false);
 
     private final CompletableFuture<Void> connectionFuture = new CompletableFuture<>();
 
-    public WebRTCClient(Consumer<byte[]> onMessage) {
+    public boolean gotMessages = false;
+    private ReentrantLock writeLock = new ReentrantLock();
+
+    private Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
+
+    public WebRTCClient(Consumer<byte[]> onMessage, Consumer<WebRTCClient> onClosed) {
         this.clientId = (byte) (Math.random() * 255);
         this.onMessageHook = onMessage;
+        this.onClosed = onClosed;
+    }
+
+    private void sendQueuedSendPacketsBatched() {
+        int PACKET_SIZE_LIMIT = 2 * 1024 * 1024; // 2MB
+
+        while (!this.queuedSendPackets.isEmpty()) {
+            // Create a composite buffer to hold the entire batch
+            CompositeByteBuf batchBuffer = Unpooled.compositeBuffer();
+
+            try {
+                while (!this.queuedSendPackets.isEmpty()) {
+                    byte[] packet = this.queuedSendPackets.peek();
+                    if (packet == null) break;
+
+                    // Check for size limit: (existing buffer + 4 byte header + packet length)
+                    if (batchBuffer.readableBytes() + packet.length + 4 > PACKET_SIZE_LIMIT) {
+                        if (batchBuffer.readableBytes() > 0) break;
+                        // If single packet > limit, we let it through once so it doesn't clog
+                    }
+
+                    // Remove from queue now that we're committed
+                    this.queuedSendPackets.poll();
+
+                    // 1. Create a 4-byte buffer for the length header
+                    ByteBuf header = Unpooled.copyInt(packet.length);
+                    // 2. Wrap the existing packet array (no copy!)
+                    ByteBuf body = Unpooled.wrappedBuffer(packet);
+
+                    // Add to composite (true = advance writer index)
+                    batchBuffer.addComponents(true, header, body);
+                }
+
+                if (batchBuffer.readableBytes() > 0) {
+                    // Flatten once for the WebSocket send
+                    byte[] flatBatch = new byte[batchBuffer.readableBytes()];
+                    batchBuffer.readBytes(flatBatch);
+
+                    this.writeLock.lock();
+                    try {
+                        ModState.outboundPPSCounter.getAndAdd(1);
+                        this.send(flatBatch);
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to send", e);
+                    }
+                    finally {
+                        this.writeLock.unlock();
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("Batching error: ", e);
+                this.queuedSendPackets.clear();
+            } finally {
+                batchBuffer.release(); // Free memory
+            }
+        }
+    }
+
+    public static List<byte[]> unpackPacket(byte[] packedData) {
+        List<byte[]> packets = new ArrayList<>();
+        ByteBuffer buffer = ByteBuffer.wrap(packedData);
+
+        while (buffer.remaining() >= 4) {
+            int packetLength = buffer.getInt();
+
+            if (packetLength < 0 || packetLength > buffer.remaining()) {
+                LOGGER.error("Failed to parse packet batch: invalid packet length");
+                break;
+            }
+
+            byte[] packetData = new byte[packetLength];
+            buffer.get(packetData);
+
+            packets.add(packetData);
+        }
+
+        return packets;
+    }
+
+    private void sendQueuedSendPackets() {
+        if (StealthPipe.config.ENABLE_BATCHED_PACKETS) {
+            this.sendQueuedSendPacketsBatched();
+        } else {
+            // We use a Composite buffer to avoid copying data until the last possible second
+            CompositeByteBuf composite = Unpooled.compositeBuffer();
+
+            try {
+                while (!this.queuedSendPackets.isEmpty()) {
+                    byte[] data = this.queuedSendPackets.poll();
+                    if (data == null) break;
+
+                    // Add 4-byte length + payload
+                    ByteBuf header = Unpooled.copyInt(data.length);
+                    ByteBuf body = Unpooled.wrappedBuffer(data);
+
+                    // 'true' means update the writer index immediately
+                    composite.addComponents(true, header, body);
+                }
+
+                if (composite.readableBytes() > 0) {
+                    // Since super.send(byte[]) needs an array, we have to flatten it once here
+                    byte[] flat = new byte[composite.readableBytes()];
+                    composite.readBytes(flat);
+
+                    this.writeLock.lock();
+                    try {
+                        this.send(flat);
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to send packet", e);
+                    } finally {
+                        this.writeLock.unlock();
+                    }
+                }
+            } finally {
+                // Netty buffers are reference-counted. You MUST release or leak memory.
+                composite.release();
+            }
+        }
+    }
+
+    private void sendLoop() {
+        new Thread(() -> {
+            while (this.open) {
+                long start = System.nanoTime();
+                this.sendQueuedSendPackets();
+                long elapsed = System.nanoTime() - start;
+                long toWait = this.BATCHING_INTERVAL - elapsed;
+                if (toWait > 0) {
+                    if (toWait > 2_000_000L) { // >2ms -> park to save CPU
+                        LockSupport.parkNanos(toWait - 500_000L); // park most of it
+                    }
+                    // short busy-spin to improve precision for the remaining nanos
+                    while (System.nanoTime() - start < this.BATCHING_INTERVAL) {
+                        Thread.onSpinWait();
+                    }
+                }
+            }
+        }).start();
     }
 
     private void registerDataChannelObserver(RTCDataChannel channel) {
@@ -53,6 +205,11 @@ public class WebRTCClient {
             public void onStateChange() {
                 LOGGER.info("WebRTC DataChannel State: {}", channel.getState());
                 if (channel.getState() == RTCDataChannelState.OPEN) {
+                    if (connectionFailed.get()) {
+                        // already failed, close the connection
+                        disconnectWebRTC();
+                        return;
+                    }
                     open = true;
                     ModState.webSocketOpen.set(true);
                     connectionFuture.complete(null);
@@ -60,6 +217,16 @@ public class WebRTCClient {
                         try { onSendPacketInternal(packet); } catch (Exception e) { LOGGER.error("Queue flush failed", e); }
                     }
                     queuedPackets.clear();
+                    if (!loopStarted.get()) {
+                        loopStarted.set(true);
+                        sendLoop();
+                    }
+
+                }
+
+                if (channel.getState() == RTCDataChannelState.CLOSED || channel.getState() == RTCDataChannelState.CLOSING) {
+                    open = false;
+                    onClosed.accept(WebRTCClient.this);
                 }
             }
 
@@ -67,59 +234,77 @@ public class WebRTCClient {
             public void onMessage(RTCDataChannelBuffer buffer) {
                 byte[] data = new byte[buffer.data.remaining()];
                 buffer.data.get(data);
+
                 onMessageRTC(data);
             }
         });
     }
 
     private void handleSignalMessageStr(String message) {
-        Map<String, Object> signal = gson.fromJson(message, Map.class);
-        String type = (String) signal.get("type");
+        try {
+            Map<String, Object> signal = gson.fromJson(message, Map.class);
+            if (signal == null) {
+                LOGGER.warn("got invalid JSON: {}", message);
+                return;
+            }
 
-        /* giant nesting */
-        if ("offer".equals(type)) {
-            String sdp = (String) ((Map) signal.get("data")).get("sdp");
-            peerConnection.setRemoteDescription(new RTCSessionDescription(RTCSdpType.OFFER, sdp), new SetSessionDescriptionObserver() {
-                @Override public void onSuccess() {
-                    RTCAnswerOptions options = new RTCAnswerOptions();
-                    peerConnection.createAnswer(options, new CreateSessionDescriptionObserver() {
-                        @Override public void onSuccess(RTCSessionDescription description) {
-                            peerConnection.setLocalDescription(description, new SetSessionDescriptionObserver() {
-                                @Override public void onSuccess() {
-                                    sendToSignaling("answer", Map.of("sdp", description.sdp));
-                                }
-                                @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
-                            });
-                        }
-                        @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
-                    });
-                }
-                @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
-            });
-        }
-        else if ("answer".equals(type)) {
-            String sdp = (String) ((Map) signal.get("data")).get("sdp");
-            peerConnection.setRemoteDescription(new RTCSessionDescription(RTCSdpType.ANSWER, sdp), new SetSessionDescriptionObserver() {
-                @Override public void onSuccess() {
-                    LOGGER.info("WebRTC success");
-                }
+            String type = (String) signal.get("type");
 
-                @Override
-                public void onFailure(String s) {
-                    LOGGER.error("WebRTC connection failed: {}", s);
-                    connectionFuture.completeExceptionally(new RuntimeException("Failed to set remote description: "+ s));
-                }
-            });
-        } else if ("candidate".equals(type)) {
-            Map data = (Map) signal.get("data");
-            RTCIceCandidate candidate = new RTCIceCandidate(
-                    (String) data.get("sdpMid"),
-                    ((Double) data.get("sdpMLineIndex")).intValue(),
-                    (String) data.get("sdp")
-            );
-            peerConnection.addIceCandidate(candidate);
-            LOGGER.info("Got ICE candidate: {}", candidate);
+            if (peerConnection == null) {
+                LOGGER.warn("dropped signal packet. peer connection not initialized");
+                return;
+            }
+
+
+
+            /* giant nesting */
+            if ("offer".equals(type)) {
+                String sdp = (String) ((Map) signal.get("data")).get("sdp");
+                peerConnection.setRemoteDescription(new RTCSessionDescription(RTCSdpType.OFFER, sdp), new SetSessionDescriptionObserver() {
+                    @Override public void onSuccess() {
+                        RTCAnswerOptions options = new RTCAnswerOptions();
+                        peerConnection.createAnswer(options, new CreateSessionDescriptionObserver() {
+                            @Override public void onSuccess(RTCSessionDescription description) {
+                                peerConnection.setLocalDescription(description, new SetSessionDescriptionObserver() {
+                                    @Override public void onSuccess() {
+                                        sendToSignaling("answer", Map.of("sdp", description.sdp));
+                                    }
+                                    @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
+                                });
+                            }
+                            @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
+                        });
+                    }
+                    @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
+                });
+            }
+            else if ("answer".equals(type)) {
+                String sdp = (String) ((Map) signal.get("data")).get("sdp");
+                peerConnection.setRemoteDescription(new RTCSessionDescription(RTCSdpType.ANSWER, sdp), new SetSessionDescriptionObserver() {
+                    @Override public void onSuccess() {
+                        LOGGER.info("WebRTC success");
+                    }
+
+                    @Override
+                    public void onFailure(String s) {
+                        LOGGER.error("WebRTC connection failed: {}", s);
+                        connectionFuture.completeExceptionally(new RuntimeException("Failed to set remote description: "+ s));
+                    }
+                });
+            } else if ("candidate".equals(type)) {
+                Map data = (Map) signal.get("data");
+                RTCIceCandidate candidate = new RTCIceCandidate(
+                        (String) data.get("sdpMid"),
+                        ((Double) data.get("sdpMLineIndex")).intValue(),
+                        (String) data.get("sdp")
+                );
+                peerConnection.addIceCandidate(candidate);
+                LOGGER.info("Got ICE candidate: {}", candidate);
+            }
+        } catch (Exception e) {
+            LOGGER.error("WebRTC handle signal message failed", e);
         }
+
     }
 
     private void handleSignalMessage(byte[] message) {
@@ -128,6 +313,12 @@ public class WebRTCClient {
             return;
         }
         byte messageType = message[0];
+        if (messageType == SignalingMessageType.WebRTC_ConnectionFailed.getPacketType()) {
+            LOGGER.warn("Other recipient refused WebRTC connection");
+            connectionFuture.completeExceptionally(new RuntimeException("host refused WebRTC connection"));
+            return;
+        }
+
         byte[] messageContents = Arrays.copyOfRange(message, 2, message.length);
         String messageStr = new String(messageContents, StandardCharsets.UTF_8);
         if (messageStr.startsWith("REQUESTCONNECTION")) {
@@ -168,6 +359,10 @@ public class WebRTCClient {
         peerConnection = factory.createPeerConnection(config, new PeerConnectionObserver() {
             @Override
             public void onIceCandidate(RTCIceCandidate candidate) {
+                if (StealthPipe.config.SIMULATE_ICE_CANDIDATES_FAILURE) {
+                    LOGGER.warn("[debug] Not sending ICE candidate. Simulating ICE candidates failure");
+                    return;
+                }
                 sendToSignaling("candidate", Map.of(
                         "sdp", candidate.sdp,
                         "sdpMid", candidate.sdpMid,
@@ -208,6 +403,9 @@ public class WebRTCClient {
             if (data[0] == SignalingMessageType.WebRTC_ConnectionReady.getPacketType()) {
                 LOGGER.info("Other side reported RTC negotiation start ready status");
                 readyFuture.complete(null);
+            } else if (data[0] == SignalingMessageType.WebRTC_ConnectionFailed.getPacketType()) {
+                LOGGER.error("Other side rejected WebRTC connection");
+                readyFuture.completeExceptionally(new RuntimeException("Host rejected WebRTC"));
             }
         });
 
@@ -216,11 +414,20 @@ public class WebRTCClient {
         byte[] message = {(byte) SignalingMessageType.WebRTC_RequestConnection.getPacketType(), clientId};
         this.hookMessage();
         signalingClient.send(message);
+        try {
+            readyFuture.get(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOGGER.error("ReadyFuture failed: ", e);
+            this.connectionFailed.set(true);
+        }
+
 
         try {
-            connectionFuture.get(30, TimeUnit.SECONDS);
+            connectionFuture.get(15, TimeUnit.SECONDS);
             LOGGER.info("WebRTC Connection Success");
+            this.connectionFailed.set(false);
         } catch (Exception e) {
+            this.connectionFailed.set(true);
             throw new RuntimeException("WebRTC connection failed or timed out");
         }
 
@@ -275,6 +482,8 @@ public class WebRTCClient {
 
     private void onMessageRTC(byte[] data) {
         // LOGGER.info("WebRTC pipe received {} bytes of data", data.length);
+        this.gotMessages = true;
+        ModState.inboundPPSCounter.getAndAdd(1);
         this.onMessageHook.accept(data);
 
     }
@@ -321,5 +530,18 @@ public class WebRTCClient {
         } else {
             this.onSendPacketInternal(data);
         }
+    }
+
+    private void checkShouldFire() {
+
+        if (!StealthPipe.config.ENABLE_BATCHED_PACKETS) {
+            this.sendQueuedSendPackets();
+        }
+    }
+
+    public void sendPacket(byte[] data) {
+        this.queuedSendPackets.add(data);
+
+        this.checkShouldFire();
     }
 }

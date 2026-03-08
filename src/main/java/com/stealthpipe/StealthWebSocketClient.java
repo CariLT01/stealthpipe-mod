@@ -30,6 +30,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
@@ -55,6 +56,7 @@ public class StealthWebSocketClient extends WebSocketClient {
 
     private final AtomicLong sentBegin = new AtomicLong(System.nanoTime());
     private final AtomicLong sentEnd = new AtomicLong(System.nanoTime());
+
     private final AtomicInteger pingMilliseconds = new AtomicInteger(0);
 
     // alert time, allow alerting 2 minutes after connection instead of 15 at first alert
@@ -71,6 +73,8 @@ public class StealthWebSocketClient extends WebSocketClient {
             120,
             50
     );
+
+
 
     public StealthWebSocketClient(URI serverUri, WebsocketClientType clientType, Channel channel, String gameId) {
         super(serverUri, createHeaders());
@@ -510,16 +514,52 @@ public class StealthWebSocketClient extends WebSocketClient {
         return newArray;
     }
 
+    private void handleRTCDisconnect(WebRTCClient client) {
+
+        // It is connection on server
+
+        ModState.channelToRTCClient.entrySet().removeIf(entry -> {
+            if (entry.getValue() == client) {
+                LOGGER.info("Closed Netty channel on the server, and queued for removal");
+                entry.getKey().disconnect(); // Close the Netty channel
+                return true; // Removes this entry from the map
+            }
+            return false;
+        });
+
+        LOGGER.warn("Could not disconnect channel; WebRTC client not found");
+    }
+
     private void processWebRTCRequestConnectionRequest(byte[] data) {
         LOGGER.info("Received a WebRTC Request Connection signal");
 
         byte clientId = data[1];
+
+        if (!StealthPipe.config.HOST_ALLOW_WEBRTC_INBOUND) {
+            // refuse request
+
+            LOGGER.info("Refused WebRTC connection request, as stated in config");
+            byte[] sendBackData = new byte[]{(byte) SignalingMessageType.WebRTC_ConnectionFailed.getPacketType(), clientId};
+
+            this.send(sendBackData);
+            return;
+        }
+
         Channel virtualChannel = this.createVirtualChannel();
 
         WebRTCClient rtcClient = new WebRTCClient((byte[] message) -> {
-            // todo: fire in server thread
-           virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(message));
-        });
+            ModState.minecraftServer.get().execute(() -> {
+                List<byte[]> packets = WebRTCClient.unpackPacket(message);
+                for (byte[] packet : packets) {
+                    virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+                }
+            });
+
+        }, this::handleRTCDisconnect);
+
+        byte[] readyData = new byte[]{(byte)SignalingMessageType.WebRTC_ConnectionReady.getPacketType(), clientId};
+        this.send(readyData);
+        LOGGER.info("Sent ready data");
 
         try {
             rtcClient.tryEstablishRTCHost(this, clientId);
@@ -648,13 +688,7 @@ public class StealthWebSocketClient extends WebSocketClient {
             // Disconnect the channel
 
 
-            if (StealthPipe.CLIENT_PROXY != null) {
-                if (this.gotMessages) {
-                    StealthPipe.CLIENT_PROXY.disconnectWithReason("§cStealthPipe connection disconnected.\nThe host may have closed the room. If not, try reconnecting.", 250);
-                } else {
-                    StealthPipe.CLIENT_PROXY.disconnectWithReason("§cStealthPipe failed to connect.\nCheck room code and try again.\n\nMake sure you are using the latest client version.", 0);
-                }
-            }
+            DisconnectHandler.showClientDisconnectMessage(this.gotMessages);
 
 
 
@@ -667,12 +701,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         } else {
 
             if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
-                ModState.minecraftServer.get().getPlayerList().broadcastSystemMessage(
-                        Component.literal("§8[StealthPipe§8] : §cSignaling connection to relay disconnected. Attempting to reconnect...").withStyle(ChatFormatting.RED),
-                        false
-                );
-
-                StealthPipe.CLIENT_PROXY.connectToRelay();
+                DisconnectHandler.showDisconnectMessageAndRetry();
                 return;
             }
 

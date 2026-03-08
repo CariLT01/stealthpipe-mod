@@ -60,7 +60,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
                     return false;
                 }
                 try {
-                    rtcClient.send(bytes);
+                    rtcClient.sendPacket(bytes);
                     return true;
                 } catch (Exception e) {
                     LOGGER.error("packet dropped. WebRTC send failed:", e);
@@ -97,7 +97,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
                     // cannot forward, probably a LAN person
                 }
                 try {
-                    rtcClient.send(bytes);
+                    rtcClient.sendPacket(bytes);
                     return true;
                 } catch (Exception e) {
                     LOGGER.error("packet dropped. send failed:", e);

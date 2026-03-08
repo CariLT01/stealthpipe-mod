@@ -7,6 +7,7 @@ import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -14,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class ConnectionHelper {
 
@@ -101,18 +103,21 @@ public class ConnectionHelper {
 
     }
 
+    private static void handleWebRTCClientDisconnect(WebRTCClient client, Channel gameChannel) {
+        DisconnectHandler.showClientDisconnectMessage(client.gotMessages);
+        gameChannel.disconnect();
+        LOGGER.info("Disconnected WebRTC channel");
+    }
+
     private static void connectToStealthRelay(String gameId, Channel gameChannel) throws Exception {
 
         LOGGER.info("Connect to stealth relay");
 
         try {
-            WebRTCClient rtcClient = new WebRTCClient((byte[] msg) -> {
-                ModState.clientThreadExecutor.get().execute(() -> {
-                    gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(msg));
-                });
-            });
-
-            rtcClient.tryEstablishRTC(gameId);
+            if (!StealthPipe.config.CLIENT_ATTEMPT_WEBRTC) {
+                throw new RuntimeException("configured to not try WebRTC");
+            }
+            WebRTCClient rtcClient = getWebRTCClient(gameId, gameChannel);
 
             ModState.relayRTCClient.set(rtcClient);
             ModState.usingWebRTC.set(true);
@@ -129,6 +134,23 @@ public class ConnectionHelper {
             LOGGER.info("Established a WebSocket relay based connection");
         }
 
+    }
+
+    private static @NotNull WebRTCClient getWebRTCClient(String gameId, Channel gameChannel) throws Exception {
+        WebRTCClient rtcClient = new WebRTCClient((byte[] msg) -> {
+            ModState.clientThreadExecutor.get().execute(() -> {
+                List<byte[]> packets = WebRTCClient.unpackPacket(msg);
+                for (byte[] pck : packets) {
+                    gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
+                }
+
+            });
+        }, (client) -> {
+            handleWebRTCClientDisconnect(client, gameChannel);
+        });
+
+        rtcClient.tryEstablishRTC(gameId);
+        return rtcClient;
     }
 
     public static void injectInPipeline(ChannelPipeline pipeline, PacketFlow receiving) {
