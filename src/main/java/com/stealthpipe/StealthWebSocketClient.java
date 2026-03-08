@@ -523,6 +523,9 @@ public class StealthWebSocketClient extends WebSocketClient {
 
         try {
             rtcClient.tryEstablishRTCHost(this, clientId);
+            // success
+            LOGGER.info("RTC Client established!");
+            ModState.channelToRTCClient.put(virtualChannel, rtcClient);
         } catch (Exception e) {
             LOGGER.error("RTC connection failed to establish");
             this.send(this.prepareSignalingMessage(clientId, (byte)SignalingMessageType.WebRTC_ConnectionFailed.getPacketType(), new byte[0]));

@@ -2,6 +2,7 @@ package com.stealthpipe;
 
 import com.google.gson.Gson;
 import dev.onvoid.webrtc.*;
+import io.netty.buffer.Unpooled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,8 @@ public class WebRTCClient {
 
     private byte clientId;
 
+    private boolean isHost = false;
+
     private final List<byte[]> queuedPackets = new ArrayList<>();
     private boolean open = false;
 
@@ -51,6 +54,7 @@ public class WebRTCClient {
                 LOGGER.info("WebRTC DataChannel State: {}", channel.getState());
                 if (channel.getState() == RTCDataChannelState.OPEN) {
                     open = true;
+                    ModState.webSocketOpen.set(true);
                     connectionFuture.complete(null);
                     for (byte[] packet : queuedPackets) {
                         try { onSendPacketInternal(packet); } catch (Exception e) { LOGGER.error("Queue flush failed", e); }
@@ -126,6 +130,11 @@ public class WebRTCClient {
         byte messageType = message[0];
         byte[] messageContents = Arrays.copyOfRange(message, 2, message.length);
         String messageStr = new String(messageContents, StandardCharsets.UTF_8);
+        if (messageStr.startsWith("REQUESTCONNECTION")) {
+            LOGGER.warn("ignore request connection message");
+            return;
+        }
+
         LOGGER.info("WebRTC received signaling message: {}", messageStr);
 
         this.handleSignalMessageStr(messageStr);
@@ -136,6 +145,7 @@ public class WebRTCClient {
     public void tryEstablishRTCHost(StealthWebSocketClient signalingClient, byte otherClientID) throws Exception {
         LOGGER.info("Trying to establish RTC connection as a host");
 
+        this.isHost = true;
         this.clientId = otherClientID;
         this.signalingClient = signalingClient;
         this.hookMessage();
@@ -174,6 +184,8 @@ public class WebRTCClient {
 
         if (isOfferer) {
             RTCDataChannelInit init = new RTCDataChannelInit();
+            init.ordered = true;
+            init.negotiated = false;
             RTCDataChannel localChannel = peerConnection.createDataChannel("main", init);
             registerDataChannelObserver(localChannel);
             startCall();
@@ -185,6 +197,7 @@ public class WebRTCClient {
     }
 
     public void tryEstablishRTC(String gameId) throws Exception {
+        this.isHost = false;
         signalingClient = new StealthWebSocketClient(URI.create(
                 StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&signal=true&version=" + StealthPipe.MOD_VERSION),
                 WebsocketClientType.CLIENT_SIGNALING, gameId);
@@ -262,6 +275,8 @@ public class WebRTCClient {
 
     private void onMessageRTC(byte[] data) {
         LOGGER.info("WebRTC pipe received {} bytes of data", data.length);
+        this.onMessageHook.accept(data);
+
     }
 
 

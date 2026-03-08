@@ -84,6 +84,7 @@ public class DebugScreenMixin {
         list2.add("Is Client: " + ModState.isClientConnectingToStealthServer.get());
         list2.add("WS Open: " + ModState.webSocketOpen.get());
         list2.add("Game open to LAN: " + ModState.gameOpenToLan.get());
+        list2.add("Using WebRTC: " + ModState.usingWebRTC.get());
     }
     /*? } else { */
     /*@Inject(
