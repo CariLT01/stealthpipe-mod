@@ -185,7 +185,12 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
         if (!wsConnected) return;
 
         if (isClient) {
-            ModState.relayClient.get().close();
+            if (ModState.relayClient.get() != null) {
+                ModState.relayClient.get().close();
+            }
+            if (ModState.relayRTCClient.get() != null) {
+                ModState.relayRTCClient.get().disconnect();
+            }
             ModState.webSocketOpen.set(false);
             ModState.relayClient.set(null);
             ModState.relayClientChannel.set(null);
@@ -206,6 +211,12 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
                 wsClient.close();
             } else {
                 LOGGER.info("Destination not found, no WS client to close");
+            }
+
+            WebRTCClient rtcClient = ModState.channelToRTCClient.get(ctx.channel());
+            if (rtcClient != null) {
+                rtcClient.disconnect();
+                LOGGER.info("Disconnected RTC client");
             }
 
 

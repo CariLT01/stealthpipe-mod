@@ -4,6 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
 import com.stealthpipe.*;
+import com.terraformersmc.modmenu.util.mod.Mod;
+import io.netty.channel.Channel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
@@ -26,6 +28,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 
 @Mixin(IntegratedServer.class)
@@ -41,11 +44,18 @@ public class IntegratedServerMixin {
     private void stopServer(CallbackInfo ci) {
         boolean wsConnected = ModState.webSocketOpen.get();
         if (wsConnected) {
-            ModState.relayClient.get().close();
+            if(ModState.relayClient.get() != null) {
+                ModState.relayClient.get().close();
+            }
+            for (Map.Entry<Channel, WebRTCClient> entry : ModState.channelToRTCClient.entrySet()) {
+                LOGGER.info("Disconnected RTC Connection");
+                entry.getValue().disconnect();
+            }
             LOGGER.info("Detected integrated server closed");
         }
 
         ModState.channelToWSClient.clear();
+        ModState.channelToRTCClient.clear();
 
         ModState.resetState();
     }

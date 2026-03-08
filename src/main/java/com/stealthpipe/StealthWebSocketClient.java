@@ -641,6 +641,10 @@ public class StealthWebSocketClient extends WebSocketClient {
 
         if (isClient) {
 
+            if (this.relayType == WebsocketClientType.CLIENT_SIGNALING) {
+                LOGGER.info("not warning disconnect for client signal disconnect");
+                return;
+            }
             // Disconnect the channel
 
 

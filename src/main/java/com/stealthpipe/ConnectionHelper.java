@@ -151,6 +151,11 @@ public class ConnectionHelper {
             wsClient.close();
         }
 
+        WebRTCClient rtcClient = ModState.relayRTCClient.get();
+        if (rtcClient != null) {
+            rtcClient.disconnect();
+        }
+
         ModState.resetState();
     }
 }

@@ -274,7 +274,7 @@ public class WebRTCClient {
     }
 
     private void onMessageRTC(byte[] data) {
-        LOGGER.info("WebRTC pipe received {} bytes of data", data.length);
+        // LOGGER.info("WebRTC pipe received {} bytes of data", data.length);
         this.onMessageHook.accept(data);
 
     }
@@ -283,6 +283,36 @@ public class WebRTCClient {
     private void onSendPacketInternal(byte[] data) throws Exception {
         ByteBuffer buffer = ByteBuffer.wrap(data);
         dataChannel.send(new RTCDataChannelBuffer(buffer, true));
+    }
+
+    private void disconnectWebRTC() {
+        try {
+            // 1. Close the Data Channel first
+            if (dataChannel != null) {
+                dataChannel.unregisterObserver(); // Stop listening to 170k PPS
+                dataChannel.close();
+                dataChannel.dispose(); // Crucial in Java to free native memory
+            }
+
+            // 2. Close the Peer Connection
+            if (peerConnection != null) {
+                peerConnection.close();
+                // peerConnection.(); // Cleans up the C++ backend
+            }
+
+            System.out.println("[StealthPipe V6] P2P Disconnected. Native resources freed.");
+
+        } catch (Exception e) {
+            // Log it, but don't let it crash the WSS fallback
+            System.err.println("Error during P2P cleanup: " + e.getMessage());
+        } finally {
+            this.dataChannel = null;
+            this.peerConnection = null;
+        }
+    }
+
+    public void disconnect() {
+        this.disconnectWebRTC();
     }
 
     public void send(byte[] data) throws Exception {
