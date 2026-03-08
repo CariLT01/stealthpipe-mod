@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 
 public class StealthWebSocketClient extends WebSocketClient {
 
@@ -64,8 +63,6 @@ public class StealthWebSocketClient extends WebSocketClient {
 
     private final int DEFAULT_PING_INTERVAL = 300 * 1000; // 5 minutes
 
-    private Consumer<byte[]> hookedEvent = null;
-
     private final RoundTripTimeMonitor RTTMonitor = new RoundTripTimeMonitor(
             10,
             120,
@@ -91,26 +88,6 @@ public class StealthWebSocketClient extends WebSocketClient {
 
 
 
-    }
-
-    public StealthWebSocketClient(URI serverUri, WebsocketClientType type, String gameId) {
-        super(serverUri);
-
-        if (ModState.isClientConnectingToStealthServer.get()) {
-            LOGGER.warn("Instructed to open SIGNALING socket when state is client!");
-        }
-
-        if (type != WebsocketClientType.RELAY_SIGNALING && type != WebsocketClientType.CLIENT_SIGNALING) {
-            throw new IllegalArgumentException("Must be relay signaling");
-        }
-
-        this.relayType = WebsocketClientType.RELAY_SIGNALING;
-        this.relayUrl = serverUri;
-        this.gameId = gameId;
-    }
-
-    public void hookOnMessage(Consumer<byte[]> func) {
-        this.hookedEvent = func;
     }
 
     private void pingRelay() throws Exception {
@@ -312,7 +289,21 @@ public class StealthWebSocketClient extends WebSocketClient {
         this.checkShouldFire();
     }
 
+    public StealthWebSocketClient(URI serverUri, WebsocketClientType type, String gameId) {
+        super(serverUri);
 
+        if (ModState.isClientConnectingToStealthServer.get()) {
+            LOGGER.warn("Instructed to open SIGNALING socket when state is client!");
+        }
+
+        if (type != WebsocketClientType.RELAY_SIGNALING) {
+            throw new IllegalArgumentException("Must be relay signaling");
+        }
+
+        this.relayType = WebsocketClientType.RELAY_SIGNALING;
+        this.relayUrl = serverUri;
+        this.gameId = gameId;
+    }
 
 
     @Override
@@ -542,12 +533,8 @@ public class StealthWebSocketClient extends WebSocketClient {
             }
         } else {
             // SIGNALING
-            // RELAY_TO_CLIENT or CLIENT_TO_RELAY
+            // RELAY_TO_CLIENT
             this.processMessageSignaling(data);
-        }
-
-        if (this.hookedEvent != null) {
-            this.hookedEvent.accept(data);
         }
 
 
@@ -663,7 +650,7 @@ public class StealthWebSocketClient extends WebSocketClient {
                 return;
             }
 
-            if (this.relayType == WebsocketClientType.RELAY_SIGNALING || this.relayType == WebsocketClientType.CLIENT_SIGNALING) {
+            if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
                 // Don't batch signaling data
                 ModState.outboundPPSCounter.getAndAdd(1);
                 super.send(data);

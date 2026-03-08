@@ -1,7 +1,6 @@
 package com.stealthpipe;
 
 import com.stealthpipe.mixin.ConnectionChannelAccessor;
-import dev.onvoid.webrtc.*;
 import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.network.Connection;
@@ -12,17 +11,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 
 public class ConnectionHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
-
-    public static void tryEstablishRTC(String gameId) {
-
-
-
-    }
 
     public static void connectToRelay(InetSocketAddress inetSocketAddress, EventLoop eventLoop, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
         LOGGER.info("Attempting to connect");
