@@ -363,6 +363,9 @@ public class WebRTCClient {
                     LOGGER.warn("[debug] Not sending ICE candidate. Simulating ICE candidates failure");
                     return;
                 }
+                if (connectionFailed.get()) {
+                    return;
+                }
                 sendToSignaling("candidate", Map.of(
                         "sdp", candidate.sdp,
                         "sdpMid", candidate.sdpMid,
@@ -429,6 +432,8 @@ public class WebRTCClient {
             this.connectionFailed.set(false);
         } catch (Exception e) {
             this.connectionFailed.set(true);
+            peerConnection.close();
+            signalingClient.close();
             throw new RuntimeException("WebRTC connection failed or timed out");
         }
 
