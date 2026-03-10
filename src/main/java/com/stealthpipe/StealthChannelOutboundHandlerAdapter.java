@@ -186,7 +186,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
         if (isClient) {
             if (ModState.relayClient.get() != null) {
-                ModState.relayClient.get().close();
+                ModState.relayClient.get().disconnectWithReason(WebSocketDisconnectReason.NettyChannelInactiveClient);
             }
             if (ModState.relayRTCClient.get() != null) {
                 ModState.relayRTCClient.get().disconnect();
@@ -208,7 +208,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
             StealthWebSocketClient wsClient = ModState.channelToWSClient.get(ctx.channel());
             if (wsClient != null) {
                 LOGGER.info("2: Connection closed, detected channel inactive");
-                wsClient.close();
+                wsClient.disconnectWithReason(WebSocketDisconnectReason.NettyChannelInactiveServer);
             } else {
                 LOGGER.info("Destination not found, no WS client to close");
             }

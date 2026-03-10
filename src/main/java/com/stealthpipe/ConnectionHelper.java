@@ -138,13 +138,10 @@ public class ConnectionHelper {
 
     private static @NotNull WebRTCClient getWebRTCClient(String gameId, Channel gameChannel) throws Exception {
         WebRTCClient rtcClient = new WebRTCClient((byte[] msg) -> {
-            ModState.clientThreadExecutor.get().execute(() -> {
-                List<byte[]> packets = WebRTCClient.unpackPacket(msg);
-                for (byte[] pck : packets) {
-                    gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
-                }
-
-            });
+            List<byte[]> packets = WebRTCClient.unpackPacket(msg);
+            for (byte[] pck : packets) {
+                gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
+            }
         }, (client) -> {
             handleWebRTCClientDisconnect(client, gameChannel);
         });
@@ -170,7 +167,7 @@ public class ConnectionHelper {
         StealthWebSocketClient wsClient = ModState.relayClient.get();
 
         if (wsClient != null) {
-            wsClient.close();
+            wsClient.disconnectWithReason(WebSocketDisconnectReason.FabricEventDisconnectClient);
         }
 
         WebRTCClient rtcClient = ModState.relayRTCClient.get();

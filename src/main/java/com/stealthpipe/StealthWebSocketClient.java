@@ -425,9 +425,7 @@ public class StealthWebSocketClient extends WebSocketClient {
             throw new IllegalArgumentException("Game channel is empty");
         }
 
-        ModState.minecraftServer.get().execute(() -> {
-            this.gameChannel.get().pipeline().fireChannelRead(Unpooled.wrappedBuffer(data));
-        });
+        this.gameChannel.get().pipeline().fireChannelRead(Unpooled.wrappedBuffer(data));
 
 
 
@@ -465,10 +463,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         }
 
         Channel clientChannel = gameChannel.get();
-
-        ModState.clientThreadExecutor.get().execute(() -> {
-            clientChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(data));
-        });
+        clientChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(data));
 
         // LOGGER.info("Received {} bytes as client", data.length);
 
@@ -548,12 +543,10 @@ public class StealthWebSocketClient extends WebSocketClient {
         Channel virtualChannel = this.createVirtualChannel();
 
         WebRTCClient rtcClient = new WebRTCClient((byte[] message) -> {
-            ModState.minecraftServer.get().execute(() -> {
-                List<byte[]> packets = WebRTCClient.unpackPacket(message);
-                for (byte[] packet : packets) {
-                    virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
-                }
-            });
+            List<byte[]> packets = WebRTCClient.unpackPacket(message);
+            for (byte[] packet : packets) {
+                virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+            }
 
         }, this::handleRTCDisconnect);
 
@@ -610,6 +603,11 @@ public class StealthWebSocketClient extends WebSocketClient {
         } else {
              processConnectionRequest(data);
          }
+    }
+
+    public void disconnectWithReason(WebSocketDisconnectReason reason) {
+        LOGGER.info("Close called with reason: {}", reason.getPacketType());
+        this.close(1000, reason.getPacketType());
     }
 
     @Override

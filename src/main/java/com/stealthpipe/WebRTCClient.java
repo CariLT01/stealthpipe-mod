@@ -39,8 +39,8 @@ public class WebRTCClient {
     private final List<byte[]> queuedPackets = new ArrayList<>();
     private boolean open = false;
 
-    private Consumer<byte[]> onMessageHook;
-    private Consumer<WebRTCClient> onClosed;
+    private final Consumer<byte[]> onMessageHook;
+    private final Consumer<WebRTCClient> onClosed;
     private final AtomicBoolean loopStarted = new AtomicBoolean(false);
 
     private final AtomicBoolean connectionFailed = new AtomicBoolean(false);
@@ -48,9 +48,9 @@ public class WebRTCClient {
     private final CompletableFuture<Void> connectionFuture = new CompletableFuture<>();
 
     public boolean gotMessages = false;
-    private ReentrantLock writeLock = new ReentrantLock();
+    private final ReentrantLock writeLock = new ReentrantLock();
 
-    private Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
+    private final Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
 
     public WebRTCClient(Consumer<byte[]> onMessage, Consumer<WebRTCClient> onClosed) {
         this.clientId = (byte) (Math.random() * 255);
@@ -308,11 +308,22 @@ public class WebRTCClient {
     }
 
     private void handleSignalMessage(byte[] message) {
+        if (message.length == 0) {
+            LOGGER.warn("Ignore empty signal packet");
+            return;
+        }
+        byte messageType = message[0];
+        if (messageType == SignalingMessageType.PONG.getPacketType()) {
+            return;
+        }
+        if (messageType == SignalingMessageType.PING.getPacketType()) {
+            return;
+        }
         if (message.length < 2) {
             LOGGER.warn("ignore message length < 2");
             return;
         }
-        byte messageType = message[0];
+
         if (messageType == SignalingMessageType.WebRTC_ConnectionFailed.getPacketType()) {
             LOGGER.warn("Other recipient refused WebRTC connection");
             connectionFuture.completeExceptionally(new RuntimeException("host refused WebRTC connection"));
@@ -430,10 +441,12 @@ public class WebRTCClient {
             connectionFuture.get(15, TimeUnit.SECONDS);
             LOGGER.info("WebRTC Connection Success");
             this.connectionFailed.set(false);
+            LOGGER.info("Disconnecting signaling WebSocket");
+            signalingClient.disconnectWithReason(WebSocketDisconnectReason.SignalingFinished);
         } catch (Exception e) {
             this.connectionFailed.set(true);
             peerConnection.close();
-            signalingClient.close();
+            signalingClient.disconnectWithReason(WebSocketDisconnectReason.SignalingWebRTCFailed);
             throw new RuntimeException("WebRTC connection failed or timed out");
         }
 

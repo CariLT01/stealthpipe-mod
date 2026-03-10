@@ -8,7 +8,8 @@ public enum SignalingMessageType {
     WebRTC_ConnectionEstablished(4),
     WebRTC_RequestConnection(5),
     WebRTC_ConnectionFailed(6),
-    WebRTC_ConnectionReady(7);
+    WebRTC_ConnectionReady(7),
+    SignalDisconnect(8);
 
     private final int signalingPacketType;
 

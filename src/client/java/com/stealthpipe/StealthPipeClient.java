@@ -31,7 +31,7 @@ public class StealthPipeClient implements ClientModInitializer {
 			StealthWebSocketClient wsClient = ModState.relayClient.get();
 
 			if (wsClient != null) {
-				wsClient.close();
+				wsClient.disconnectWithReason(WebSocketDisconnectReason.FabricEventDisconnectClient);
 			}
 
 			ModState.resetState();
