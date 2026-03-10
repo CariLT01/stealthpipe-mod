@@ -62,5 +62,6 @@ public class ModState {
         reuseToken.set(null);
         ping.set(0);
         isStealthPipeConnection.set(false);
+        usingWebRTC.set(false);
     }
 }
