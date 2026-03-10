@@ -173,16 +173,16 @@ public class RelayConnector {
 
 
             UXHelper.sendStealthPipeSystemMessage(
-                    "§cCaution: You are running the latest experimental build of StealthPipe (v6.0.0-alpha.2-WebRTC). Expect bugs, issues, and glitches!\n§8Download a stable build (version 5 and under) for a smoother experience. Version 6 clients are not compatible with version 5 clients.\n§6Note: you will be disconnected if your room is idle for more than 15 minutes."
+                    "§cStealthPipe is still in beta!"
             );
 
-            /* if (!StealthPipe.config.HAS_SHOWN_WEBRTC_PRIVACY_NOTE) {
+            if (!StealthPipe.config.HAS_SHOWN_WEBRTC_PRIVACY_NOTE) {
                 UXHelper.sendStealthPipeSystemMessage(
-                        "§9Important Privacy Note: §8StealthPipe may use §fWebRTC Technology §8to create faster, direct connections between players joining you. This requires sharing your public IP and may reveal your real IP even with a VPN.\n\n§8Disable by setting §f\"Host Allow WebRTC\" §8to §cfalse §8in the config (§8may significantly increase latency for players connecting to you§8).\n\n§8This message will not appear again."
+                        "§9privacy note: §8StealthPipe may use §fWebRTC Technology §8 to significantly reduce latency. It may reveal your IP address. Can be disabled in config."
                 );
                 StealthPipe.config.HAS_SHOWN_WEBRTC_PRIVACY_NOTE = true;
                 StealthPipe.config.save();
-            } */
+            }
 
 
 
