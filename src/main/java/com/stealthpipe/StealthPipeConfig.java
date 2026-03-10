@@ -20,8 +20,15 @@ public class StealthPipeConfig {
     public boolean ENABLE_BATCHED_PACKETS = DefaultConfigValues.ENABLE_BATCHED_PACKETS;
     public int PACKET_BATCHING_INTERVAL_MS = DefaultConfigValues.PACKET_BATCHING_INTERVAL_MS;
 
+    public boolean CLIENT_ATTEMPT_WEBRTC = DefaultConfigValues.CLIENT_ATTEMPT_WEBRTC;
+    public boolean HOST_ALLOW_WEBRTC_INBOUND = DefaultConfigValues.HOST_ALLOW_WEBRTC_INBOUND;
+
+    public boolean SIMULATE_ICE_CANDIDATES_FAILURE = DefaultConfigValues.SIMULATE_ICE_CANDIDATES_FAILURE;
+
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("stealthpipe.json");
+
+    public boolean HAS_SHOWN_WEBRTC_PRIVACY_NOTE = DefaultConfigValues.HAS_SHOWN_WEBRTC_PRIVACY_NOTE;
 
     public static StealthPipeConfig load() {
         if (!Files.exists(PATH)) return new StealthPipeConfig();

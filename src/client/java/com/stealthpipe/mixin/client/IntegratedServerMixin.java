@@ -1,14 +1,8 @@
 package com.stealthpipe.mixin.client;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.google.gson.Gson;
 import com.stealthpipe.*;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
+import io.netty.channel.Channel;
 import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.GameType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,14 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.time.Instant;
-import java.util.Objects;
+import java.util.Map;
 
 @Mixin(IntegratedServer.class)
 public class IntegratedServerMixin {
@@ -41,11 +28,24 @@ public class IntegratedServerMixin {
     private void stopServer(CallbackInfo ci) {
         boolean wsConnected = ModState.webSocketOpen.get();
         if (wsConnected) {
-            ModState.relayClient.get().close();
-            LOGGER.info("Detected integrated server closed");
+            if(ModState.relayClient.get() != null) {
+                try {
+                    ModState.relayClient.get().disconnectWithReason(WebSocketDisconnectReason.LocalServerStopped);
+                } catch (Exception e) {
+                    LOGGER.error("Failed to send disconnect reason", e);
+                }
+
+            }
         }
 
+        for (Map.Entry<Channel, WebRTCClient> entry : ModState.channelToRTCClient.entrySet()) {
+            LOGGER.info("Disconnected RTC Connection");
+            entry.getValue().disconnect();
+        }
+        LOGGER.info("Detected integrated server closed");
+
         ModState.channelToWSClient.clear();
+        ModState.channelToRTCClient.clear();
 
         ModState.resetState();
     }

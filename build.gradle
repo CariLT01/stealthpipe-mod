@@ -2,6 +2,7 @@ plugins {
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
 	id("dev.kikugie.fletching-table.fabric") version "0.1.0-alpha.22"
+	id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 version = "${project.mod_version}+${sc.current.version}"
@@ -77,6 +78,19 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${requiredFabric}"
 
 	implementation "org.java-websocket:Java-WebSocket:1.5.3"
+	implementation "dev.onvoid.webrtc:webrtc-java:0.14.0"
+	implementation "dev.onvoid.webrtc:webrtc-java:0.14.0:windows-x86_64"
+	implementation "dev.onvoid.webrtc:webrtc-java:0.14.0:macos-x86_64"
+	// Standard 64-bit Linux (most common)
+	implementation "dev.onvoid.webrtc:webrtc-java:0.14.0:linux-x86_64"
+
+	// Linux ARM 64-bit (Raspberry Pi 4/5, Oracle Ampere, etc.)
+	implementation "dev.onvoid.webrtc:webrtc-java:0.14.0:linux-aarch64"
+
+	// Linux ARM 32-bit
+	implementation "dev.onvoid.webrtc:webrtc-java:0.14.0:linux-aarch32"
+
+
 	include "org.java-websocket:Java-WebSocket:1.5.3"
 
 	modApi("me.shedaniel.cloth:cloth-config-fabric:${requiredClothConfig}") {
@@ -99,6 +113,17 @@ dependencies {
 	// Sometimes you also need the annotations and core
 	include 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
 	include 'com.fasterxml.jackson.core:jackson-core:2.15.2'
+	include "dev.onvoid.webrtc:webrtc-java:0.14.0"
+	include "dev.onvoid.webrtc:webrtc-java:0.14.0:windows-x86_64"
+	include "dev.onvoid.webrtc:webrtc-java:0.14.0:macos-x86_64"
+	// Standard 64-bit Linux (most common)
+	include "dev.onvoid.webrtc:webrtc-java:0.14.0:linux-x86_64"
+
+	// Linux ARM 64-bit (Raspberry Pi 4/5, Oracle Ampere, etc.)
+	include "dev.onvoid.webrtc:webrtc-java:0.14.0:linux-aarch64"
+
+	// Linux ARM 32-bit
+	include "dev.onvoid.webrtc:webrtc-java:0.14.0:linux-aarch32"
 }
 
 processResources {

@@ -48,5 +48,10 @@ public class ClientProxyImpl implements ClientProxy {
         RelayConnector connector = new RelayConnector();
         connector.connectToRelay();
     }
+
+    @Override
+    public void runOnClientThread(Runnable runnable) {
+        Minecraft.getInstance().execute(runnable);
+    }
 }
 

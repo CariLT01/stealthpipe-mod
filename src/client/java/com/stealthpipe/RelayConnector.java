@@ -170,6 +170,28 @@ public class RelayConnector {
 
             assert Minecraft.getInstance().player != null;
 
+
+
+            UXHelper.sendStealthPipeSystemMessage(
+                    "§cStealthPipe is still in beta!"
+            );
+
+            if (!StealthPipe.config.HAS_SHOWN_WEBRTC_PRIVACY_NOTE) {
+                UXHelper.sendStealthPipeSystemMessage(
+                        "§9privacy note: §8StealthPipe may use §fWebRTC Technology §8 to significantly reduce latency. It may reveal your IP address. Can be disabled in config."
+                );
+                StealthPipe.config.HAS_SHOWN_WEBRTC_PRIVACY_NOTE = true;
+                StealthPipe.config.save();
+            }
+
+
+
+            if (Objects.equals(gameId, "676767")) {
+                UXHelper.sendStealthPipeSystemMessage(
+                        "§cWarning: §6Room privacy cannot be guaranteed for this session, and you will lose this room code if your internet connection disconnects. Restart the session to fix this."
+                );
+            }
+
             UXHelper.sendStealthPipeSystemMessage("Join with the mod on another client using: ");
             UXHelper.sendSystemMessageComponent(Component.literal(gameId + ".stealth.link").withStyle(style -> style
                             .withUnderlined(true)
@@ -180,18 +202,7 @@ public class RelayConnector {
                             .withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to copy to clipboard")))),
                     ChatFormatting.WHITE);
 
-            UXHelper.sendStealthPipeSystemMessage(
-                    "§cStealthPipe is experimental!\n§6Note: you will be disconnected if your room is idle for more than 15 minutes."
-            );
-
-            if (Objects.equals(gameId, "676767")) {
-                UXHelper.sendStealthPipeSystemMessage(
-                        "§cWarning: §6Room privacy cannot be guaranteed for this session, and you will lose this room code if your internet connection disconnects. Restart the session to fix this."
-                );
-            }
-
-
-            DistanceWarner.warnDistance();
+            // DistanceWarner.warnDistance();
 
             ModState.gameId.set(gameId);
 

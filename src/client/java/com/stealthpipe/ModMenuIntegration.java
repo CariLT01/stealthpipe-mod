@@ -56,6 +56,26 @@ public class ModMenuIntegration implements ModMenuApi {
                             .build()
             );
 
+            general.addEntry(
+                    entryBuilder.startBooleanToggle(Component.literal("Client Attempt WebRTC"), StealthPipe.config.CLIENT_ATTEMPT_WEBRTC)
+                            .setDefaultValue(DefaultConfigValues.CLIENT_ATTEMPT_WEBRTC)
+                            .setSaveConsumer(newValue -> StealthPipe.config.CLIENT_ATTEMPT_WEBRTC = newValue)
+                            .setTooltip(
+                                    Component.literal("Whether he client should attempt a direct peer-to-peer connection with WebRTC.")
+                            )
+                            .build()
+            );
+
+            general.addEntry(
+                    entryBuilder.startBooleanToggle(Component.literal("Host Allow WebRTC"), StealthPipe.config.HOST_ALLOW_WEBRTC_INBOUND)
+                            .setDefaultValue(DefaultConfigValues.HOST_ALLOW_WEBRTC_INBOUND)
+                            .setSaveConsumer(newValue -> StealthPipe.config.HOST_ALLOW_WEBRTC_INBOUND = newValue)
+                            .setTooltip(
+                                    Component.literal("Allow/Block inbound WebRTC connection requests")
+                            )
+                            .build()
+            );
+
             // Add section "Optimization"
             var optimization = entryBuilder.startSubCategory(Component.literal("Optimization"));
 
@@ -80,6 +100,19 @@ public class ModMenuIntegration implements ModMenuApi {
             );
 
             general.addEntry(optimization.build());
+
+            var debug = entryBuilder.startSubCategory(Component.literal("Debugging"));
+            debug.add(
+                    entryBuilder.startBooleanToggle(Component.literal("Simulate WRTC ICE Candidates Failure"), StealthPipe.config.SIMULATE_ICE_CANDIDATES_FAILURE)
+                            .setDefaultValue(DefaultConfigValues.SIMULATE_ICE_CANDIDATES_FAILURE)
+                            .setSaveConsumer(newValue -> StealthPipe.config.SIMULATE_ICE_CANDIDATES_FAILURE = newValue)
+                            .setTooltip(
+                                    Component.literal("Not ICE from the United States. Simulates unable to find ICE candidates for WebRTC")
+                            )
+                            .build()
+            );
+
+            general.addEntry(debug.build());
 
             builder.setSavingRunnable(() -> {
                 StealthPipe.config.save();
