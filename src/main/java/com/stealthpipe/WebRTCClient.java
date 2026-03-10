@@ -528,7 +528,9 @@ public class WebRTCClient {
                 // peerConnection.(); // Cleans up the C++ backend
             }
 
-            System.out.println("[StealthPipe V6] P2P Disconnected. Native resources freed.");
+            LOGGER.info("Disconnected WebRTC P2P");
+            this.open = false;
+            onClosed.accept(this);
 
         } catch (Exception e) {
             // Log it, but don't let it crash the WSS fallback

@@ -10,6 +10,7 @@ public class DisconnectHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     public static void showDisconnectMessageAndRetry() {
+        LOGGER.info("attempt retry");
         ModState.minecraftServer.get().getPlayerList().broadcastSystemMessage(
                 Component.literal("§8[StealthPipe§8] : §cSignaling connection to relay disconnected. Attempting to reconnect...").withStyle(ChatFormatting.RED),
                 false

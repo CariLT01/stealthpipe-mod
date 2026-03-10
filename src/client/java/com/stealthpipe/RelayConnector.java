@@ -80,9 +80,9 @@ public class RelayConnector {
 
                 LOGGER.error("An error occurred while trying to reach relay: ", e);
 
-                UXHelper.sendStealthPipeSystemMessage(
+                /* UXHelper.sendStealthPipeSystemMessage(
                         "§cFailed to reach the relay. Check the logs for more info."
-                );
+                ); */
 
             }
 
@@ -315,7 +315,7 @@ public class RelayConnector {
 
                     LOGGER.error("Could not connect to the relay: pinging failed");
 
-                    UXHelper.sendStealthPipeSystemMessage("§cFailed to reach the relay, connection failed");
+                    UXHelper.sendStealthPipeSystemMessage("§cFailed to reach the relay, connection failed. Check the logs for more info.");
                     UXHelper.sendStealthPipeSystemMessage("§r--- §nTroubleshooting§r --");
                     UXHelper.sendStealthPipeSystemMessage("Please try the following:");
                     UXHelper.sendStealthPipeSystemMessage(" - Try starting a new session again");

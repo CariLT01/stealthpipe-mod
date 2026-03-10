@@ -643,6 +643,7 @@ public class StealthWebSocketClient extends WebSocketClient {
                 this.processMessageClient(packet);
             }
         } else if (relayType == WebsocketClientType.SERVER_TO_RELAY) {
+
             List<byte[]> packets = this.unpackPacket(data);
             for (byte[] packet : packets) {
                 this.processMessageServer(packet);
@@ -699,6 +700,13 @@ public class StealthWebSocketClient extends WebSocketClient {
         } else {
 
             if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
+                // disconnect WebRTC connections
+                for (Map.Entry<Channel, WebRTCClient> clients : ModState.channelToRTCClient.entrySet()) {
+                    LOGGER.info("Disconnecting RTC Client. Cause: signal disconnected. Preserve state.");
+                    clients.getValue().disconnect();
+                }
+
+                LOGGER.info("RELAY SIGNAL disconnected");
                 DisconnectHandler.showDisconnectMessageAndRetry();
                 return;
             }
