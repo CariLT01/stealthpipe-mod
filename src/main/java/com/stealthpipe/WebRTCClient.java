@@ -530,7 +530,7 @@ public class WebRTCClient {
 
             LOGGER.info("Disconnected WebRTC P2P");
             this.open = false;
-            onClosed.accept(this);
+            // onClosed.accept(this);
 
         } catch (Exception e) {
             // Log it, but don't let it crash the WSS fallback
