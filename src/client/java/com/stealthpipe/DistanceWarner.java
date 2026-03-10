@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Objects;
 
 public class DistanceWarner {
 
@@ -61,6 +62,11 @@ public class DistanceWarner {
 
     public static void warnDistance() {
         // Calculate distance based on IP geo-location
+
+        if (!Objects.equals(StealthPipe.config.RELAY_IP, DefaultConfigValues.RELAY_IP)) {
+            LOGGER.warn("Not warning relay IP; not using default");
+            return;
+        }
 
         try {
             getAndWarn();

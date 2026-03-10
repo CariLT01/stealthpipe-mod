@@ -28,6 +28,8 @@ public class StealthPipeConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("stealthpipe.json");
 
+    public boolean HAS_SHOWN_WEBRTC_PRIVACY_NOTE = DefaultConfigValues.HAS_SHOWN_WEBRTC_PRIVACY_NOTE;
+
     public static StealthPipeConfig load() {
         if (!Files.exists(PATH)) return new StealthPipeConfig();
         try (Reader reader = Files.newBufferedReader(PATH)) {

@@ -1,7 +1,6 @@
 package com.stealthpipe;
 
 import io.netty.channel.Channel;
-import net.minecraft.network.Connection;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.concurrent.ConcurrentHashMap;

@@ -10,6 +10,9 @@ public class DefaultConfigValues {
     public static final boolean CLIENT_ATTEMPT_WEBRTC = true;
     public static final boolean HOST_ALLOW_WEBRTC_INBOUND = true;
 
+    // Messages
+    public static final boolean HAS_SHOWN_WEBRTC_PRIVACY_NOTE = false;
+
     /*DEBUG OPTIONS*/
     public static final boolean SIMULATE_ICE_CANDIDATES_FAILURE = false;
     // public static final String RELAY_IP = "http://127.0.0.1:7860";
