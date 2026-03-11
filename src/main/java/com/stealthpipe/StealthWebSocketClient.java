@@ -676,6 +676,12 @@ public class StealthWebSocketClient extends WebSocketClient {
     public void onClose(int code, String reason, boolean remote) {
         // Logic for when the connection ends
 
+        LOGGER.info("WSS client disconnected for reason: {}", reason);
+
+        if (Objects.equals(reason, "") && code == 1006) {
+            reason = "ABNORMAL_DISCONNECT";
+        }
+
         boolean isClient = ModState.isClientConnectingToStealthServer.get();
 
         if (isClient) {
@@ -687,7 +693,7 @@ public class StealthWebSocketClient extends WebSocketClient {
             // Disconnect the channel
 
 
-            DisconnectHandler.showClientDisconnectMessage(this.gotMessages);
+            DisconnectHandler.showClientDisconnectMessage(this.gotMessages, reason);
 
 
 
@@ -707,7 +713,7 @@ public class StealthWebSocketClient extends WebSocketClient {
                 }
 
                 LOGGER.info("RELAY SIGNAL disconnected");
-                DisconnectHandler.showDisconnectMessageAndRetry();
+                DisconnectHandler.showDisconnectMessageAndRetry(reason);
                 return;
             }
 

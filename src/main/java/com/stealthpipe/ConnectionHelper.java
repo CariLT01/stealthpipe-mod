@@ -104,7 +104,7 @@ public class ConnectionHelper {
     }
 
     private static void handleWebRTCClientDisconnect(WebRTCClient client, Channel gameChannel) {
-        DisconnectHandler.showClientDisconnectMessage(client.gotMessages);
+        DisconnectHandler.showClientDisconnectMessage(client.gotMessages, "WRTC_DISCONNECTED");
         gameChannel.disconnect();
         LOGGER.info("Disconnected WebRTC channel");
     }

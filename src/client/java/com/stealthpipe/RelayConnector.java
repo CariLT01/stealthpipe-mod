@@ -178,7 +178,7 @@ public class RelayConnector {
 
             if (!StealthPipe.config.HAS_SHOWN_WEBRTC_PRIVACY_NOTE) {
                 UXHelper.sendStealthPipeSystemMessage(
-                        "§9privacy note: §8StealthPipe may use §fWebRTC Technology §8 to significantly reduce latency. It may reveal your IP address. Can be disabled in config."
+                        "§9Privacy note: §8StealthPipe may use §fWebRTC Technology§8 to significantly reduce latency. It requires sharing your IP address. WebRTC can be disabled in the mod's config."
                 );
                 StealthPipe.config.HAS_SHOWN_WEBRTC_PRIVACY_NOTE = true;
                 StealthPipe.config.save();
@@ -266,13 +266,13 @@ public class RelayConnector {
         switch (difficulty) {
             case 6:
                 UXHelper.sendStealthPipeSystemMessage(
-                        "The relay has issued a challenge with a higher difficulty than usual to throttle traffic and protect itself from potential ongoing attacks. This will make authenticating slower. Please wait..."
+                        "Authentication may take longer. Please stand by."
                 );
                 break;
 
             case 7:
                 UXHelper.sendStealthPipeSystemMessage(
-                        "The relay has issued a challenge with a very high difficulty than usual to throttle traffic and protect itself from the ongoing attacks. This will make authentication take a lot longer than usual. Please hold..."
+                        "Authentication may take a lot longer. Please stand by."
                 );
                 break;
 
