@@ -28,21 +28,26 @@ public class StealthPipeClient implements ClientModInitializer {
 
 			LOGGER.info("Detected disconnect via Fabric EVENT");
 
-			StealthWebSocketClient wsClient = ModState.relayClient.get();
+			GameConnectionWebSocket wsClient = ModState.relayClient.get();
 
 			if (wsClient != null) {
 				wsClient.disconnectWithReason(WebSocketDisconnectReason.FabricEventDisconnectClient);
+			}
+
+			SignalWebSocket wsClient2 = ModState.signalClient.get();
+			if (wsClient2 != null) {
+				wsClient2.disconnectWithReason(WebSocketDisconnectReason.FabricEventDisconnectClient);
 			}
 
 			ModState.resetState();
 
 		});
 
-		ClientTickEvents.END_CLIENT_TICK.register((client) -> {
+		/* NOT COMMENTED CODE ClientTickEvents.END_CLIENT_TICK.register((client) -> {
 			// Fire lingering packets in queue
 			if (ModState.relayClient.get() != null && ModState.webSocketOpen.get()) {
 				ModState.relayClient.get().firePacketsInQueue();
 			}
-		});
+		}); */
 	}
 }

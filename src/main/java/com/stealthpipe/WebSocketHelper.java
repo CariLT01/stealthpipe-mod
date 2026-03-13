@@ -29,10 +29,13 @@ public class WebSocketHelper {
 
         URI uri = new URI(StealthPipe.config.RELAY_IP.replace("https://", "wss://").replace("http://", "ws://") + "/join?id=" + gameId + hostQuery + versionQuery);
 
-        StealthWebSocketClient wsClient = new StealthWebSocketClient(uri, WebsocketClientType.RELAY_SIGNALING, gameId);
+        // StealthWebSocketClient wsClient = new StealthWebSocketClient(uri, WebsocketClientType.RELAY_SIGNALING, gameId);
+        // wsClient.connect();
+
+        SignalWebSocket wsClient = new SignalWebSocket(gameId, SignalConnectionFlow.HostToRelay);
         wsClient.connect();
 
-        ModState.relayClient.set(wsClient);
+        ModState.signalClient.set(wsClient);
         ModState.webSocketOpen.set(true);
 
         LOGGER.info("Connected to external WS, started signaling");

@@ -45,13 +45,13 @@ public class StealthPipe implements ModInitializer {
 			LOGGER.info("Registered Minecraft Server instance");
 		});
 
-		ServerTickEvents.END_SERVER_TICK.register(server -> {
+		/* NOt commented code ServerTickEvents.END_SERVER_TICK.register(server -> {
 			// Make sure we fire packets in queue that are lingering
 			if (!ModState.gameOpenToLan.get()) return;
-			for (Map.Entry<Channel, StealthWebSocketClient> entry : ModState.channelToWSClient.entrySet()) {
+			for (Map.Entry<Channel, GameConnectionWebSocket> entry : ModState.channelToWSClient.entrySet()) {
 				entry.getValue().firePacketsInQueue();
 			}
-		});
+		}); */
 
 
 	}

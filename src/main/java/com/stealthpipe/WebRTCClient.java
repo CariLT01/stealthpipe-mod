@@ -25,14 +25,15 @@ public class WebRTCClient {
     private final Gson gson = new Gson();
     private final PeerConnectionFactory factory = new PeerConnectionFactory();
     private RTCPeerConnection peerConnection;
-    private StealthWebSocketClient signalingClient;
+    private AbstractStealthPipeWebSocketClient signalingClient;
     private RTCDataChannel dataChannel;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     private byte clientId;
 
-    private final long BATCHING_INTERVAL = StealthPipe.config.PACKET_BATCHING_INTERVAL_MS * 1_000_000L; // 2 milliseconds
+    private final AtomicBoolean loopStarted = new AtomicBoolean(false);
+
 
     private boolean isHost = false;
 
@@ -41,7 +42,6 @@ public class WebRTCClient {
 
     private final Consumer<byte[]> onMessageHook;
     private final Consumer<WebRTCClient> onClosed;
-    private final AtomicBoolean loopStarted = new AtomicBoolean(false);
 
     private final AtomicBoolean connectionFailed = new AtomicBoolean(false);
 
@@ -50,7 +50,7 @@ public class WebRTCClient {
     public boolean gotMessages = false;
     private final ReentrantLock writeLock = new ReentrantLock();
 
-    private final Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
+    private final PacketBatchingManager packetBatchingManager = new PacketBatchingManager(this::send);
 
     public WebRTCClient(Consumer<byte[]> onMessage, Consumer<WebRTCClient> onClosed) {
         this.clientId = (byte) (Math.random() * 255);
@@ -58,141 +58,8 @@ public class WebRTCClient {
         this.onClosed = onClosed;
     }
 
-    private void sendQueuedSendPacketsBatched() {
-        int PACKET_SIZE_LIMIT = 2 * 1024 * 1024; // 2MB
-
-        while (!this.queuedSendPackets.isEmpty()) {
-            // Create a composite buffer to hold the entire batch
-            CompositeByteBuf batchBuffer = Unpooled.compositeBuffer();
-
-            try {
-                while (!this.queuedSendPackets.isEmpty()) {
-                    byte[] packet = this.queuedSendPackets.peek();
-                    if (packet == null) break;
-
-                    // Check for size limit: (existing buffer + 4 byte header + packet length)
-                    if (batchBuffer.readableBytes() + packet.length + 4 > PACKET_SIZE_LIMIT) {
-                        if (batchBuffer.readableBytes() > 0) break;
-                        // If single packet > limit, we let it through once so it doesn't clog
-                    }
-
-                    // Remove from queue now that we're committed
-                    this.queuedSendPackets.poll();
-
-                    // 1. Create a 4-byte buffer for the length header
-                    ByteBuf header = Unpooled.copyInt(packet.length);
-                    // 2. Wrap the existing packet array (no copy!)
-                    ByteBuf body = Unpooled.wrappedBuffer(packet);
-
-                    // Add to composite (true = advance writer index)
-                    batchBuffer.addComponents(true, header, body);
-                }
-
-                if (batchBuffer.readableBytes() > 0) {
-                    // Flatten once for the WebSocket send
-                    byte[] flatBatch = new byte[batchBuffer.readableBytes()];
-                    batchBuffer.readBytes(flatBatch);
-
-                    this.writeLock.lock();
-                    try {
-                        ModState.outboundPPSCounter.getAndAdd(1);
-                        this.send(flatBatch);
-                    } catch (Exception e) {
-                        LOGGER.error("Failed to send", e);
-                    }
-                    finally {
-                        this.writeLock.unlock();
-                    }
-                }
-            } catch (Exception e) {
-                LOGGER.error("Batching error: ", e);
-                this.queuedSendPackets.clear();
-            } finally {
-                batchBuffer.release(); // Free memory
-            }
-        }
-    }
-
-    public static List<byte[]> unpackPacket(byte[] packedData) {
-        List<byte[]> packets = new ArrayList<>();
-        ByteBuffer buffer = ByteBuffer.wrap(packedData);
-
-        while (buffer.remaining() >= 4) {
-            int packetLength = buffer.getInt();
-
-            if (packetLength < 0 || packetLength > buffer.remaining()) {
-                LOGGER.error("Failed to parse packet batch: invalid packet length");
-                break;
-            }
-
-            byte[] packetData = new byte[packetLength];
-            buffer.get(packetData);
-
-            packets.add(packetData);
-        }
-
-        return packets;
-    }
-
-    private void sendQueuedSendPackets() {
-        if (StealthPipe.config.ENABLE_BATCHED_PACKETS) {
-            this.sendQueuedSendPacketsBatched();
-        } else {
-            // We use a Composite buffer to avoid copying data until the last possible second
-            CompositeByteBuf composite = Unpooled.compositeBuffer();
-
-            try {
-                while (!this.queuedSendPackets.isEmpty()) {
-                    byte[] data = this.queuedSendPackets.poll();
-                    if (data == null) break;
-
-                    // Add 4-byte length + payload
-                    ByteBuf header = Unpooled.copyInt(data.length);
-                    ByteBuf body = Unpooled.wrappedBuffer(data);
-
-                    // 'true' means update the writer index immediately
-                    composite.addComponents(true, header, body);
-                }
-
-                if (composite.readableBytes() > 0) {
-                    // Since super.send(byte[]) needs an array, we have to flatten it once here
-                    byte[] flat = new byte[composite.readableBytes()];
-                    composite.readBytes(flat);
-
-                    this.writeLock.lock();
-                    try {
-                        this.send(flat);
-                    } catch (Exception e) {
-                        LOGGER.error("Failed to send packet", e);
-                    } finally {
-                        this.writeLock.unlock();
-                    }
-                }
-            } finally {
-                // Netty buffers are reference-counted. You MUST release or leak memory.
-                composite.release();
-            }
-        }
-    }
-
-    private void sendLoop() {
-        new Thread(() -> {
-            while (this.open) {
-                long start = System.nanoTime();
-                this.sendQueuedSendPackets();
-                long elapsed = System.nanoTime() - start;
-                long toWait = this.BATCHING_INTERVAL - elapsed;
-                if (toWait > 0) {
-                    if (toWait > 2_000_000L) { // >2ms -> park to save CPU
-                        LockSupport.parkNanos(toWait - 500_000L); // park most of it
-                    }
-                    // short busy-spin to improve precision for the remaining nanos
-                    while (System.nanoTime() - start < this.BATCHING_INTERVAL) {
-                        Thread.onSpinWait();
-                    }
-                }
-            }
-        }).start();
+    public PacketBatchingManager getPacketBatchingManager() {
+        return packetBatchingManager;
     }
 
     private void registerDataChannelObserver(RTCDataChannel channel) {
@@ -219,13 +86,14 @@ public class WebRTCClient {
                     queuedPackets.clear();
                     if (!loopStarted.get()) {
                         loopStarted.set(true);
-                        sendLoop();
+                        packetBatchingManager.run();
                     }
 
                 }
 
                 if (channel.getState() == RTCDataChannelState.CLOSED || channel.getState() == RTCDataChannelState.CLOSING) {
                     open = false;
+                    onClosedInternal();
                     onClosed.accept(WebRTCClient.this);
                 }
             }
@@ -344,7 +212,7 @@ public class WebRTCClient {
     }
 
 
-    public void tryEstablishRTCHost(StealthWebSocketClient signalingClient, byte otherClientID) throws Exception {
+    public void tryEstablishRTCHost(AbstractStealthPipeWebSocketClient signalingClient, byte otherClientID) throws Exception {
         LOGGER.info("Trying to establish RTC connection as a host");
 
         this.isHost = true;
@@ -407,9 +275,11 @@ public class WebRTCClient {
 
     public void tryEstablishRTC(String gameId) throws Exception {
         this.isHost = false;
-        signalingClient = new StealthWebSocketClient(URI.create(
+        /* signalingClient = new StealthWebSocketClient(URI.create(
                 StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&signal=true&version=" + StealthPipe.MOD_VERSION),
-                WebsocketClientType.CLIENT_SIGNALING, gameId);
+                WebsocketClientType.CLIENT_SIGNALING, gameId); */
+
+        signalingClient = new SignalWebSocket(gameId, SignalConnectionFlow.ClientToRelay);
 
         signalingClient.connect();
         CompletableFuture<Void> readyFuture = new CompletableFuture<>();
@@ -433,7 +303,8 @@ public class WebRTCClient {
         } catch (Exception e) {
             LOGGER.error("ReadyFuture failed: ", e);
             this.connectionFailed.set(true);
-            throw new RuntimeException("Host did not report status READY, timed out waiting for READY status");
+            signalingClient.disconnectWithReason(WebSocketDisconnectReason.SignalingWebRTCFailed);
+            throw new RuntimeException("Timed out waiting for READY status or WRTC rejected");
         }
 
 
@@ -507,6 +378,10 @@ public class WebRTCClient {
 
     }
 
+    private void onClosedInternal() {
+        this.packetBatchingManager.stop();
+    }
+
 
     private void onSendPacketInternal(byte[] data) throws Exception {
         ByteBuffer buffer = ByteBuffer.wrap(data);
@@ -545,24 +420,19 @@ public class WebRTCClient {
         this.disconnectWebRTC();
     }
 
-    public void send(byte[] data) throws Exception {
-        if (!this.open) {
-            this.queuedPackets.add(data);
-        } else {
-            this.onSendPacketInternal(data);
-        }
-    }
-
-    private void checkShouldFire() {
-
-        if (!StealthPipe.config.ENABLE_BATCHED_PACKETS) {
-            this.sendQueuedSendPackets();
+    public void send(byte[] data) {
+        try {
+            if (!this.open) {
+                this.queuedPackets.add(data);
+            } else {
+                this.onSendPacketInternal(data);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to send data via WebRTC", e);
         }
     }
 
     public void sendPacket(byte[] data) {
-        this.queuedSendPackets.add(data);
-
-        this.checkShouldFire();
+        this.packetBatchingManager.queuePacket(data);
     }
 }

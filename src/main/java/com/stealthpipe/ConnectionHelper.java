@@ -1,7 +1,6 @@
 package com.stealthpipe;
 
 import com.stealthpipe.mixin.ConnectionChannelAccessor;
-import dev.onvoid.webrtc.*;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -13,9 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.InetSocketAddress;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
+
 
 public class ConnectionHelper {
 
@@ -125,7 +123,10 @@ public class ConnectionHelper {
         } catch (Exception e) {
             LOGGER.error("Failed to establish direct P2P WebRTC, falling back to WSS-relay based", e);
 
-            StealthWebSocketClient wsClient = new StealthWebSocketClient(URI.create(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&version=" + StealthPipe.MOD_VERSION),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
+            // StealthWebSocketClient wsClient = new StealthWebSocketClient(Utils.formatWebSocketJoinURL(gameId, false, ),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
+            // wsClient.connect();
+
+            GameConnectionWebSocket wsClient = new GameConnectionWebSocket(gameId, com.stealthpipe.PacketFlow.ClientToHost, gameChannel, null);
             wsClient.connect();
 
             ModState.relayClient.set(wsClient);
@@ -138,7 +139,7 @@ public class ConnectionHelper {
 
     private static @NotNull WebRTCClient getWebRTCClient(String gameId, Channel gameChannel) throws Exception {
         WebRTCClient rtcClient = new WebRTCClient((byte[] msg) -> {
-            List<byte[]> packets = WebRTCClient.unpackPacket(msg);
+            List<byte[]> packets = PacketBatchingManager.unpackPacket(msg);
             for (byte[] pck : packets) {
                 gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
             }
@@ -159,22 +160,5 @@ public class ConnectionHelper {
         LOGGER.info("Injecting adapter");
 
         pipeline.addFirst( "stealth_relay_send", new StealthChannelOutboundHandlerAdapter(label));
-    }
-
-    public static void handleDisconnectEvent() {
-        LOGGER.info("Detected disconnect via Fabric EVENT");
-
-        StealthWebSocketClient wsClient = ModState.relayClient.get();
-
-        if (wsClient != null) {
-            wsClient.disconnectWithReason(WebSocketDisconnectReason.FabricEventDisconnectClient);
-        }
-
-        WebRTCClient rtcClient = ModState.relayRTCClient.get();
-        if (rtcClient != null) {
-            rtcClient.disconnect();
-        }
-
-        ModState.resetState();
     }
 }

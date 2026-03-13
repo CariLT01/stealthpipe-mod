@@ -6,10 +6,8 @@ import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.common.ClientboundDisconnectPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerConnectionListener;
 import org.java_websocket.client.WebSocketClient;
@@ -18,26 +16,22 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
-public class StealthWebSocketClient extends WebSocketClient {
+public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
     private final List<byte[]> queuedPackets = new ArrayList<>();
@@ -76,7 +70,7 @@ public class StealthWebSocketClient extends WebSocketClient {
 
 
 
-    public StealthWebSocketClient(URI serverUri, WebsocketClientType clientType, Channel channel, String gameId) {
+    public Z_OLD_DO_NOT_USE_tealthWebSocketClient(URI serverUri, WebsocketClientType clientType, Channel channel, String gameId) {
         super(serverUri, createHeaders());
 
         lastTick.set(System.nanoTime());
@@ -97,7 +91,7 @@ public class StealthWebSocketClient extends WebSocketClient {
 
     }
 
-    public StealthWebSocketClient(URI serverUri, WebsocketClientType type, String gameId) {
+    public Z_OLD_DO_NOT_USE_tealthWebSocketClient(URI serverUri, WebsocketClientType type, String gameId) {
         super(serverUri);
 
         if (ModState.isClientConnectingToStealthServer.get()) {
@@ -486,7 +480,7 @@ public class StealthWebSocketClient extends WebSocketClient {
     private void processRequestConnectionRequest(byte[] data) {
         // We need to create a fake channel
 
-        String newString = new String(data, StandardCharsets.UTF_8);
+        /* don't do anything for now String newString = new String(data, StandardCharsets.UTF_8);
 
         Channel virtualChannel = this.createVirtualChannel();
 
@@ -497,7 +491,7 @@ public class StealthWebSocketClient extends WebSocketClient {
 
         ModState.channelToWSClient.put(virtualChannel, newClient);
 
-        LOGGER.info("Created new channel to relay");
+        LOGGER.info("Created new channel to relay"); */
     }
 
     private byte[] prepareSignalingMessage(byte clientId, byte messageType, byte[] message) {
@@ -526,7 +520,7 @@ public class StealthWebSocketClient extends WebSocketClient {
     }
 
     private void processWebRTCRequestConnectionRequest(byte[] data) {
-        LOGGER.info("Received a WebRTC Request Connection signal");
+        /* LOGGER.info("Received a WebRTC Request Connection signal");
 
         byte clientId = data[1];
 
@@ -562,7 +556,7 @@ public class StealthWebSocketClient extends WebSocketClient {
         } catch (Exception e) {
             LOGGER.error("RTC connection failed to establish");
             this.send(this.prepareSignalingMessage(clientId, (byte)SignalingMessageType.WebRTC_ConnectionFailed.getPacketType(), new byte[0]));
-        }
+        } */
 
 
 
@@ -719,7 +713,7 @@ public class StealthWebSocketClient extends WebSocketClient {
 
             // It is connection on server
 
-            ModState.channelToWSClient.entrySet().removeIf(entry -> {
+            /* ModState.channelToWSClient.entrySet().removeIf(entry -> {
                 if (entry.getValue() == this) {
                     LOGGER.info("Closed Netty channel on the server, and queued for removal");
                     entry.getKey().disconnect(); // Close the Netty channel
@@ -729,7 +723,7 @@ public class StealthWebSocketClient extends WebSocketClient {
             });
 
             LOGGER.warn("Could not disconnect channel; WS client not found");
-
+            */
 
         }
 

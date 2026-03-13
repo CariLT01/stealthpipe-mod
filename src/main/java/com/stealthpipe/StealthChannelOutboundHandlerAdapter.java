@@ -68,14 +68,14 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
                 }
 
             } else {
-                StealthWebSocketClient relayClient = ModState.relayClient.get();
+                GameConnectionWebSocket relayClient = ModState.relayClient.get();
 
                 if (relayClient == null) {
                     LOGGER.warn("No WS client found");
                     return false;
                 }
 
-                relayClient.send(bytes);
+                relayClient.sendPacket(bytes);
 
                 // LOGGER.info("Forwarding {} bytes to the relay as a client", bytes.length);
 
@@ -86,7 +86,8 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
         } else {
             // Send it to the client
 
-            StealthWebSocketClient wsClient = ModState.channelToWSClient.get(destination);
+            // StealthWebSocketClient wsClient = ModState.channelToWSClient.get(destination);
+            GameConnectionWebSocket wsClient = ModState.channelToWSClient.get(destination);
             if (wsClient == null) {
                 // try webRTC
 
@@ -105,7 +106,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
                 }
             }
 
-            wsClient.send(bytes);
+            wsClient.sendPacket(bytes);
 
             // LOGGER.info("Forwarding {} bytes to the relay as a server", bytes.length);
 
@@ -205,7 +206,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
             // Kicked player, close the WS connection
 
-            StealthWebSocketClient wsClient = ModState.channelToWSClient.get(ctx.channel());
+            GameConnectionWebSocket wsClient = ModState.channelToWSClient.get(ctx.channel());
             if (wsClient != null) {
                 LOGGER.info("2: Connection closed, detected channel inactive");
                 wsClient.disconnectWithReason(WebSocketDisconnectReason.NettyChannelInactiveServer);
