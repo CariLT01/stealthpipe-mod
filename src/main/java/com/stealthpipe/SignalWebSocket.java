@@ -95,6 +95,7 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
 
                 try {
                     Thread.sleep(1000);
+                    this.sentBegin.set(System.nanoTime());
                     this.send(data);
 
                 } catch (WebsocketNotConnectedException e) {
