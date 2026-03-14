@@ -53,63 +53,29 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
         if (isClient) {
             // Send it to server
-            if (ModState.usingWebRTC.get()) {
-                WebRTCClient rtcClient = ModState.relayRTCClient.get();
-                if (rtcClient == null) {
-                    LOGGER.warn("dropped packet. no RTC client found");
-                    return false;
-                }
-                try {
-                    rtcClient.sendPacket(bytes);
-                    return true;
-                } catch (Exception e) {
-                    LOGGER.error("packet dropped. WebRTC send failed:", e);
-                    return false;
-                }
+            GameConnectionInterface relayClient = ModState.relayClient.get();
 
-            } else {
-                GameConnectionWebSocket relayClient = ModState.relayClient.get();
-
-                if (relayClient == null) {
-                    LOGGER.warn("No WS client found");
-                    return false;
-                }
-
-                relayClient.sendPacket(bytes);
-
-                // LOGGER.info("Forwarding {} bytes to the relay as a client", bytes.length);
-
-                return true;
+            if (relayClient == null) {
+                LOGGER.warn("No WS client found");
+                return false;
             }
+
+            relayClient.sendPacket(bytes);
+
+            // LOGGER.info("Forwarding {} bytes to the relay as a client", bytes.length);
+
+            return true;
 
 
         } else {
             // Send it to the client
 
             // StealthWebSocketClient wsClient = ModState.channelToWSClient.get(destination);
-            GameConnectionWebSocket wsClient = ModState.channelToWSClient.get(destination);
+            GameConnectionInterface wsClient = ModState.channelToGameConnection.get(destination);
             if (wsClient == null) {
-                // try webRTC
-
-                WebRTCClient rtcClient = ModState.channelToRTCClient.get(destination);
-                if (rtcClient == null) {
-                    LOGGER.error("Cannot find RTC connection or WS connection to forward (debug error)");
-                    return false;
-                    // cannot forward, probably a LAN person
-                }
-                try {
-                    rtcClient.sendPacket(bytes);
-                    return true;
-                } catch (Exception e) {
-                    LOGGER.error("packet dropped. send failed:", e);
-                    return false;
-                }
+                return false;
             }
-
             wsClient.sendPacket(bytes);
-
-            // LOGGER.info("Forwarding {} bytes to the relay as a server", bytes.length);
-
             return true;
         }
     }
@@ -187,10 +153,7 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
         if (isClient) {
             if (ModState.relayClient.get() != null) {
-                ModState.relayClient.get().disconnectWithReason(WebSocketDisconnectReason.NettyChannelInactiveClient);
-            }
-            if (ModState.relayRTCClient.get() != null) {
-                ModState.relayRTCClient.get().disconnect();
+                ModState.relayClient.get().disconnectWithReason(ConnectionDisconnectReason.NettyChannelInactiveClient);
             }
             ModState.webSocketOpen.set(false);
             ModState.relayClient.set(null);
@@ -199,25 +162,19 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
             ModState.resetState();
 
-            ModState.channelToWSClient.clear();
+            ModState.channelToGameConnection.clear();
 
             LOGGER.info("Connection closed, detected channel inactive");
         } else {
 
             // Kicked player, close the WS connection
 
-            GameConnectionWebSocket wsClient = ModState.channelToWSClient.get(ctx.channel());
+            GameConnectionInterface wsClient = ModState.channelToGameConnection.get(ctx.channel());
             if (wsClient != null) {
                 LOGGER.info("2: Connection closed, detected channel inactive");
-                wsClient.disconnectWithReason(WebSocketDisconnectReason.NettyChannelInactiveServer);
+                wsClient.disconnectWithReason(ConnectionDisconnectReason.NettyChannelInactiveServer);
             } else {
-                LOGGER.info("Destination not found, no WS client to close");
-            }
-
-            WebRTCClient rtcClient = ModState.channelToRTCClient.get(ctx.channel());
-            if (rtcClient != null) {
-                rtcClient.disconnect();
-                LOGGER.info("Disconnected RTC client");
+                LOGGER.info("Destination not found, no client to close");
             }
 
 

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.LockSupport;
 
-public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient {
+public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient implements GameConnectionInterface {
     private final PacketFlow flow;
 
     private final Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
@@ -78,7 +78,7 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
         this.gameChannel.disconnect();
         // Display a message on the client
         if (this.flow == PacketFlow.ClientToHost) {
-            if (Objects.equals(reason, WebSocketDisconnectReason.NettyChannelInactiveClient.getPacketType())) {
+            if (Objects.equals(reason, ConnectionDisconnectReason.NettyChannelInactiveClient.getPacketType())) {
                 // Don't show an error message
                 // Minecraft should show an error message on top,
                 // Or it was an intentional disconnect (Fabric's disconnect event still won't work, caused by a bug)
@@ -105,5 +105,9 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
             this.gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
         }
 
+    }
+
+    public void disconnect() {
+        this.disconnectWithReason(ConnectionDisconnectReason.Unknown);
     }
 }

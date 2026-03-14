@@ -7,7 +7,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerConnectionListener;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
 import org.java_websocket.handshake.ServerHandshake;
-import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -129,11 +128,11 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
         return newArray;
     }
 
-    private void handleRTCDisconnect(WebRTCClient client) {
+    private void handleRTCDisconnect(WebRTCGameConnection client) {
 
         // It is connection on server
 
-        ModState.channelToRTCClient.entrySet().removeIf(entry -> {
+        ModState.channelToGameConnection.entrySet().removeIf(entry -> {
             if (entry.getValue() == client) {
                 LOGGER.info("Closed Netty channel on the server, and queued for removal");
                 entry.getKey().disconnect(); // Close the Netty channel
@@ -173,23 +172,23 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
 
         Channel virtualChannel = this.createVirtualChannel();
 
-        WebRTCClient rtcClient = new WebRTCClient((byte[] message) -> {
+        WebRTCGameConnection rtcClient = new WebRTCGameConnection((byte[] message) -> {
             List<byte[]> packets = PacketBatchingManager.unpackPacket(message);
             for (byte[] packet : packets) {
                 virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
             }
 
-        }, this::handleRTCDisconnect);
+        }, this::handleRTCDisconnect, PacketFlow.HostToClient, this, clientId);
 
         byte[] readyData = new byte[]{(byte)SignalingMessageType.WebRTC_ConnectionReady.getPacketType(), clientId};
         this.send(readyData);
         LOGGER.info("Sent ready data");
 
         try {
-            rtcClient.tryEstablishRTCHost(this, clientId);
+            rtcClient.connect();
             // success
             LOGGER.info("RTC Client established!");
-            ModState.channelToRTCClient.put(virtualChannel, rtcClient);
+            ModState.channelToGameConnection.put(virtualChannel, rtcClient);
         } catch (Exception e) {
             LOGGER.error("RTC connection failed to establish");
             this.send(this.prepareSignalingMessage(clientId, (byte)SignalingMessageType.WebRTC_ConnectionFailed.getPacketType(), new byte[0]));
@@ -214,7 +213,7 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
         GameConnectionWebSocket newClient = new GameConnectionWebSocket(gameId, PacketFlow.HostToClient, virtualChannel, newString);
         newClient.connect();
 
-        ModState.channelToWSClient.put(virtualChannel, newClient);
+        ModState.channelToGameConnection.put(virtualChannel, newClient);
 
         LOGGER.info("Created new channel to relay");
     }
@@ -284,9 +283,9 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
         String realReason = getReasonFromCode(code, reason);
 
         if (this.flow == SignalConnectionFlow.HostToRelay) {
-            for (Map.Entry<Channel, WebRTCClient> clients : ModState.channelToRTCClient.entrySet()) {
+            for (Map.Entry<Channel, GameConnectionInterface> clients : ModState.channelToGameConnection.entrySet()) {
                 LOGGER.info("Disconnecting RTC Client. Cause: signal disconnected. Preserve state.");
-                clients.getValue().disconnect();
+                clients.getValue().disconnectWithReason(ConnectionDisconnectReason.SignalConnectionDisconnected);
             }
 
             LOGGER.info("RELAY SIGNAL disconnected");

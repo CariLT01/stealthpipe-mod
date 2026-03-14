@@ -503,9 +503,9 @@ public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
         return newArray;
     }
 
-    private void handleRTCDisconnect(WebRTCClient client) {
+    private void handleRTCDisconnect(WebRTCGameConnection client) {
 
-        // It is connection on server
+        /* // It is connection on server
 
         ModState.channelToRTCClient.entrySet().removeIf(entry -> {
             if (entry.getValue() == client) {
@@ -516,7 +516,7 @@ public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
             return false;
         });
 
-        LOGGER.warn("Could not disconnect channel; WebRTC client not found");
+        LOGGER.warn("Could not disconnect channel; WebRTC client not found"); */
     }
 
     private void processWebRTCRequestConnectionRequest(byte[] data) {
@@ -599,7 +599,7 @@ public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
          }
     }
 
-    public void disconnectWithReason(WebSocketDisconnectReason reason) {
+    public void disconnectWithReason(ConnectionDisconnectReason reason) {
         LOGGER.info("Close called with reason: {}", reason.getPacketType());
         this.close(1000, reason.getPacketType());
     }
@@ -701,14 +701,14 @@ public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
 
             if (this.relayType == WebsocketClientType.RELAY_SIGNALING) {
                 // disconnect WebRTC connections
-                for (Map.Entry<Channel, WebRTCClient> clients : ModState.channelToRTCClient.entrySet()) {
+                /* for (Map.Entry<Channel, WebRTCClient> clients : ModState.channelToRTCClient.entrySet()) {
                     LOGGER.info("Disconnecting RTC Client. Cause: signal disconnected. Preserve state.");
                     clients.getValue().disconnect();
                 }
 
                 LOGGER.info("RELAY SIGNAL disconnected");
                 DisconnectHandler.showDisconnectMessageAndRetry(reason);
-                return;
+                return; */
             }
 
             // It is connection on server

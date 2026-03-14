@@ -36,11 +36,10 @@ public class StealthPipe implements ModInitializer {
 
 		config = StealthPipeConfig.load();
 
-		LOGGER.info("Stealth initializing");
+		LOGGER.info("StealthPipe initializing");
 
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
 			ModState.minecraftServer.set(server);
-
 
 			LOGGER.info("Registered Minecraft Server instance");
 		});

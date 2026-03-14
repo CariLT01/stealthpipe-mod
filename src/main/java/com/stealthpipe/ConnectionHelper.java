@@ -101,7 +101,7 @@ public class ConnectionHelper {
 
     }
 
-    private static void handleWebRTCClientDisconnect(WebRTCClient client, Channel gameChannel) {
+    private static void handleWebRTCClientDisconnect(WebRTCGameConnection client, Channel gameChannel) {
         DisconnectHandler.showClientDisconnectMessage(client.gotMessages, "WRTC_DISCONNECTED");
         gameChannel.disconnect();
         LOGGER.info("Disconnected WebRTC channel");
@@ -115,9 +115,9 @@ public class ConnectionHelper {
             if (!StealthPipe.config.CLIENT_ATTEMPT_WEBRTC) {
                 throw new RuntimeException("configured to not try WebRTC");
             }
-            WebRTCClient rtcClient = getWebRTCClient(gameId, gameChannel);
+            WebRTCGameConnection rtcClient = getWebRTCClient(gameId, gameChannel);
 
-            ModState.relayRTCClient.set(rtcClient);
+            ModState.relayClient.set(rtcClient);
             ModState.usingWebRTC.set(true);
             LOGGER.info("Successfully established a direct WebRTC connection");
         } catch (Exception e) {
@@ -137,17 +137,17 @@ public class ConnectionHelper {
 
     }
 
-    private static @NotNull WebRTCClient getWebRTCClient(String gameId, Channel gameChannel) throws Exception {
-        WebRTCClient rtcClient = new WebRTCClient((byte[] msg) -> {
+    private static @NotNull WebRTCGameConnection getWebRTCClient(String gameId, Channel gameChannel) throws Exception {
+        WebRTCGameConnection rtcClient = new WebRTCGameConnection((byte[] msg) -> {
             List<byte[]> packets = PacketBatchingManager.unpackPacket(msg);
             for (byte[] pck : packets) {
                 gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
             }
         }, (client) -> {
             handleWebRTCClientDisconnect(client, gameChannel);
-        });
+        }, com.stealthpipe.PacketFlow.ClientToHost, gameId);
 
-        rtcClient.tryEstablishRTC(gameId);
+        rtcClient.connect();
         return rtcClient;
     }
 

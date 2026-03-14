@@ -2,25 +2,19 @@ package com.stealthpipe;
 
 import com.google.gson.Gson;
 import dev.onvoid.webrtc.*;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.CompositeByteBuf;
-import io.netty.buffer.Unpooled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
-public class WebRTCClient {
+public class WebRTCGameConnection implements GameConnectionInterface {
 
     private final Gson gson = new Gson();
     private final PeerConnectionFactory factory = new PeerConnectionFactory();
@@ -41,7 +35,7 @@ public class WebRTCClient {
     private boolean open = false;
 
     private final Consumer<byte[]> onMessageHook;
-    private final Consumer<WebRTCClient> onClosed;
+    private final Consumer<WebRTCGameConnection> onClosed;
 
     private final AtomicBoolean connectionFailed = new AtomicBoolean(false);
 
@@ -52,10 +46,37 @@ public class WebRTCClient {
 
     private final PacketBatchingManager packetBatchingManager = new PacketBatchingManager(this::send);
 
-    public WebRTCClient(Consumer<byte[]> onMessage, Consumer<WebRTCClient> onClosed) {
+    private SignalWebSocket aSignalingClient = null;
+    private byte aOtherClientID = 0;
+    private String aGameID = null;
+    private final PacketFlow flow;
+
+
+    public WebRTCGameConnection(Consumer<byte[]> onMessage, Consumer<WebRTCGameConnection> onClosed, PacketFlow flow, String gameId) {
+        if (flow != PacketFlow.ClientToHost) {
+            throw new IllegalArgumentException("Cannot use client to host constructor, invalid flow");
+        }
+
+        this.flow = flow;
+
         this.clientId = (byte) (Math.random() * 255);
         this.onMessageHook = onMessage;
         this.onClosed = onClosed;
+        this.aGameID = gameId;
+    }
+
+    public WebRTCGameConnection(Consumer<byte[]> onMessage, Consumer<WebRTCGameConnection> onClosed, PacketFlow flow, SignalWebSocket signalingClient, byte otherClientID) {
+        if (flow != PacketFlow.HostToClient) {
+            throw new IllegalArgumentException("Cannot use host to client constructor, invalid flow");
+        }
+
+        this.flow = flow;
+
+        this.onMessageHook = onMessage;
+        this.onClosed = onClosed;
+        this.aSignalingClient = signalingClient;
+        this.aOtherClientID = otherClientID;
+
     }
 
     public PacketBatchingManager getPacketBatchingManager() {
@@ -94,7 +115,7 @@ public class WebRTCClient {
                 if (channel.getState() == RTCDataChannelState.CLOSED || channel.getState() == RTCDataChannelState.CLOSING) {
                     open = false;
                     onClosedInternal();
-                    onClosed.accept(WebRTCClient.this);
+                    onClosed.accept(WebRTCGameConnection.this);
                 }
             }
 
@@ -211,8 +232,16 @@ public class WebRTCClient {
 
     }
 
+    public void connect() throws Exception {
+        if (this.flow == PacketFlow.ClientToHost) {
+            this.tryEstablishRTC(this.aGameID);
+        } else {
+            this.tryEstablishRTCHost(this.aSignalingClient, this.aOtherClientID);
+        }
+    }
 
-    public void tryEstablishRTCHost(AbstractStealthPipeWebSocketClient signalingClient, byte otherClientID) throws Exception {
+
+    private void tryEstablishRTCHost(AbstractStealthPipeWebSocketClient signalingClient, byte otherClientID) throws Exception {
         LOGGER.info("Trying to establish RTC connection as a host");
 
         this.isHost = true;
@@ -273,7 +302,7 @@ public class WebRTCClient {
         signalingClient.hookOnMessage(this::handleSignalMessage);
     }
 
-    public void tryEstablishRTC(String gameId) throws Exception {
+    private void tryEstablishRTC(String gameId) throws Exception {
         this.isHost = false;
         /* signalingClient = new StealthWebSocketClient(URI.create(
                 StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&signal=true&version=" + StealthPipe.MOD_VERSION),
@@ -303,7 +332,7 @@ public class WebRTCClient {
         } catch (Exception e) {
             LOGGER.error("ReadyFuture failed: ", e);
             this.connectionFailed.set(true);
-            signalingClient.disconnectWithReason(WebSocketDisconnectReason.SignalingWebRTCFailed);
+            signalingClient.disconnectWithReason(ConnectionDisconnectReason.SignalingWebRTCFailed);
             throw new RuntimeException("Timed out waiting for READY status or WRTC rejected");
         }
 
@@ -313,11 +342,11 @@ public class WebRTCClient {
             LOGGER.info("WebRTC Connection Success");
             this.connectionFailed.set(false);
             LOGGER.info("Disconnecting signaling WebSocket");
-            signalingClient.disconnectWithReason(WebSocketDisconnectReason.SignalingFinished);
+            signalingClient.disconnectWithReason(ConnectionDisconnectReason.SignalingFinished);
         } catch (Exception e) {
             this.connectionFailed.set(true);
             peerConnection.close();
-            signalingClient.disconnectWithReason(WebSocketDisconnectReason.SignalingWebRTCFailed);
+            signalingClient.disconnectWithReason(ConnectionDisconnectReason.SignalingWebRTCFailed);
             throw new RuntimeException("WebRTC connection failed or timed out");
         }
 
@@ -419,6 +448,7 @@ public class WebRTCClient {
     public void disconnect() {
         this.disconnectWebRTC();
     }
+    public void disconnectWithReason(ConnectionDisconnectReason reason) {this.disconnectWebRTC();} // WebRTC does not support custom disconnect frames
 
     public void send(byte[] data) {
         try {

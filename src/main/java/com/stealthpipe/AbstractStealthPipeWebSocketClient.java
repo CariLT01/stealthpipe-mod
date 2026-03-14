@@ -40,7 +40,7 @@ public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient
         this.queuedPackets.clear();
     }
 
-    public void disconnectWithReason(WebSocketDisconnectReason reason) {
+    public void disconnectWithReason(ConnectionDisconnectReason reason) {
         LOGGER.info("Close called with reason: {}", reason.getPacketType());
         this.close(1000, reason.getPacketType());
     }

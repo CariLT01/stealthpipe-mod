@@ -13,9 +13,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ModState {
 
     public static AtomicBoolean gameOpenToLan = new AtomicBoolean(false);
-    public static AtomicReference<GameConnectionWebSocket> relayClient = new AtomicReference<>(null);
+    public static AtomicReference<GameConnectionInterface> relayClient = new AtomicReference<>(null);
     public static AtomicReference<SignalWebSocket> signalClient = new AtomicReference<>(null);
-    public static AtomicReference<WebRTCClient> relayRTCClient = new AtomicReference<>(null);
     public static AtomicBoolean usingWebRTC = new AtomicBoolean(false);
     public static AtomicReference<String> gameId = new AtomicReference<>("");
     public static AtomicBoolean webSocketOpen = new AtomicBoolean(false);
@@ -24,8 +23,7 @@ public class ModState {
     public static AtomicReference<Channel> relayClientChannel = new AtomicReference<>(null);
     public static AtomicReference<MinecraftServer> minecraftServer = new AtomicReference<>(null);
 
-    public static ConcurrentHashMap<Channel, GameConnectionWebSocket> channelToWSClient = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<Channel, WebRTCClient> channelToRTCClient = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Channel, GameConnectionInterface> channelToGameConnection = new ConcurrentHashMap<>();
 
     // Allows client executor to be accessible in common code
     public static AtomicReference<Executor> clientThreadExecutor = new AtomicReference<>(null);

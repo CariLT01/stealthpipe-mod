@@ -30,7 +30,7 @@ public class IntegratedServerMixin {
         if (wsConnected) {
             if(ModState.relayClient.get() != null) {
                 try {
-                    ModState.relayClient.get().disconnectWithReason(WebSocketDisconnectReason.LocalServerStopped);
+                    ModState.relayClient.get().disconnectWithReason(ConnectionDisconnectReason.LocalServerStopped);
                 } catch (Exception e) {
                     LOGGER.error("Failed to send disconnect reason", e);
                 }
@@ -38,14 +38,14 @@ public class IntegratedServerMixin {
             }
         }
 
-        for (Map.Entry<Channel, WebRTCClient> entry : ModState.channelToRTCClient.entrySet()) {
+        for (Map.Entry<Channel, GameConnectionInterface> entry : ModState.channelToGameConnection.entrySet()) {
             LOGGER.info("Disconnected RTC Connection");
-            entry.getValue().disconnect();
+            entry.getValue().disconnectWithReason(ConnectionDisconnectReason.LocalServerStopped);
         }
         LOGGER.info("Detected integrated server closed");
 
-        ModState.channelToWSClient.clear();
-        ModState.channelToRTCClient.clear();
+        ModState.channelToGameConnection.clear();
+        // ModState.channelToRTCClient.clear();
 
         ModState.resetState();
     }
