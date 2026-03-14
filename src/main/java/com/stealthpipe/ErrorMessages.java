@@ -5,7 +5,7 @@ import static java.util.Map.entry;
 
 public class ErrorMessages {
     public static final Map<String, String> MESSAGES = Map.ofEntries(
-            entry("HOST_DISCONNECTED", "The host has disconnected."),
+            entry("HOST_DISCONNECTED", "The host has left the game."),
             entry("HIGH_BANDWIDTH", "You are sending too much data. Try lowering your render distance and try again."),
             entry("HIGH_USAGE", "You are sending too much data. Please wait and try again."),
             entry("WSS_READ_FAILED", "Socket read failed. Please try reconnecting."),
@@ -26,7 +26,7 @@ public class ErrorMessages {
             entry("SIGNAL_DISCONNECTED", "The main room connection has disconnected."),
             entry("BAD_REQUEST", "The client has sent an unexpected request."),
             entry("WRTC_DISCONNECTED", "The connection to the other client has disconnected."),
-            entry("ABNORMAL_DISCONNECT", "Disconnected unexpectedly. Please check your Internet connection and try again."),
+            entry("ABNORMAL_DISCONNECT", "Disconnected unexpectedly. Please check your internet connection and try again."),
             entry("INVALID_VERSION", "This version of the mod is invalid!"),
             entry("OUTDATED_CLIENT", "Outdated client. Please update to the latest version of StealthPipe."),
             entry("UNSUPPORTED_CLIENT", "Unsupported client version. Your client is too new for this relay.")
