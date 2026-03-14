@@ -61,7 +61,7 @@ public class ModMenuIntegration implements ModMenuApi {
                             .setDefaultValue(DefaultConfigValues.CLIENT_ATTEMPT_WEBRTC)
                             .setSaveConsumer(newValue -> StealthPipe.config.CLIENT_ATTEMPT_WEBRTC = newValue)
                             .setTooltip(
-                                    Component.literal("Whether he client should attempt a direct peer-to-peer connection with WebRTC.")
+                                    Component.literal("Whether the client should attempt a direct peer-to-peer connection with WebRTC.")
                             )
                             .build()
             );
