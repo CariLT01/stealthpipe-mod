@@ -47,17 +47,8 @@ public class DebugScreenMixin {
         }
     }
 
-    /*? if >=1.21.9 {*/
-    @Inject(
-            method = "render",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V",
-                    ordinal = 1 // ordinal 0 is 'list', ordinal 1 is 'list2'
-            )
-    )
-    private void render(GuiGraphics guiGraphics, CallbackInfo ci, @Local(ordinal = 1) List<String> list2) {
-
+    @Unique
+    private void updateDebugCounters() {
         if (Instant.now().toEpochMilli() - ModState.lastBandwidthTick.get() > 1000) {
 
             ModState.inboundBandwidth.set(ModState.inboundBandwidthCounter.get());
@@ -72,7 +63,10 @@ public class DebugScreenMixin {
             ModState.lastBandwidthTick.set(Instant.now().toEpochMilli());
 
         }
+    }
 
+    @Unique
+    private void addToDebugList(List<String> list2) {
         list2.add("§aStealthPipe " + StealthPipe.REAL_MOD_VERSION);
         list2.add("Usage in out: " + formatBytes(ModState.inboundData.get()) + " " + formatBytes(ModState.outboundData.get()));
         list2.add("Data in out: " + formatBytes(ModState.inboundBandwidth.get()) + "/s " + formatBytes(ModState.outboundBandwidth.get()) + "/s");
@@ -86,8 +80,22 @@ public class DebugScreenMixin {
         list2.add("Game open to LAN: " + ModState.gameOpenToLan.get());
         list2.add("Using WebRTC: " + ModState.usingWebRTC.get());
     }
-    /*? } else { */
+
+    /*? if >=1.21.9 {*/
     /*@Inject(
+            method = "render",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V",
+                    ordinal = 1 // ordinal 0 is 'list', ordinal 1 is 'list2'
+            )
+    )
+    private void render(GuiGraphics guiGraphics, CallbackInfo ci, @Local(ordinal = 1) List<String> list2) {
+        this.updateDebugCounters();
+        this.addToDebugList(list2);
+    }
+    *//*? } else { */
+    @Inject(
             method = "drawGameInformation",
             at = @At(
                     value = "INVOKE",
@@ -97,23 +105,8 @@ public class DebugScreenMixin {
     )
     private void render2(GuiGraphics guiGraphics, CallbackInfo ci, @Local(ordinal = 0) List<String> list2) {
 
-        if (Instant.now().toEpochMilli() - ModState.lastBandwidthTick.get() > 1000) {
-
-            ModState.inboundBandwidth.set(ModState.inboundBandwidthCounter.get());
-            ModState.outboundBandwidth.set(ModState.outboundBandwidthCounter.get());
-            ModState.inboundBandwidthCounter.set(0);
-            ModState.outboundBandwidthCounter.set(0);
-            ModState.lastBandwidthTick.set(Instant.now().toEpochMilli());
-
-        }
-
-        list2.add("-- §aStealthPipe§r --");
-        list2.add("Usage in out: " + formatBytes(ModState.inboundData.get()) + " " + formatBytes(ModState.outboundData.get()));
-        list2.add("Bandwidth in out: " + formatBytes(ModState.inboundBandwidth.get()) + "/s " + formatBytes(ModState.outboundBandwidth.get()) + "/s");
-        list2.add("-- Mod state: --");
-        list2.add("Is Client: " + ModState.isClientConnectingToStealthServer.get());
-        list2.add("WS Open: " + ModState.webSocketOpen.get());
-        list2.add("Game open to LAN: " + ModState.gameOpenToLan.get());
+        this.updateDebugCounters();
+        this.addToDebugList(list2);
     }
-    *//*? } */
+    /*? } */
 }

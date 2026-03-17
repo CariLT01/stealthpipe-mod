@@ -1,6 +1,7 @@
 package com.stealthpipe.mixin.client;
 
 import com.stealthpipe.*;
+import com.stealthpipe.connection.game.GameConnectionInterface;
 import io.netty.channel.Channel;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.world.level.GameType;

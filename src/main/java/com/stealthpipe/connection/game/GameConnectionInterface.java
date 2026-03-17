@@ -1,4 +1,6 @@
-package com.stealthpipe;
+package com.stealthpipe.connection.game;
+
+import com.stealthpipe.ConnectionDisconnectReason;
 
 public interface GameConnectionInterface {
     void connect() throws Exception;

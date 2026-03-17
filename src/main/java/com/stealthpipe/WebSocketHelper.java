@@ -1,6 +1,7 @@
 package com.stealthpipe;
 
-import io.netty.channel.Channel;
+import com.stealthpipe.connection.signal.SignalConnectionFlow;
+import com.stealthpipe.connection.signal.SignalWebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

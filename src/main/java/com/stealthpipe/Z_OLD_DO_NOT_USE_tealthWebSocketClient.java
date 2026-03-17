@@ -1,6 +1,7 @@
 package com.stealthpipe;
 
 
+import com.stealthpipe.connection.signal.SignalingMessageType;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;

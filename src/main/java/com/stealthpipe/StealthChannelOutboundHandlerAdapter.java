@@ -1,5 +1,6 @@
 package com.stealthpipe;
 
+import com.stealthpipe.connection.game.GameConnectionInterface;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;

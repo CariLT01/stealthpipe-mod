@@ -1,5 +1,8 @@
-package com.stealthpipe;
+package com.stealthpipe.connection.signal;
 
+import com.stealthpipe.*;
+import com.stealthpipe.connection.game.GameConnectionInterface;
+import com.stealthpipe.connection.game.GameConnectionWebSocket;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -156,43 +159,48 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
     }
 
     private void processWebRTCRequestConnectionRequest(byte[] data) {
-        LOGGER.info("Received a WebRTC Request Connection signal");
+        try {
+            LOGGER.info("Received a WebRTC Request Connection signal");
 
-        byte clientId = data[1];
+            byte clientId = data[1];
 
-        if (!StealthPipe.config.HOST_ALLOW_WEBRTC_INBOUND) {
-            // refuse request
+            if (!StealthPipe.config.HOST_ALLOW_WEBRTC_INBOUND) {
+                // refuse request
 
-            LOGGER.info("Refused WebRTC connection request, as stated in config");
-            byte[] sendBackData = new byte[]{(byte) SignalingMessageType.WebRTC_ConnectionFailed.getPacketType(), clientId};
+                LOGGER.info("Refused WebRTC connection request, as stated in config");
+                byte[] sendBackData = new byte[]{(byte) SignalingMessageType.WebRTC_ConnectionFailed.getPacketType(), clientId};
 
-            this.send(sendBackData);
-            return;
-        }
-
-        Channel virtualChannel = this.createVirtualChannel();
-
-        WebRTCGameConnection rtcClient = new WebRTCGameConnection((byte[] message) -> {
-            List<byte[]> packets = PacketBatchingManager.unpackPacket(message);
-            for (byte[] packet : packets) {
-                virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+                this.send(sendBackData);
+                return;
             }
 
-        }, this::handleRTCDisconnect, PacketFlow.HostToClient, this, clientId);
+            Channel virtualChannel = this.createVirtualChannel();
 
-        byte[] readyData = new byte[]{(byte)SignalingMessageType.WebRTC_ConnectionReady.getPacketType(), clientId};
-        this.send(readyData);
-        LOGGER.info("Sent ready data");
+            WebRTCGameConnection rtcClient = new WebRTCGameConnection((byte[] message) -> {
+                List<byte[]> packets = PacketBatchingManager.unpackPacket(message);
+                for (byte[] packet : packets) {
+                    virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+                }
 
-        try {
-            rtcClient.connect();
-            // success
-            LOGGER.info("RTC Client established!");
-            ModState.channelToGameConnection.put(virtualChannel, rtcClient);
-        } catch (Exception e) {
-            LOGGER.error("RTC connection failed to establish");
-            this.send(this.prepareSignalingMessage(clientId, (byte)SignalingMessageType.WebRTC_ConnectionFailed.getPacketType(), new byte[0]));
+            }, this::handleRTCDisconnect, PacketFlow.HostToClient, this, clientId);
+
+            byte[] readyData = new byte[]{(byte)SignalingMessageType.WebRTC_ConnectionReady.getPacketType(), clientId};
+            this.send(readyData);
+            LOGGER.info("Sent ready data");
+
+            try {
+                rtcClient.connect();
+                // success
+                LOGGER.info("RTC Client established!");
+                ModState.channelToGameConnection.put(virtualChannel, rtcClient);
+            } catch (Exception e) {
+                LOGGER.error("RTC connection failed to establish");
+                this.send(this.prepareSignalingMessage(clientId, (byte)SignalingMessageType.WebRTC_ConnectionFailed.getPacketType(), new byte[0]));
+            }
+        } catch (Throwable e) {
+            LOGGER.error("Failed to instantiate WebRTC:", e);
         }
+
 
 
 

@@ -1,5 +1,6 @@
 package com.stealthpipe;
 
+import com.stealthpipe.connection.game.GameConnectionWebSocket;
 import com.stealthpipe.mixin.ConnectionChannelAccessor;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -120,7 +121,7 @@ public class ConnectionHelper {
             ModState.relayClient.set(rtcClient);
             ModState.usingWebRTC.set(true);
             LOGGER.info("Successfully established a direct WebRTC connection");
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Failed to establish direct P2P WebRTC, falling back to WSS-relay based", e);
 
             // StealthWebSocketClient wsClient = new StealthWebSocketClient(Utils.formatWebSocketJoinURL(gameId, false, ),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);

@@ -1,5 +1,7 @@
 package com.stealthpipe;
 
+import com.stealthpipe.connection.game.GameConnectionInterface;
+import com.stealthpipe.connection.signal.SignalWebSocket;
 import io.netty.channel.Channel;
 import net.minecraft.server.MinecraftServer;
 

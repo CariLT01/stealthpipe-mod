@@ -17,7 +17,7 @@ public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient
     public boolean connected = false;
     private final List<byte[]> queuedPackets = new ArrayList<>();
 
-    static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     private final ReentrantLock writeLock = new ReentrantLock();
 

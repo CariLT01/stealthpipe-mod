@@ -1,20 +1,16 @@
-package com.stealthpipe;
+package com.stealthpipe.connection.game;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.CompositeByteBuf;
+import com.stealthpipe.*;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import org.java_websocket.handshake.ServerHandshake;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
-import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.locks.LockSupport;
 
 public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient implements GameConnectionInterface {
     private final PacketFlow flow;

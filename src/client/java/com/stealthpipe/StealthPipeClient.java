@@ -1,10 +1,9 @@
 package com.stealthpipe;
 
+import com.stealthpipe.connection.game.GameConnectionInterface;
+import com.stealthpipe.connection.signal.SignalWebSocket;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.impl.renderer.DebugHudClient;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
