@@ -82,7 +82,7 @@ public class DebugScreenMixin {
     }
 
     /*? if >=1.21.9 {*/
-    /*@Inject(
+    @Inject(
             method = "render",
             at = @At(
                     value = "INVOKE",
@@ -94,8 +94,8 @@ public class DebugScreenMixin {
         this.updateDebugCounters();
         this.addToDebugList(list2);
     }
-    *//*? } else { */
-    @Inject(
+    /*? } else { */
+    /*@Inject(
             method = "drawGameInformation",
             at = @At(
                     value = "INVOKE",
@@ -108,5 +108,5 @@ public class DebugScreenMixin {
         this.updateDebugCounters();
         this.addToDebugList(list2);
     }
-    /*? } */
+    *//*? } */
 }
