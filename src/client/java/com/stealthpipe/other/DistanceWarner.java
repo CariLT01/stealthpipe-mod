@@ -1,8 +1,10 @@
-package com.stealthpipe;
+package com.stealthpipe.other;
 
 import com.google.gson.Gson;
+import com.stealthpipe.config.DefaultConfigValues;
+import com.stealthpipe.StealthPipe;
+import com.stealthpipe.models.IpGelocationJsonResult;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;

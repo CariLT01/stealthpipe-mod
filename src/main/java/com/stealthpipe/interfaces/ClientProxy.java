@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.interfaces;
 
 public interface ClientProxy {
     void disconnectWithReason(String reason, int delayInMs);

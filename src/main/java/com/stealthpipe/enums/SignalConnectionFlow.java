@@ -1,4 +1,4 @@
-package com.stealthpipe.connection.signal;
+package com.stealthpipe.enums;
 
 public enum SignalConnectionFlow {
     HostToRelay,

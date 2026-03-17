@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.responses;
 
 public class ResponseModel {
     public boolean ok;

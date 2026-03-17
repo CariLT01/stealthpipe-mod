@@ -2,6 +2,7 @@ package com.stealthpipe;
 
 import com.stealthpipe.connection.game.GameConnectionInterface;
 import com.stealthpipe.connection.signal.SignalWebSocket;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.Minecraft;

@@ -1,6 +1,9 @@
-package com.stealthpipe;
+package com.stealthpipe.connection;
 
+import com.stealthpipe.*;
+import com.stealthpipe.connection.adapters.StealthChannelOutboundHandlerAdapter;
 import com.stealthpipe.connection.game.GameConnectionWebSocket;
+import com.stealthpipe.connection.game.WebRTCGameConnection;
 import com.stealthpipe.mixin.ConnectionChannelAccessor;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -127,7 +130,7 @@ public class ConnectionHelper {
             // StealthWebSocketClient wsClient = new StealthWebSocketClient(Utils.formatWebSocketJoinURL(gameId, false, ),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);
             // wsClient.connect();
 
-            GameConnectionWebSocket wsClient = new GameConnectionWebSocket(gameId, com.stealthpipe.PacketFlow.ClientToHost, gameChannel, null);
+            GameConnectionWebSocket wsClient = new GameConnectionWebSocket(gameId, com.stealthpipe.enums.PacketFlow.ClientToHost, gameChannel, null);
             wsClient.connect();
 
             ModState.relayClient.set(wsClient);
@@ -146,7 +149,7 @@ public class ConnectionHelper {
             }
         }, (client) -> {
             handleWebRTCClientDisconnect(client, gameChannel);
-        }, com.stealthpipe.PacketFlow.ClientToHost, gameId);
+        }, com.stealthpipe.enums.PacketFlow.ClientToHost, gameId);
 
         rtcClient.connect();
         return rtcClient;

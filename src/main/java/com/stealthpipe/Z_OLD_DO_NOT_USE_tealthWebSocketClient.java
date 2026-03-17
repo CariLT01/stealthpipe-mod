@@ -1,7 +1,13 @@
 package com.stealthpipe;
 
 
-import com.stealthpipe.connection.signal.SignalingMessageType;
+import com.stealthpipe.connection.DisconnectHandler;
+import com.stealthpipe.connection.game.WebRTCGameConnection;
+import com.stealthpipe.connection.misc.RoundTripTimeMonitor;
+import com.stealthpipe.enums.SignalingMessageType;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
+import com.stealthpipe.enums.WebsocketClientType;
+import com.stealthpipe.interfaces.IConnectionInjector;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;

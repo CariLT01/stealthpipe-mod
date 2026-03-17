@@ -1,5 +1,8 @@
-package com.stealthpipe;
+package com.stealthpipe.connection;
 
+import com.stealthpipe.ErrorMessages;
+import com.stealthpipe.ModState;
+import com.stealthpipe.StealthPipe;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;

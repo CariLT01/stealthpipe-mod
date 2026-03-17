@@ -1,6 +1,9 @@
-package com.stealthpipe;
+package com.stealthpipe.connection.adapters;
 
+import com.stealthpipe.ModState;
+import com.stealthpipe.StealthPipe;
 import com.stealthpipe.connection.game.GameConnectionInterface;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;

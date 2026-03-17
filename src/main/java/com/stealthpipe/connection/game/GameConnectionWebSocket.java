@@ -1,6 +1,11 @@
 package com.stealthpipe.connection.game;
 
 import com.stealthpipe.*;
+import com.stealthpipe.connection.AbstractStealthPipeWebSocketClient;
+import com.stealthpipe.connection.DisconnectHandler;
+import com.stealthpipe.connection.PacketBatchingManager;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
+import com.stealthpipe.enums.PacketFlow;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import net.minecraft.ChatFormatting;

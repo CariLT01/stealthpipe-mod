@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.debug;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

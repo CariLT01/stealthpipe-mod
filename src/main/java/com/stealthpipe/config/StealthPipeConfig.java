@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -24,6 +24,8 @@ public class StealthPipeConfig {
     public boolean HOST_ALLOW_WEBRTC_INBOUND = DefaultConfigValues.HOST_ALLOW_WEBRTC_INBOUND;
 
     public boolean SIMULATE_ICE_CANDIDATES_FAILURE = DefaultConfigValues.SIMULATE_ICE_CANDIDATES_FAILURE;
+
+    public boolean LOG_WRTC_ICE_CANDIDATES = DefaultConfigValues.LOG_WRTC_ICE_CANDIDATES;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("stealthpipe.json");

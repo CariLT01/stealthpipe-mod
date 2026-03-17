@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.enums;
 
 public enum WebsocketClientType {
     RELAY_SIGNALING,

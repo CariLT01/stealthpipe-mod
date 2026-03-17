@@ -1,8 +1,14 @@
-package com.stealthpipe;
+package com.stealthpipe.connection;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
+import com.stealthpipe.ModState;
+import com.stealthpipe.StealthPipe;
+import com.stealthpipe.other.UXHelper;
+import com.stealthpipe.models.ProofOfWorkChallengePayload;
+import com.stealthpipe.models.ProofOfWorkChallengeResult;
+import com.stealthpipe.responses.ResponseModel;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
@@ -19,7 +25,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.time.Instant;
 import java.util.Objects;
 
 public class RelayConnector {

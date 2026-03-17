@@ -2,7 +2,6 @@ package com.stealthpipe.mixin.client;
 
 import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
-import com.stealthpipe.StealthPipeConfig;
 import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.client.multiplayer.resolver.ServerNameResolver;

@@ -1,10 +1,15 @@
-package com.stealthpipe;
+package com.stealthpipe.connection.game;
 
 import com.google.gson.Gson;
-import com.stealthpipe.connection.game.GameConnectionInterface;
-import com.stealthpipe.connection.signal.SignalConnectionFlow;
+import com.stealthpipe.ModState;
+import com.stealthpipe.connection.PacketBatchingManager;
+import com.stealthpipe.StealthPipe;
+import com.stealthpipe.connection.AbstractStealthPipeWebSocketClient;
+import com.stealthpipe.enums.SignalConnectionFlow;
 import com.stealthpipe.connection.signal.SignalWebSocket;
-import com.stealthpipe.connection.signal.SignalingMessageType;
+import com.stealthpipe.enums.SignalingMessageType;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
+import com.stealthpipe.enums.PacketFlow;
 import dev.onvoid.webrtc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,7 +197,11 @@ public class WebRTCGameConnection implements GameConnectionInterface {
                         (String) data.get("sdp")
                 );
                 peerConnection.addIceCandidate(candidate);
-                LOGGER.info("Got ICE candidate: {}", candidate);
+                if (StealthPipe.config.LOG_WRTC_ICE_CANDIDATES) {
+                    LOGGER.info("[DEBUG SENSITIVE INFO] Got ICE candidate: {}", candidate);
+                } else {
+                    LOGGER.info("Got ICE candidate: [hidden]");
+                }
             }
         } catch (Exception e) {
             LOGGER.error("WebRTC handle signal message failed", e);
@@ -230,7 +239,12 @@ public class WebRTCGameConnection implements GameConnectionInterface {
             return;
         }
 
-        LOGGER.info("WebRTC received signaling message: {}", messageStr);
+        if (StealthPipe.config.LOG_WRTC_ICE_CANDIDATES) {
+            LOGGER.info("[DEBUG SENSITIVE INFO] WebRTC received signaling message: {}", messageStr);
+        } else {
+            LOGGER.info("WebRTC received signaling message: [hidden]");
+        }
+
 
         this.handleSignalMessageStr(messageStr);
 
@@ -262,9 +276,32 @@ public class WebRTCGameConnection implements GameConnectionInterface {
 
 
         RTCConfiguration config = new RTCConfiguration();
+
         RTCIceServer stunServer = new RTCIceServer();
         stunServer.urls.add("stun:stun.l.google.com:19302");
+        stunServer.urls.add("stun:stun1.l.google.com:19302");
+        stunServer.urls.add("stun:stun2.l.google.com:19302");
+        stunServer.urls.add("stun:stun3.l.google.com:19302");
+        stunServer.urls.add("stun:stun4.l.google.com:19302");
+        stunServer.urls.add("stun:stun.stunprotocol.org:3478");
+        stunServer.urls.add("stun:stun.voiparound.com");
+        stunServer.urls.add("stun:stun.voipbuster.com");
+        stunServer.urls.add("stun:stun.voipstunt.com");
+        stunServer.urls.add("stun:stun.counterpath.net");
+        stunServer.urls.add("stun:stun.ekiga.net");
+        stunServer.urls.add("stun:stun.ideasip.com");
+        stunServer.urls.add("stun:stun.schlund.de");
+        stunServer.urls.add("stun:stun.rixtelecom.se");
+        stunServer.urls.add("stun:stun.sipgate.net");
+        stunServer.urls.add("stun:stun.sipphone.com");
+        stunServer.urls.add("stun:stun.t-online.de");
+        stunServer.urls.add("stun:stun.iptel.org");
+        stunServer.urls.add("stun:stun.1und1.de");
+        stunServer.urls.add("stun:stun.sipnet.net");
+
         config.iceServers.add(stunServer);
+        config.iceTransportPolicy = RTCIceTransportPolicy.ALL;
+
 
 
 
@@ -371,7 +408,14 @@ public class WebRTCGameConnection implements GameConnectionInterface {
 
 
         String msg = gson.toJson(Map.of("type", type, "data", data));
-        LOGGER.info("WebRTC client -> send msg: {}", msg);
+
+        if (StealthPipe.config.LOG_WRTC_ICE_CANDIDATES) {
+            LOGGER.info("[DEBUG SENSITIVE INFO] WebRTC client -> send msg: {}", msg);
+        } else {
+            LOGGER.info("WebRTC client send msg: [hidden]");
+        }
+
+
         signalingClient.send(this.prepareSignalingMessage(msg));
     }
 

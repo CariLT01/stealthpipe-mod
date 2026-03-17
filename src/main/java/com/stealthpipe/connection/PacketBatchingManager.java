@@ -1,5 +1,7 @@
-package com.stealthpipe;
+package com.stealthpipe.connection;
 
+import com.stealthpipe.ModState;
+import com.stealthpipe.StealthPipe;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;

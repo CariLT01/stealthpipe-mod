@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.interfaces;
 
 import io.netty.channel.Channel;
 

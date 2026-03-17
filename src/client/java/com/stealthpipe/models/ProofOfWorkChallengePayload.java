@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.models;
 
 public class ProofOfWorkChallengePayload {
     public String salt;

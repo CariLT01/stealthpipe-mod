@@ -1,5 +1,8 @@
 package com.stealthpipe;
 
+import com.stealthpipe.connection.RelayConnector;
+import com.stealthpipe.interfaces.ClientProxy;
+import com.stealthpipe.other.UXHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.network.chat.Component;

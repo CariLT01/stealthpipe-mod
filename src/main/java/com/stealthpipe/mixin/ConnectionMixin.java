@@ -1,6 +1,7 @@
 package com.stealthpipe.mixin;
 
 import com.stealthpipe.*;
+import com.stealthpipe.connection.ConnectionHelper;
 import io.netty.channel.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

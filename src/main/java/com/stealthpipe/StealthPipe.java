@@ -1,14 +1,12 @@
 package com.stealthpipe;
 
-import io.netty.channel.Channel;
+import com.stealthpipe.config.StealthPipeConfig;
+import com.stealthpipe.interfaces.ClientProxy;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public class StealthPipe implements ModInitializer {
 	public static final String MOD_ID = "stealthpipe";

@@ -1,6 +1,9 @@
-package com.stealthpipe;
+package com.stealthpipe.connection;
 
-import com.terraformersmc.modmenu.util.mod.Mod;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
+import com.stealthpipe.ModState;
+import com.stealthpipe.StealthPipe;
+import com.stealthpipe.Utils;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;

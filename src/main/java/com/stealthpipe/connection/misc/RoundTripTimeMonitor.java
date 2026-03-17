@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.connection.misc;
 
 import java.util.ArrayDeque;
 

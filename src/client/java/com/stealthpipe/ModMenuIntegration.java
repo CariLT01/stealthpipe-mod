@@ -1,8 +1,8 @@
 package com.stealthpipe;
 
+import com.stealthpipe.config.DefaultConfigValues;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
-import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -108,6 +108,16 @@ public class ModMenuIntegration implements ModMenuApi {
                             .setSaveConsumer(newValue -> StealthPipe.config.SIMULATE_ICE_CANDIDATES_FAILURE = newValue)
                             .setTooltip(
                                     Component.literal("Not ICE from the United States. Simulates unable to find ICE candidates for WebRTC")
+                            )
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startBooleanToggle(Component.literal("Log ICE Candidates"), StealthPipe.config.LOG_WRTC_ICE_CANDIDATES)
+                            .setDefaultValue(DefaultConfigValues.LOG_WRTC_ICE_CANDIDATES)
+                            .setSaveConsumer(newValue -> StealthPipe.config.LOG_WRTC_ICE_CANDIDATES = newValue)
+                            .setTooltip(
+                                    Component.literal("Whether or not to log ICE candidates.\n\n§6Warning: §eEnabling this might expose sensitive information in logs like your IP address and your network topology.\n§rPlease share logs privately if you would like to report an issue.")
                             )
                             .build()
             );

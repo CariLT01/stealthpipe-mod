@@ -1,6 +1,8 @@
-package com.stealthpipe;
+package com.stealthpipe.connection;
 
-import com.stealthpipe.connection.signal.SignalConnectionFlow;
+import com.stealthpipe.ModState;
+import com.stealthpipe.StealthPipe;
+import com.stealthpipe.enums.SignalConnectionFlow;
 import com.stealthpipe.connection.signal.SignalWebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

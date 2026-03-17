@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.enums;
 
 public enum ConnectionDisconnectReason {
     NettyChannelInactiveClient("CLIENT_CHANNEL_INACTIVE"),

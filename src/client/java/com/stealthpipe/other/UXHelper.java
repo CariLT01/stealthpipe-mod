@@ -1,4 +1,4 @@
-package com.stealthpipe;
+package com.stealthpipe.other;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;

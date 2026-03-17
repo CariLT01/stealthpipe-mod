@@ -1,9 +1,8 @@
 package com.stealthpipe.mixin;
 
 import com.stealthpipe.StealthPipe;
-import com.stealthpipe.StealthPipeConfig;
-import com.stealthpipe.IConnectionInjector;
-import com.stealthpipe.StealthChannelOutboundHandlerAdapter;
+import com.stealthpipe.interfaces.IConnectionInjector;
+import com.stealthpipe.connection.adapters.StealthChannelOutboundHandlerAdapter;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.timeout.ReadTimeoutHandler;
