@@ -16,7 +16,7 @@ public class StealthPipe implements ModInitializer {
 	// That way, it's clear which mod wrote info, warnings, and errors.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
-	public static String REAL_MOD_VERSION = "6.1.2";
+	public static String REAL_MOD_VERSION = "6.1.3";
 	public static String CONNECTION_SUFFIX = ".stealth.link";
 	public static String MOD_VERSION = "4.0.0";
 	public String PROTOCOL_VERSION = "6";
