@@ -17,9 +17,14 @@
 
 **StealthPipe is a reverse-tunneling mod aimed to make Minecraft's Open to LAN feature more robust on different networks.** It uses WebSockets with a relay to establish a secure robust connection even on restrictive networks or WebRTC when network conditions are favorable for lower latency. WebRTC is attempted firt and if it fails, WebSocket-based relay is used after. This allows the mod to establish a connection even on restrictive networks since TCP 443 (WebSockets) are almost always allowed on firewalls, and the mod is also able to balance speed by allowing fast direct connections when possible.
 
-To see the full description, see the [Modrinth Page](https://modrinth.com/mod/stealthpipe)
+> [!WARNING]
+> StealthPipe is still in beta! Issues and edge cases may be present.
 
-To see the entire technical overview, see [TECHNICAL.md](https://github.com/CariLT01/stealthpipe-relay/blob/main/TECHNICAL.MD)
+To see the full description, see the [Modrinth Page](https://modrinth.com/mod/stealthpipe).
+
+To see the entire technical overview, see [TECHNICAL.md](https://github.com/CariLT01/stealthpipe-relay/blob/main/TECHNICAL.MD).
+
+To report an issue, go to the [Issue Tracker](https://github.com/CariLT01/stealthpipe-mod/issues).
 
 # How it Works
 
