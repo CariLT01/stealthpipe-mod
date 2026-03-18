@@ -31,6 +31,8 @@ To report an issue, go to the [Issue Tracker](https://github.com/CariLT01/stealt
 - It tries to establish a direct connection with the standardized WebRTC protocol with the other client if possible using NAT traversal and ICE negotiation
 - It uses WebSockets (WSS) on TCP port 443 (widely allowed port) to establish a connection to the relay that forwards traffic if WebRTC cannot be established
 
+StealthPipe also uses some other techniques to enhance reliability on hostile networks.
+
 # Contribute
 
 Please contribute
