@@ -116,6 +116,7 @@ public class ConnectionHelper {
         LOGGER.info("Connect to stealth relay");
 
         try {
+            StealthPipe.CLIENT_PROXY.setConnectionStatusIndex("§aEstablishing a direct connection with WebRTC...", 0);
             if (!StealthPipe.config.CLIENT_ATTEMPT_WEBRTC) {
                 throw new RuntimeException("configured to not try WebRTC");
             }
@@ -125,6 +126,9 @@ public class ConnectionHelper {
             ModState.usingWebRTC.set(true);
             LOGGER.info("Successfully established a direct WebRTC connection");
         } catch (Throwable e) {
+
+            StealthPipe.CLIENT_PROXY.setConnectionStatusIndex("§7Falling back to WebSockets...", 0);
+
             LOGGER.error("Failed to establish direct P2P WebRTC, falling back to WSS-relay based", e);
 
             // StealthWebSocketClient wsClient = new StealthWebSocketClient(Utils.formatWebSocketJoinURL(gameId, false, ),WebsocketClientType.CLIENT_TO_RELAY, gameChannel, gameId);

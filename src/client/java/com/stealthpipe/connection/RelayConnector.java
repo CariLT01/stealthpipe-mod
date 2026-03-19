@@ -9,6 +9,7 @@ import com.stealthpipe.other.UXHelper;
 import com.stealthpipe.models.ProofOfWorkChallengePayload;
 import com.stealthpipe.models.ProofOfWorkChallengeResult;
 import com.stealthpipe.responses.ResponseModel;
+import com.stealthpipe.ui.ConnectionStatusInterface;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
@@ -175,7 +176,9 @@ public class RelayConnector {
 
             assert Minecraft.getInstance().player != null;
 
-
+            ModState.gameId.set(gameId);
+            ConnectionStatusInterface.setConnectionStatusText("§7Joining as host as SIGNAL", 1);
+            WebSocketHelper.connectToServer();
 
             UXHelper.sendStealthPipeSystemMessage(
                     "§cStealthPipe is still in beta!"
@@ -209,9 +212,11 @@ public class RelayConnector {
 
             // DistanceWarner.warnDistance();
 
-            ModState.gameId.set(gameId);
+            ConnectionStatusInterface.setConnectionStatusLength(0);
 
-            WebSocketHelper.connectToServer();
+
+
+
 
         }
     }
@@ -312,6 +317,9 @@ public class RelayConnector {
 
             try {
 
+                ConnectionStatusInterface.setConnectionStatusText("§aCreating room...", 0);
+                ConnectionStatusInterface.setConnectionStatusText("§7task: Finding the relay...", 1);
+
                 boolean isAvailable = pingRelay();
 
                 if (!isAvailable) {
@@ -344,6 +352,7 @@ public class RelayConnector {
                             ChatFormatting.WHITE
                     );
 
+                    ConnectionStatusInterface.setConnectionStatusLength(0);
 
                     return;
                 }
@@ -364,6 +373,8 @@ public class RelayConnector {
                         .GET()
                         .build();
 
+                ConnectionStatusInterface.setConnectionStatusText("§7Establishing SIGNAL WSS..", 1);
+
                 UXHelper.sendStealthPipeSystemMessage(
                         "Creating WebSocket connection..."
                 );
@@ -371,6 +382,7 @@ public class RelayConnector {
                 establishConnection(request);
 
             } catch (Exception e) {
+                ConnectionStatusInterface.setConnectionStatusLength(0);
                 System.out.printf("An error occurred while trying to create room ID: %s%n", e.getMessage());
 
                 Minecraft.getInstance().execute(() -> {

@@ -3,6 +3,7 @@ package com.stealthpipe;
 import com.stealthpipe.connection.RelayConnector;
 import com.stealthpipe.interfaces.ClientProxy;
 import com.stealthpipe.other.UXHelper;
+import com.stealthpipe.ui.ConnectionStatusInterface;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.network.chat.Component;
@@ -55,6 +56,16 @@ public class ClientProxyImpl implements ClientProxy {
     @Override
     public void runOnClientThread(Runnable runnable) {
         Minecraft.getInstance().execute(runnable);
+    }
+
+    @Override
+    public void resizeConnectionStatusList(int newSize) {
+        ConnectionStatusInterface.setConnectionStatusLength(newSize);
+    }
+
+    @Override
+    public void setConnectionStatusIndex(String text, int index) {
+        ConnectionStatusInterface.setConnectionStatusText(text, index);
     }
 }
 

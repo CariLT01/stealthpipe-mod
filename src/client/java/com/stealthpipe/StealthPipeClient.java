@@ -3,8 +3,11 @@ package com.stealthpipe;
 import com.stealthpipe.connection.game.GameConnectionInterface;
 import com.stealthpipe.connection.signal.SignalWebSocket;
 import com.stealthpipe.enums.ConnectionDisconnectReason;
+import com.stealthpipe.ui.ConnectionStatusInterface;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +25,16 @@ public class StealthPipeClient implements ClientModInitializer {
 		ModState.clientThreadExecutor.set(Minecraft.getInstance());
 
 		LOGGER.info("Client initialized stealth");
+
+		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+			ScreenEvents.afterRender(screen).register((scr, guiGraphics, mouseX, mouseY, tickDelta) -> {
+				ConnectionStatusInterface.renderConnectionStatusText(guiGraphics);
+			});
+		});
+
+		HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> {
+			ConnectionStatusInterface.renderConnectionStatusText(guiGraphics);
+		});
 
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 

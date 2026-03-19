@@ -56,6 +56,15 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
         this.gameId = gameId;
     }
 
+    private void reportStatus(String text, int length) {
+        if (this.flow != SignalConnectionFlow.HostToRelay) return;
+        StealthPipe.CLIENT_PROXY.setConnectionStatusIndex(text ,length);
+    }
+    private void clearStatus() {
+        if (this.flow != SignalConnectionFlow.HostToRelay) return;
+        StealthPipe.CLIENT_PROXY.resizeConnectionStatusList(0);
+    }
+
     private void pingRelay() throws Exception {
 
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -273,6 +282,7 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
 
     @Override
     protected void handleOpen(ServerHandshake handshake) {
+        clearStatus();
         this.relayPingLoop();
         if (this.flow == SignalConnectionFlow.HostToRelay) {
             this.keepAliveLoop();
@@ -297,6 +307,7 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
 
     @Override
     protected void handleOnClose(int code, String reason, boolean remote) {
+        clearStatus();
 
         String realReason = getReasonFromCode(code, reason);
 

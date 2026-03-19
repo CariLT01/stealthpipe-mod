@@ -37,9 +37,23 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
         this.packetBatchingManager.queuePacket(packet);
     }
 
+    private void reportConnectionStatus(String text, int index) {
+        if (this.flow == PacketFlow.ClientToHost) {
+            StealthPipe.CLIENT_PROXY.setConnectionStatusIndex(text, index);
+        }
+    }
+
+    private void clearConnectionStatus() {
+        if (this.flow == PacketFlow.ClientToHost) {
+            StealthPipe.CLIENT_PROXY.resizeConnectionStatusList(0);
+        }
+    }
+
     @Override
     protected void handleOpen(ServerHandshake handshake) {
         this.packetBatchingManager.run();
+
+        this.clearConnectionStatus();
 
         if (this.flow == PacketFlow.ClientToHost) {
             ModState.webSocketOpen.set(true);
@@ -72,6 +86,7 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
     @Override
     protected void handleOnClose(int code, String reason, boolean remote) {
 
+        this.clearConnectionStatus();
 
         String displayedReason = this.getReasonFromCode(code, reason);
 

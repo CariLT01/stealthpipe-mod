@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
@@ -60,6 +61,10 @@ public class WebRTCGameConnection implements GameConnectionInterface {
     private String aGameID = null;
     private final PacketFlow flow;
 
+    /* Debugging statistics */
+    private final AtomicInteger iceCandidatesReceivedCount = new AtomicInteger(0);
+    private final AtomicInteger iceCandidatesSentCount = new AtomicInteger(0);
+
 
     public WebRTCGameConnection(Consumer<byte[]> onMessage, Consumer<WebRTCGameConnection> onClosed, PacketFlow flow, String gameId) {
         if (flow != PacketFlow.ClientToHost) {
@@ -72,6 +77,8 @@ public class WebRTCGameConnection implements GameConnectionInterface {
         this.onMessageHook = onMessage;
         this.onClosed = onClosed;
         this.aGameID = gameId;
+        this.iceCandidatesSentCount.set(0);
+        this.iceCandidatesReceivedCount.set(0);
     }
 
     public WebRTCGameConnection(Consumer<byte[]> onMessage, Consumer<WebRTCGameConnection> onClosed, PacketFlow flow, SignalWebSocket signalingClient, byte otherClientID) {
@@ -85,7 +92,29 @@ public class WebRTCGameConnection implements GameConnectionInterface {
         this.onClosed = onClosed;
         this.aSignalingClient = signalingClient;
         this.aOtherClientID = otherClientID;
+        this.iceCandidatesSentCount.set(0);
+        this.iceCandidatesReceivedCount.set(0);
 
+    }
+
+    private void reportConnectionStatus(int index, String text) {
+        if (flow != PacketFlow.ClientToHost) {
+            // Don't show any messages on the host-side when connecting via WebRTC
+            return;
+        }
+        StealthPipe.CLIENT_PROXY.setConnectionStatusIndex(text, index);
+    }
+
+    private void clearConnectionStatus() {
+        if (flow != PacketFlow.ClientToHost) {
+            // Don't manipulate on the host side
+            return;
+        }
+        StealthPipe.CLIENT_PROXY.resizeConnectionStatusList(0);
+    }
+
+    private void updateIceCandidateCount() {
+        reportConnectionStatus(1, String.format("§ICE negotiation: %s received, %s sent", iceCandidatesReceivedCount.get(), iceCandidatesSentCount.get()));
     }
 
     public PacketBatchingManager getPacketBatchingManager() {
@@ -102,12 +131,14 @@ public class WebRTCGameConnection implements GameConnectionInterface {
             public void onStateChange() {
                 LOGGER.info("WebRTC DataChannel State: {}", channel.getState());
                 if (channel.getState() == RTCDataChannelState.OPEN) {
+                    clearConnectionStatus();
                     if (connectionFailed.get()) {
                         // already failed, close the connection
                         disconnectWebRTC();
                         return;
                     }
                     open = true;
+                    clearConnectionStatus();
                     ModState.webSocketOpen.set(true);
                     connectionFuture.complete(null);
                     for (byte[] packet : queuedPackets) {
@@ -165,6 +196,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
                             @Override public void onSuccess(RTCSessionDescription description) {
                                 peerConnection.setLocalDescription(description, new SetSessionDescriptionObserver() {
                                     @Override public void onSuccess() {
+                                        reportConnectionStatus(1, "§7Reporting WebRTC answer");
                                         sendToSignaling("answer", Map.of("sdp", description.sdp));
                                     }
                                     @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
@@ -197,7 +229,11 @@ public class WebRTCGameConnection implements GameConnectionInterface {
                         (String) data.get("sdp")
                 );
                 peerConnection.addIceCandidate(candidate);
+                iceCandidatesReceivedCount.getAndAdd(1);
+                updateIceCandidateCount();
                 if (StealthPipe.config.LOG_WRTC_ICE_CANDIDATES) {
+
+
                     LOGGER.info("[DEBUG SENSITIVE INFO] Got ICE candidate: {}", candidate);
                 } else {
                     LOGGER.info("Got ICE candidate: [hidden]");
@@ -251,15 +287,22 @@ public class WebRTCGameConnection implements GameConnectionInterface {
     }
 
     public void connect() throws Exception {
-        if (this.flow == PacketFlow.ClientToHost) {
-            this.tryEstablishRTC(this.aGameID);
-        } else {
-            this.tryEstablishRTCHost(this.aSignalingClient, this.aOtherClientID);
+        try {
+            reportConnectionStatus(0, "§7Connecting via WebRTC...");
+            if (this.flow == PacketFlow.ClientToHost) {
+                this.clientTryEstablishRTC(this.aGameID);
+            } else {
+                this.hostTryEstablishRTC(this.aSignalingClient, this.aOtherClientID);
+            }
+        } catch (Throwable t) {
+            clearConnectionStatus();
+            throw t;
         }
+
     }
 
 
-    private void tryEstablishRTCHost(AbstractStealthPipeWebSocketClient signalingClient, byte otherClientID) throws Exception {
+    private void hostTryEstablishRTC(AbstractStealthPipeWebSocketClient signalingClient, byte otherClientID) throws Exception {
         LOGGER.info("Trying to establish RTC connection as a host");
 
         this.isHost = true;
@@ -315,6 +358,8 @@ public class WebRTCGameConnection implements GameConnectionInterface {
                 if (connectionFailed.get()) {
                     return;
                 }
+                iceCandidatesSentCount.getAndAdd(1);
+                updateIceCandidateCount();
                 sendToSignaling("candidate", Map.of(
                         "sdp", candidate.sdp,
                         "sdpMid", candidate.sdpMid,
@@ -343,7 +388,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
         signalingClient.hookOnMessage(this::handleSignalMessage);
     }
 
-    private void tryEstablishRTC(String gameId) throws Exception {
+    private void clientTryEstablishRTC(String gameId) throws Exception {
         this.isHost = false;
         /* signalingClient = new StealthWebSocketClient(URI.create(
                 StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=" + gameId + "&signal=true&version=" + StealthPipe.MOD_VERSION),
