@@ -11,6 +11,9 @@ public class DefaultConfigValues {
     public static final boolean HOST_ALLOW_WEBRTC_INBOUND = true;
 
 
+    // Preferences
+    public static final boolean SHOW_CONNECT_INFO = true;
+
     // Messages
     public static final boolean HAS_SHOWN_WEBRTC_PRIVACY_NOTE = false;
 

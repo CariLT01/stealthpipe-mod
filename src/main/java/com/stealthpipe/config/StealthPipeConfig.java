@@ -26,6 +26,7 @@ public class StealthPipeConfig {
     public boolean SIMULATE_ICE_CANDIDATES_FAILURE = DefaultConfigValues.SIMULATE_ICE_CANDIDATES_FAILURE;
 
     public boolean LOG_WRTC_ICE_CANDIDATES = DefaultConfigValues.LOG_WRTC_ICE_CANDIDATES;
+    public boolean SHOW_CONNECT_INFO = DefaultConfigValues.SHOW_CONNECT_INFO;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("stealthpipe.json");

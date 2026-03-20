@@ -76,6 +76,16 @@ public class ModMenuIntegration implements ModMenuApi {
                             .build()
             );
 
+            general.addEntry(
+                    entryBuilder.startBooleanToggle(Component.literal("Show Connect Info"), StealthPipe.config.SHOW_CONNECT_INFO)
+                            .setDefaultValue(DefaultConfigValues.SHOW_CONNECT_INFO)
+                            .setSaveConsumer(newValue -> StealthPipe.config.SHOW_CONNECT_INFO = newValue)
+                            .setTooltip(
+                                    Component.literal("Toggles the rendering of the connect info & progress")
+                            )
+                            .build()
+            );
+
             // Add section "Optimization"
             var optimization = entryBuilder.startSubCategory(Component.literal("Optimization"));
 
@@ -100,6 +110,7 @@ public class ModMenuIntegration implements ModMenuApi {
             );
 
             general.addEntry(optimization.build());
+
 
             var debug = entryBuilder.startSubCategory(Component.literal("Debugging"));
             debug.add(

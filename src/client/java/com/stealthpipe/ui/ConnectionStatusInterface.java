@@ -47,6 +47,8 @@ public class ConnectionStatusInterface {
     }
 
     public static void renderConnectionStatusText(GuiGraphics guiGraphics) {
+        if (!StealthPipe.config.SHOW_CONNECT_INFO) return;
+
         // LOGGER.info("Render");
         int centerX = guiGraphics.guiWidth() / 2;
         for (int i = 0; i < connectionStatuses.size(); i++) {
