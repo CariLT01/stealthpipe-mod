@@ -1,7 +1,7 @@
 package com.stealthpipe.mixin.client;
 
 import com.stealthpipe.*;
-import com.stealthpipe.connection.RelayConnector;
+import com.stealthpipe.connection.HostRelayConnector;
 import com.stealthpipe.connection.game.GameConnectionInterface;
 import com.stealthpipe.enums.ConnectionDisconnectReason;
 import io.netty.channel.Channel;
@@ -25,7 +25,7 @@ public class IntegratedServerMixin {
     @Unique
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
     @Unique
-    private static final RelayConnector connector = new RelayConnector();
+    private static final HostRelayConnector connector = new HostRelayConnector();
 
     @Inject(method="stopServer", at=@At("HEAD"))
     private void stopServer(CallbackInfo ci) {

@@ -51,10 +51,6 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
         boolean isClient = ModState.isClientConnectingToStealthServer.get();
 
-
-
-
-
         if (isClient) {
             // Send it to server
             GameConnectionInterface relayClient = ModState.relayClient.get();

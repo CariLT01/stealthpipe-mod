@@ -1,6 +1,6 @@
 package com.stealthpipe;
 
-import com.stealthpipe.connection.RelayConnector;
+import com.stealthpipe.connection.HostRelayConnector;
 import com.stealthpipe.interfaces.ClientProxy;
 import com.stealthpipe.other.UXHelper;
 import com.stealthpipe.ui.ConnectionStatusInterface;
@@ -49,7 +49,7 @@ public class ClientProxyImpl implements ClientProxy {
             System.out.println("Cancel reconnect attempt, game not open to lan");
             return;
         }
-        RelayConnector connector = new RelayConnector();
+        HostRelayConnector connector = new HostRelayConnector();
         connector.connectToRelay();
     }
 

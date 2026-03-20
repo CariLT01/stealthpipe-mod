@@ -16,6 +16,15 @@ public class ConnectionStatusInterface {
 
     public static final List<String> connectionStatuses = new ArrayList<>();
 
+    /**
+     * Resizes the connectionStatuses array to a certain length.
+     * <p>
+     * If the length exceeds the current size, it will add elements with empty strings ("").
+     * If the length is lower than the current size, elements at the tail will be removed first.
+     * If the length is the same as the current size, nothing will be done.
+     *
+     * @param length The new length of the array
+     */
     public static void setConnectionStatusLength(int length) {
         LOGGER.info("Resize array to length: {}", length);
         if (length > connectionStatuses.size()) {
@@ -26,6 +35,13 @@ public class ConnectionStatusInterface {
             connectionStatuses.subList(length, connectionStatuses.size()).clear();
         }
     }
+
+    /**
+     * Sets the status text at the connection status index. It will automatically resize the array if necessary.
+     *
+     * @param text The text to show at the specified index. Supports Minecraft color codes, beginnings with '§'.
+     * @param index The index to draw the text at.
+     */
     public static void setConnectionStatusText(String text, int index) {
         try {
             if (index >= connectionStatuses.size()) {
@@ -46,6 +62,11 @@ public class ConnectionStatusInterface {
 
     }
 
+    /**
+     * Function that renders the connection status texts.
+     *
+     * @param guiGraphics GuiGraphics object provided by whatever callback or event was used.
+     */
     public static void renderConnectionStatusText(GuiGraphics guiGraphics) {
         if (!StealthPipe.config.SHOW_CONNECT_INFO) return;
 

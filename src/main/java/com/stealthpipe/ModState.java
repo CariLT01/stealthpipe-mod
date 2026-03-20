@@ -15,7 +15,18 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ModState {
 
     public static AtomicBoolean gameOpenToLan = new AtomicBoolean(false);
+    /**
+     * This is the relay client for game traffic, only non-null on the client.
+     *
+     *
+     */
     public static AtomicReference<GameConnectionInterface> relayClient = new AtomicReference<>(null);
+
+    /**
+     * Signaling client used for signaling purposes. Available in some context on the client (such as, during WebRTC establishment) and
+     * available on the host when a room is active.
+     *
+     */
     public static AtomicReference<SignalWebSocket> signalClient = new AtomicReference<>(null);
     public static AtomicBoolean usingWebRTC = new AtomicBoolean(false);
     public static AtomicReference<String> gameId = new AtomicReference<>("");
@@ -25,6 +36,9 @@ public class ModState {
     public static AtomicReference<Channel> relayClientChannel = new AtomicReference<>(null);
     public static AtomicReference<MinecraftServer> minecraftServer = new AtomicReference<>(null);
 
+    /**
+     *  Netty channel to a Game Connection map. Host only
+     */
     public static ConcurrentHashMap<Channel, GameConnectionInterface> channelToGameConnection = new ConcurrentHashMap<>();
 
     // Allows client executor to be accessible in common code
@@ -53,6 +67,10 @@ public class ModState {
 
     public static AtomicReference<String> reuseToken = new AtomicReference<>(null); // Reuse token, allows auto-reconnect and keeping the same room code
 
+    /**
+     * Resets the values for some fields in ModState.
+     *
+     */
     public static void resetState() {
         outboundData.set(0);
         inboundData.set(0);

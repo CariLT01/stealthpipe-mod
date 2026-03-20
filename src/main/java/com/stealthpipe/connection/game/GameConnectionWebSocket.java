@@ -26,6 +26,15 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
 
     private final PacketBatchingManager packetBatchingManager = new PacketBatchingManager(this::send);
 
+    /**
+     * Creates a game connection using the WebSocket protocol.
+     *
+     * @param gameId Room ID
+     * @param flow The direction the packets flow in
+     * @param channel The underlying Netty channel to read and write from.
+     * @param request The request ID if applicable (for pairing two WebSockets)
+     */
+
     public GameConnectionWebSocket(String gameId, PacketFlow flow, Channel channel, @Nullable String request) {
         super(gameId, flow == PacketFlow.HostToClient, Optional.ofNullable(request), false);
 
@@ -33,6 +42,12 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
         this.gameChannel = channel;
     }
 
+    /**
+     * Queues a packet to be sent by the PacketBatchingManager.
+     * Use this function for any Minecraft packets.
+     *
+     * @param packet The packet buffer
+     */
     public void sendPacket(byte[] packet) {
         this.packetBatchingManager.queuePacket(packet);
     }

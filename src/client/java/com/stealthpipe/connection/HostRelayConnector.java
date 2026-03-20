@@ -28,12 +28,19 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Objects;
 
-public class RelayConnector {
+public class HostRelayConnector {
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
+
+    /**
+     * Initial stage of the protocol. Pings the relay and checks for health (or version mismatch).
+     * This allows the client to know if the relay is reachable before attempting the rest of the protocol.
+     *
+     * @return If the relay is reachable, healthy, and available to serve the request, it will return true. Otherwise, false will be returned.
+     */
 
     @Unique
     private boolean pingRelay() {
@@ -144,6 +151,14 @@ public class RelayConnector {
 
     }
 
+    /**
+     * Creates the room and calls the function to establish the room's SIGNAL connection.
+     * It also logs the room code in the chat for the user.
+     *
+     * @param request The initial request for the room creation HTTP request
+     * @throws Exception Throws an exception if any part of the room establishment process fails
+     */
+
     @Unique
     private void establishConnection(HttpRequest request) throws Exception {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -222,7 +237,14 @@ public class RelayConnector {
     }
 
 
-
+    /**
+     * Checks if a proof of work is valid.
+     *
+     * @param salt The salt given by the server
+     * @param nonce The nonce we want to check against with
+     * @param difficulty The difficulty given by the server (number of zeroes)
+     * @return If the proof of work is valid
+     */
 
     @Unique
     private static boolean checkPoW(String salt, String nonce, int difficulty) {
@@ -248,8 +270,18 @@ public class RelayConnector {
         }
     }
 
+    /**
+     * Queries the server for a proof of work challenge and solves it. The challenge is a tiny
+     * SHA-256 puzzle. Yields.
+     *
+     * @return Returns the result that includes the nonce.
+     * @throws Exception Throws an exception if any part of the protocol fails.
+     */
+
     @Unique
     private ProofOfWorkChallengeResult doProofOfWorkChallenge() throws Exception {
+
+        ConnectionStatusInterface.setConnectionStatusText("Solving PoW...", 1);
 
         UXHelper.sendStealthPipeSystemMessage(
                 "Authenticating client..."
@@ -307,6 +339,11 @@ public class RelayConnector {
         return new ProofOfWorkChallengeResult(data.token, nonce);
 
     }
+
+    /**
+     * The main function that handles the full Host to Relay protocol to create a room and maintain a SIGNAL connection.
+     * Does not throw any exceptions; all of them are caught inside and shown using chat messages and logged.
+     */
 
     public void connectToRelay() {
         new Thread(() -> {

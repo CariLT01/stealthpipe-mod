@@ -18,6 +18,12 @@ public class UXHelper {
 
     }
 
+    /**
+     * Sends a message in the chat with the '[StealthPipe]:' prefix.
+     * **Note**: this only works on the client
+     *
+     * @param message The message to append
+     */
     public static void sendStealthPipeSystemMessage(String message) {
         assert Minecraft.getInstance().player != null;
 
@@ -29,6 +35,13 @@ public class UXHelper {
         });
     }
 
+    /**
+     * Sends a message with a custom Component object. This function does not append a prefix. This allows custom
+     * elements like some clickable text with custom action.
+     *
+     * @param message The Component to send
+     * @param style ChatFormatting style (not used)
+     */
 
     public static void sendSystemMessageComponent(Component message, ChatFormatting style) {
         assert Minecraft.getInstance().player != null;
