@@ -23,9 +23,9 @@ public class DisconnectHandler {
 
 
         LOGGER.info("attempt retry");
-        ModState.minecraftServer.get().getPlayerList().broadcastSystemMessage(
-                Component.literal(String.format("§8[StealthPipe§8] : \n§cSignaling connection to relay disconnected.\n\n§7%s\n§8(error code: %s)\n\n§aAttempting to reconnect...", reasonPresented, realReason)).withStyle(ChatFormatting.RED),
-                false
+
+        StealthPipe.CLIENT_PROXY.sendStealthPipeMessage(
+                String.format("§8[StealthPipe§8] : \n§cSignaling connection to relay disconnected.\n\n§7%s\n§8(error code: %s)\n\n§aAttempting to reconnect...", reasonPresented, realReason)
         );
 
         StealthPipe.CLIENT_PROXY.connectToRelay();

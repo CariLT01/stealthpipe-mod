@@ -72,6 +72,11 @@ public class HostRelayConnector {
                     );
                 }
 
+                if (!ModState.gameOpenToLan.get()) {
+                    LOGGER.warn("Attempt cancelled: game is no longer open to LAN");
+                    return false;
+                }
+
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
                 if (response.statusCode() == 200 && !Objects.equals(response.body(), "OK")) {

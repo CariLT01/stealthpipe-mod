@@ -312,9 +312,36 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
         String realReason = getReasonFromCode(code, reason);
 
         if (this.flow == SignalConnectionFlow.HostToRelay) {
+            /*
+            Don't disconnect WebRTC connections when SIGNAL disconnects by default
             for (Map.Entry<Channel, GameConnectionInterface> clients : ModState.channelToGameConnection.entrySet()) {
                 LOGGER.info("Disconnecting RTC Client. Cause: signal disconnected. Preserve state.");
                 clients.getValue().disconnectWithReason(ConnectionDisconnectReason.SignalConnectionDisconnected);
+            } */
+
+            // Do disconnect WebSocket connections
+            // This is done on the relay-side too, but it's better to do it on the client just for redundancy
+            for (Map.Entry<Channel, GameConnectionInterface> client : ModState.channelToGameConnection.entrySet()) {
+                if (client.getValue() instanceof GameConnectionWebSocket) {
+                    LOGGER.info("Disconnected WebSocket client");
+                    client.getValue().disconnectWithReason(ConnectionDisconnectReason.SignalConnectionDisconnected);
+                }
+            }
+
+            // Unless if the disconnect reason is FABRIC_CLIENT_DISCONNECT or LOCAL_SERVER_STOPPED, don't disconnect WebRTC.
+            // These reasons should be present if the host is the one that leaves the game.
+            // This logic should also trigger in the integrated server mixin, but sometimes it's not reliable.
+
+            // This allows WebRTC clients to keep playing. The relay doesn't see WebRTC clients, so it constantly disconnects
+            // the room because it thinks it's empty. Should provide a better user experience.
+            if (Objects.equals(reason, ConnectionDisconnectReason.FabricEventDisconnectClient.getPacketType()) ||
+                    Objects.equals(reason, ConnectionDisconnectReason.LocalServerStopped.getPacketType())) {
+                for (Map.Entry<Channel, GameConnectionInterface> client : ModState.channelToGameConnection.entrySet()) {
+                    if (client.getValue() instanceof WebRTCGameConnection) {
+                        LOGGER.info("Disconnecting WebRTC client");
+                        client.getValue().disconnectWithReason(ConnectionDisconnectReason.SignalConnectionDisconnected);
+                    }
+                }
             }
 
             LOGGER.info("RELAY SIGNAL disconnected");

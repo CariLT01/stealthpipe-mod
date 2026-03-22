@@ -25,7 +25,9 @@ public class UXHelper {
      * @param message The message to append
      */
     public static void sendStealthPipeSystemMessage(String message) {
-        assert Minecraft.getInstance().player != null;
+        if (Minecraft.getInstance().player == null) {
+            return;
+        }
 
         Minecraft.getInstance().execute(() -> {
             Minecraft.getInstance().player.displayClientMessage(
@@ -44,7 +46,7 @@ public class UXHelper {
      */
 
     public static void sendSystemMessageComponent(Component message, ChatFormatting style) {
-        assert Minecraft.getInstance().player != null;
+        if (Minecraft.getInstance().player == null) return;
         Minecraft.getInstance().execute(() -> {
             Minecraft.getInstance().player.displayClientMessage(
                     message,
