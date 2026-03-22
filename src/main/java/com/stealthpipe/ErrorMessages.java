@@ -29,7 +29,8 @@ public class ErrorMessages {
             entry("ABNORMAL_DISCONNECT", "Disconnected unexpectedly. Please check your internet connection and try again."),
             entry("INVALID_VERSION", "This version of the mod is invalid!"),
             entry("OUTDATED_CLIENT", "Outdated client. Please update to the latest version of StealthPipe."),
-            entry("UNSUPPORTED_CLIENT", "Unsupported client version. Your client is too new for this relay.")
+            entry("UNSUPPORTED_CLIENT", "Unsupported client version. Your client is too new for this relay."),
+            entry("ROOM_RECENTLY_CLOSED", "This room was recently closed.")
     );
     public static final String DEFAULT_MESSAGE = "Disconnected.";
 
