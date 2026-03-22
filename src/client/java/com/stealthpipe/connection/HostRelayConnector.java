@@ -355,7 +355,7 @@ public class HostRelayConnector {
             try {
 
                 ConnectionStatusInterface.setConnectionStatusText("§aCreating room...", 0);
-                ConnectionStatusInterface.setConnectionStatusText("§7task: Finding the relay...", 1);
+                ConnectionStatusInterface.setConnectionStatusText("§7Finding the relay...", 1);
 
                 boolean isAvailable = pingRelay();
 
