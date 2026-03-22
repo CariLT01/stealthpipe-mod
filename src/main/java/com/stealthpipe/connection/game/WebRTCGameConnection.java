@@ -64,6 +64,8 @@ public class WebRTCGameConnection implements GameConnectionInterface {
     /* Debugging statistics */
     private final AtomicInteger iceCandidatesReceivedCount = new AtomicInteger(0);
     private final AtomicInteger iceCandidatesSentCount = new AtomicInteger(0);
+    private final AtomicBoolean connectionDone = new AtomicBoolean(false); // Responsible to prevent lingering status text
+
 
 
     public WebRTCGameConnection(Consumer<byte[]> onMessage, Consumer<WebRTCGameConnection> onClosed, PacketFlow flow, String gameId) {
@@ -102,6 +104,10 @@ public class WebRTCGameConnection implements GameConnectionInterface {
             // Don't show any messages on the host-side when connecting via WebRTC
             return;
         }
+        if (this.connectionDone.get()) {
+            // Connection already established; don't add more bloat
+            return;
+        }
         StealthPipe.CLIENT_PROXY.setConnectionStatusIndex(text, index);
     }
 
@@ -111,10 +117,11 @@ public class WebRTCGameConnection implements GameConnectionInterface {
             return;
         }
         StealthPipe.CLIENT_PROXY.resizeConnectionStatusList(0);
+        this.connectionDone.set(true);
     }
 
     private void updateIceCandidateCount() {
-        reportConnectionStatus(1, String.format("§ICE negotiation: %s received, %s sent", iceCandidatesReceivedCount.get(), iceCandidatesSentCount.get()));
+        reportConnectionStatus(1, String.format("§7ICE negotiation: %s received, %s sent", iceCandidatesReceivedCount.get(), iceCandidatesSentCount.get()));
     }
 
     public PacketBatchingManager getPacketBatchingManager() {

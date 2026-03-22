@@ -42,7 +42,7 @@ public class IntegratedServerMixin {
         }
 
         for (Map.Entry<Channel, GameConnectionInterface> entry : ModState.channelToGameConnection.entrySet()) {
-            LOGGER.info("Disconnected RTC Connection");
+            LOGGER.info("Disconnected Connection, local server stopped");
             entry.getValue().disconnectWithReason(ConnectionDisconnectReason.LocalServerStopped);
         }
         LOGGER.info("Detected integrated server closed");
