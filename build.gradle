@@ -1,8 +1,20 @@
 
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
+	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
 	id 'maven-publish'
 	id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+// Have to use this cursed logic
+def isNewMc = sc.current.version >= "26.1"
+
+if (isNewMc) {
+	// For 26.1+ → use standard Loom (if available in your setup)
+	apply plugin: 'net.fabricmc.fabric-loom'
+} else {
+	// For older versions → use remap plugin
+	apply plugin: 'net.fabricmc.fabric-loom-remap'
 }
 
 version = "${project.mod_version}+${sc.current.version}"
@@ -110,7 +122,10 @@ var modMenuVersion = modMenuVersions[sc.current.version]
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${sc.current.version}"
-	mappings loom.officialMojangMappings()
+	if (!isNewMc) {
+		mappings loom.officialMojangMappings()
+	}
+
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 
