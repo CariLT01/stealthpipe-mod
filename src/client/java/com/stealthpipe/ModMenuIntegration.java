@@ -16,62 +16,58 @@ public class ModMenuIntegration implements ModMenuApi {
 
             ConfigBuilder builder = ConfigBuilder.create()
                     .setParentScreen(parent)
-                    .setTitle(Component.literal("StealthPipe Configuration"));
+                    .setTitle(Component.translatable("config.stealthpipe.title"));
 
             ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
-            ConfigCategory general = builder.getOrCreateCategory(Component.literal("General"));
+            ConfigCategory general = builder.getOrCreateCategory(Component.translatable("config.stealthpipe.general"));
 
             general.addEntry(
                     entryBuilder.startStrField(
-                            Component.literal("Relay IP"), StealthPipe.config.RELAY_IP
+                            Component.translatable("config.stealthpipe.relayAddress"), StealthPipe.config.RELAY_IP
                     ).setDefaultValue(DefaultConfigValues.RELAY_IP)
                             .setSaveConsumer(newValue -> StealthPipe.config.RELAY_IP = newValue)
-                            .setTooltip(Component.literal(
-                                    "Controls which server StealthPipe will connect to in order to forward your game traffic. Must be a StealthPipe relay server."
-                            ))
+                            .setTooltip(Component.translatable("config.stealthpipe.relayAddress.description"))
                             .build()
             );
 
             general.addEntry(
                     entryBuilder.startBooleanToggle(
-                            Component.literal("Use Online Mode"), StealthPipe.config.ONLINE_MODE
+                            Component.translatable("config.stealthpipe.onlineMode"), StealthPipe.config.ONLINE_MODE
                     ).setDefaultValue(DefaultConfigValues.ONLINE_MODE)
                             .setSaveConsumer(newValue -> StealthPipe.config.ONLINE_MODE = newValue)
-                            .setTooltip(Component.literal(
-                                    "Controls if online mode is enabled for singleplayer worlds. Solves issues with invalid session in development."
-                            ))
+                            .setTooltip(Component.translatable("config.stealthpipe.onlineMode.description"))
                             .build()
             );
 
 
 
             general.addEntry(
-                    entryBuilder.startIntField(Component.literal("Number of attempts to reach relay"), StealthPipe.config.RELAY_PING_ATTEMPTS)
+                    entryBuilder.startIntField(Component.translatable("config.stealthpipe.connectionAttempts"), StealthPipe.config.RELAY_PING_ATTEMPTS)
                             .setDefaultValue(DefaultConfigValues.RELAY_PING_ATTEMPTS)
                             .setSaveConsumer(newValue -> StealthPipe.config.RELAY_PING_ATTEMPTS = newValue)
                             .setTooltip(
-                                    Component.literal("Controls the number of attempts to reach the relay before giving up")
+                                    Component.translatable("config.stealthpipe.connectionAttempts.description")
                             )
                             .build()
             );
 
             general.addEntry(
-                    entryBuilder.startBooleanToggle(Component.literal("Client Attempt WebRTC"), StealthPipe.config.CLIENT_ATTEMPT_WEBRTC)
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.webrtcClientEnabled"), StealthPipe.config.CLIENT_ATTEMPT_WEBRTC)
                             .setDefaultValue(DefaultConfigValues.CLIENT_ATTEMPT_WEBRTC)
                             .setSaveConsumer(newValue -> StealthPipe.config.CLIENT_ATTEMPT_WEBRTC = newValue)
                             .setTooltip(
-                                    Component.literal("Whether the client should attempt a direct peer-to-peer connection with WebRTC.")
+                                    Component.translatable("config.stealthpipe.webrtcClientEnabled.description")
                             )
                             .build()
             );
 
             general.addEntry(
-                    entryBuilder.startBooleanToggle(Component.literal("Host Allow WebRTC"), StealthPipe.config.HOST_ALLOW_WEBRTC_INBOUND)
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.webrtcHostEnabled"), StealthPipe.config.HOST_ALLOW_WEBRTC_INBOUND)
                             .setDefaultValue(DefaultConfigValues.HOST_ALLOW_WEBRTC_INBOUND)
                             .setSaveConsumer(newValue -> StealthPipe.config.HOST_ALLOW_WEBRTC_INBOUND = newValue)
                             .setTooltip(
-                                    Component.literal("Allow/Block inbound WebRTC connection requests")
+                                    Component.translatable("config.stealthpipe.webrtcHostEnabled.description")
                             )
                             .build()
             );
@@ -87,24 +83,24 @@ public class ModMenuIntegration implements ModMenuApi {
             );
 
             // Add section "Optimization"
-            var optimization = entryBuilder.startSubCategory(Component.literal("Optimization"));
+            var optimization = entryBuilder.startSubCategory(Component.translatable("config.stealthpipe.optimization"));
 
             optimization.add(
-                    entryBuilder.startBooleanToggle(Component.literal("Enable Packets Batching"), StealthPipe.config.ENABLE_BATCHED_PACKETS)
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.packetBatching"), StealthPipe.config.ENABLE_BATCHED_PACKETS)
                             .setDefaultValue(DefaultConfigValues.ENABLE_BATCHED_PACKETS)
                             .setSaveConsumer(newValue -> StealthPipe.config.ENABLE_BATCHED_PACKETS = newValue)
                             .setTooltip(
-                                    Component.literal("Groups of packets that are sent at roughly the same time will be batched. Decreases overhead, but slightly increases ping.")
+                                    Component.translatable("config.stealthpipe.packetBatching.description")
                             )
                             .build()
             );
 
             optimization.add(
-                    entryBuilder.startIntField(Component.literal("Packet Batching Interval"), StealthPipe.config.PACKET_BATCHING_INTERVAL_MS)
+                    entryBuilder.startIntField(Component.translatable("config.stealthpipe.packetBatchingInterval"), StealthPipe.config.PACKET_BATCHING_INTERVAL_MS)
                             .setDefaultValue(DefaultConfigValues.PACKET_BATCHING_INTERVAL_MS)
                             .setSaveConsumer(newValue -> StealthPipe.config.PACKET_BATCHING_INTERVAL_MS = newValue)
                             .setTooltip(
-                                    Component.literal("Controls the number of milliseconds to hold on to these packets until it is sent altogether. Higher number will increases batching efficiency but will also increase ping.")
+                                    Component.translatable("config.stealthpipe.packetBatchingInterval.description")
                             )
                             .build()
             );
@@ -112,23 +108,53 @@ public class ModMenuIntegration implements ModMenuApi {
             general.addEntry(optimization.build());
 
 
-            var debug = entryBuilder.startSubCategory(Component.literal("Debugging"));
+            var debug = entryBuilder.startSubCategory(Component.translatable("config.stealthpipe.debugging"));
             debug.add(
-                    entryBuilder.startBooleanToggle(Component.literal("Simulate WRTC ICE Candidates Failure"), StealthPipe.config.SIMULATE_ICE_CANDIDATES_FAILURE)
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.wrtcIceFailure"), StealthPipe.config.SIMULATE_ICE_CANDIDATES_FAILURE)
                             .setDefaultValue(DefaultConfigValues.SIMULATE_ICE_CANDIDATES_FAILURE)
                             .setSaveConsumer(newValue -> StealthPipe.config.SIMULATE_ICE_CANDIDATES_FAILURE = newValue)
                             .setTooltip(
-                                    Component.literal("Not ICE from the United States. Simulates unable to find ICE candidates for WebRTC")
+                                    Component.translatable("config.stealthpipe.wrtcIceFailure.description")
                             )
                             .build()
             );
 
             debug.add(
-                    entryBuilder.startBooleanToggle(Component.literal("Log ICE Candidates"), StealthPipe.config.LOG_WRTC_ICE_CANDIDATES)
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.logIceCandidates"), StealthPipe.config.LOG_WRTC_ICE_CANDIDATES)
                             .setDefaultValue(DefaultConfigValues.LOG_WRTC_ICE_CANDIDATES)
                             .setSaveConsumer(newValue -> StealthPipe.config.LOG_WRTC_ICE_CANDIDATES = newValue)
                             .setTooltip(
-                                    Component.literal("Whether or not to log ICE candidates.\n\n§6Warning: §eEnabling this might expose sensitive information in logs like your IP address and your network topology.\n§rPlease share logs privately if you would like to report an issue.")
+                                    Component.translatable("config.stealthpipe.logIceCandidates.description")
+                            )
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.abnormalDisconnectHost"), StealthPipe.config.SIMULATE_ABNORMAL_DISCONNECT_HOST)
+                            .setDefaultValue(DefaultConfigValues.SIMULATE_ABNORMAL_DISCONNECT_HOST)
+                            .setSaveConsumer(newValue -> StealthPipe.config.SIMULATE_ABNORMAL_DISCONNECT_HOST = newValue)
+                            .setTooltip(
+                                    Component.translatable("config.stealthpipe.abnormalDisconnectHost.description")
+                            )
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.abnormalDisconnectClient"), StealthPipe.config.SIMULATE_ABNORMAL_DISCONNECT_CLIENT)
+                            .setDefaultValue(DefaultConfigValues.SIMULATE_ABNORMAL_DISCONNECT_CLIENT)
+                            .setSaveConsumer(newValue -> StealthPipe.config.SIMULATE_ABNORMAL_DISCONNECT_CLIENT = newValue)
+                            .setTooltip(
+                                    Component.translatable("config.stealthpipe.abnormalDisconnectClient.description")
+                            )
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startIntField(Component.translatable("config.stealthpipe.failureDelay"), StealthPipe.config.SIMULATED_FAILURE_DELAY)
+                            .setDefaultValue(DefaultConfigValues.SIMULATED_FAILURE_DELAY)
+                            .setSaveConsumer(newValue -> StealthPipe.config.SIMULATED_FAILURE_DELAY = newValue)
+                            .setTooltip(
+                                    Component.translatable("config.stealthpipe.failureDelay.description")
                             )
                             .build()
             );

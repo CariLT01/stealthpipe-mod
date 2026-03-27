@@ -20,6 +20,10 @@ public class DefaultConfigValues {
     /*DEBUG OPTIONS*/
     public static final boolean SIMULATE_ICE_CANDIDATES_FAILURE = false;
     public static final boolean LOG_WRTC_ICE_CANDIDATES = false;
+    public static final boolean SIMULATE_ABNORMAL_DISCONNECT_HOST = false;
+    public static final boolean SIMULATE_ABNORMAL_DISCONNECT_CLIENT = false;
+    public static final int SIMULATED_FAILURE_DELAY = 10;
+
     // public static final String RELAY_IP = "http://127.0.0.1:7860";
     // public static final String RELAY_IP_WS = "ws://127.0.0.1:7860";
 }

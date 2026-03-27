@@ -9,6 +9,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -116,7 +117,7 @@ public class ConnectionHelper {
         LOGGER.info("Connect to stealth relay");
 
         try {
-            StealthPipe.CLIENT_PROXY.setConnectionStatusIndex("§aEstablishing a direct connection with WebRTC...", 0);
+            StealthPipe.CLIENT_PROXY.setConnectionStatusIndex(Component.translatable("status.stealthpipe.wrtcEstablishing"), 0);
             if (!StealthPipe.config.CLIENT_ATTEMPT_WEBRTC) {
                 throw new RuntimeException("configured to not try WebRTC");
             }
@@ -127,7 +128,7 @@ public class ConnectionHelper {
             LOGGER.info("Successfully established a direct WebRTC connection");
         } catch (Throwable e) {
 
-            StealthPipe.CLIENT_PROXY.setConnectionStatusIndex("§7Falling back to WebSockets...", 0);
+            StealthPipe.CLIENT_PROXY.setConnectionStatusIndex(Component.translatable("status.stealthpipe.wssFallingBack"), 0);
 
             LOGGER.error("Failed to establish direct P2P WebRTC, falling back to WSS-relay based", e);
 

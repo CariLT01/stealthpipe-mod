@@ -46,7 +46,7 @@ public class ConnectionStatusInterface {
      * @param text The text to show at the specified index. Supports Minecraft color codes, beginnings with '§'.
      * @param index The index to draw the text at.
      */
-    public static void setConnectionStatusText(String text, int index) {
+    public static void setConnectionStatusText(Component text, int index) {
         try {
             if (index >= connectionStatuses.size()) {
                 setConnectionStatusLength(index + 1);
@@ -59,7 +59,7 @@ public class ConnectionStatusInterface {
 
             LOGGER.info("Set connection status: {} at index {}", text, index);
 
-            connectionStatuses.set(index, text);
+            connectionStatuses.set(index, text.getString());
         } catch (Throwable t) {
             LOGGER.error("Failed to set connection status", t);
         }

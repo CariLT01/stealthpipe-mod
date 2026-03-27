@@ -1,11 +1,13 @@
 package com.stealthpipe.interfaces;
 
+import net.minecraft.network.chat.Component;
+
 public interface ClientProxy {
-    void disconnectWithReason(String reason, int delayInMs);
+    void disconnectWithReason(Component reason, int delayInMs);
     void connectToRelay();
-    void sendStealthPipeMessage(String message);
+    void sendStealthPipeMessage(Component message);
     void runOnClientThread(Runnable runnable);
-    void setConnectionStatusIndex(String text, int index);
+    void setConnectionStatusIndex(Component text, int index);
     void resizeConnectionStatusList(int newSize);
 
 }

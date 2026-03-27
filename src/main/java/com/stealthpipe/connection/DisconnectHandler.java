@@ -25,9 +25,7 @@ public class DisconnectHandler {
 
         LOGGER.info("attempt retry");
 
-        StealthPipe.CLIENT_PROXY.sendStealthPipeMessage(
-                String.format("§8[StealthPipe§8] : \n§cSignaling connection to relay disconnected.\n\n§7%s\n§8(error code: %s)\n\n§aAttempting to reconnect...", reasonPresented, realReason)
-        );
+        StealthPipe.CLIENT_PROXY.sendStealthPipeMessage(Component.translatable("text.stealthpipe.signalingDisconnected", reasonPresented, realReason));
 
         StealthPipe.CLIENT_PROXY.connectToRelay();
     }
@@ -46,10 +44,10 @@ public class DisconnectHandler {
         if (StealthPipe.CLIENT_PROXY != null) {
             if (gotMessages) {
                 StealthPipe.CLIENT_PROXY.disconnectWithReason(
-                        String.format("§cStealthPipe connection disconnected.\n\n§7%s\n§8(error code: %s)", reasonPresented, realReason), 250);
+                        Component.translatable("screen.stealthpipe.disconnected", reasonPresented, realReason), 250);
             } else {
                 StealthPipe.CLIENT_PROXY.disconnectWithReason(
-                        String.format("§cStealthPipe failed to connect.\n\n§7%s\n§8(error code: %s)", reasonPresented, realReason), 0);
+                        Component.translatable("screen.stealthpipe.connectionFailed", reasonPresented, realReason), 0);
             }
         }
     }

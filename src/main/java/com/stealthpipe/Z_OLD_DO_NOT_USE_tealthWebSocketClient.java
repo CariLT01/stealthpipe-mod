@@ -387,10 +387,10 @@ public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
                             if (this.RTTMonitor.isUnstable()) {
 
 
-                                StealthPipe.CLIENT_PROXY.sendStealthPipeMessage(String.format("§cYour connection might be unstable and cause stuttering for other players. (average: %sms, standard deviation: %sms)",
+                                /* StealthPipe.CLIENT_PROXY.sendStealthPipeMessage(String.format("§cYour connection might be unstable and cause stuttering for other players. (average: %sms, standard deviation: %sms)",
                                         (int) this.RTTMonitor.getAverage(),
                                         (int) this.RTTMonitor.getStdDev()
-                                        ));
+                                        )); */
                                 lastAlertTime.set(System.currentTimeMillis());
                             }
                         }

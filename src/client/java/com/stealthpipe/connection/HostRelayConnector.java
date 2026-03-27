@@ -45,7 +45,7 @@ public class HostRelayConnector {
     @Unique
     private boolean pingRelay() {
 
-        UXHelper.sendStealthPipeSystemMessage("Connecting to the relay...");
+        UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.connecting"));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(StealthPipe.config.RELAY_IP + "/ping?version=" + StealthPipe.MOD_VERSION))
@@ -63,13 +63,9 @@ public class HostRelayConnector {
                 if (i != 0) {
 
                     int retryDelay = Math.min(30, (int) Math.pow(2, i + 1));
-                    UXHelper.sendStealthPipeSystemMessage(
-                            String.format("Retrying in %s seconds...", (retryDelay))
-                    );
+                    UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.retrying", retryDelay));
                     Thread.sleep(retryDelay * 1000L);
-                    UXHelper.sendStealthPipeSystemMessage(
-                            String.format("Attempt %s...", (i + 1))
-                    );
+                    UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.attempting", i + 1));
                 }
 
                 if (!ModState.gameOpenToLan.get()) {
@@ -86,9 +82,7 @@ public class HostRelayConnector {
                     if (response.statusCode() == 200) {
                         return true;
                     } else {
-                        UXHelper.sendStealthPipeSystemMessage(
-                                String.format("§cRelay is in an unhealthy state and is unavailable to serve your request. Message: %s%nPlease try again later.", response.body())
-                        );
+                        UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.relayUnavailable", response.body()));
 
                         return false;
                     }
@@ -197,17 +191,13 @@ public class HostRelayConnector {
             assert Minecraft.getInstance().player != null;
 
             ModState.gameId.set(gameId);
-            ConnectionStatusInterface.setConnectionStatusText("§7Joining as host as SIGNAL", 1);
+            ConnectionStatusInterface.setConnectionStatusText(Component.translatable("status.stealthpipe.signalJoin"), 1);
             WebSocketHelper.connectToServer();
 
-            UXHelper.sendStealthPipeSystemMessage(
-                    "§cStealthPipe is still in beta!"
-            );
+            UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.betaNotice"));
 
             if (!StealthPipe.config.HAS_SHOWN_WEBRTC_PRIVACY_NOTE) {
-                UXHelper.sendStealthPipeSystemMessage(
-                        "§9Privacy note: §8StealthPipe may use §fWebRTC Technology§8 to significantly reduce latency. It requires sharing your IP address. WebRTC can be disabled in the mod's config."
-                );
+                UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.wrtcPrivacyNote"));
                 StealthPipe.config.HAS_SHOWN_WEBRTC_PRIVACY_NOTE = true;
                 StealthPipe.config.save();
             }
@@ -215,12 +205,10 @@ public class HostRelayConnector {
 
 
             if (Objects.equals(gameId, "676767")) {
-                UXHelper.sendStealthPipeSystemMessage(
-                        "§cWarning: §6Room privacy cannot be guaranteed for this session, and you will lose this room code if your internet connection disconnects. Restart the session to fix this."
-                );
+                UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.roomPrivacyNote"));
             }
 
-            UXHelper.sendStealthPipeSystemMessage("Join with the mod on another client using: ");
+            UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.joinLink"));
             UXHelper.sendSystemMessageComponent(Component.literal(gameId + ".stealth.link").withStyle(style -> style
                             .withUnderlined(true)
                             .withColor(ChatFormatting.LIGHT_PURPLE)
@@ -286,11 +274,9 @@ public class HostRelayConnector {
     @Unique
     private ProofOfWorkChallengeResult doProofOfWorkChallenge() throws Exception {
 
-        ConnectionStatusInterface.setConnectionStatusText("Solving PoW...", 1);
+        ConnectionStatusInterface.setConnectionStatusText(Component.translatable("status.stealthpipe.solvingPow"), 1);
 
-        UXHelper.sendStealthPipeSystemMessage(
-                "Authenticating client..."
-        );
+        UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.authenticating"));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(StealthPipe.config.RELAY_IP + "/pow"))
@@ -312,15 +298,11 @@ public class HostRelayConnector {
         // Warn user about high difficulty and slow authentication
         switch (difficulty) {
             case 6:
-                UXHelper.sendStealthPipeSystemMessage(
-                        "Authentication may take longer. Please stand by."
-                );
+                UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.longerAuthenticationNotice1"));
                 break;
 
             case 7:
-                UXHelper.sendStealthPipeSystemMessage(
-                        "Authentication may take a lot longer. Please stand by."
-                );
+                UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.longerAuthenticationNotice2"));
                 break;
 
             default:
@@ -359,8 +341,8 @@ public class HostRelayConnector {
 
             try {
 
-                ConnectionStatusInterface.setConnectionStatusText("§aCreating room...", 0);
-                ConnectionStatusInterface.setConnectionStatusText("§7Finding the relay...", 1);
+                ConnectionStatusInterface.setConnectionStatusText(Component.translatable("status.stealthpipe.creatingRoom"), 0);
+                ConnectionStatusInterface.setConnectionStatusText(Component.translatable("status.stealthpipe.findingRelay"), 1);
 
                 boolean isAvailable = pingRelay();
 
@@ -370,24 +352,18 @@ public class HostRelayConnector {
 
                     LOGGER.error("Could not connect to the relay: pinging failed");
 
-                    UXHelper.sendStealthPipeSystemMessage("§cFailed to reach the relay, connection failed. Check the logs for more info.");
-                    UXHelper.sendStealthPipeSystemMessage("§r--- §nTroubleshooting§r --");
-                    UXHelper.sendStealthPipeSystemMessage("Please try the following:");
-                    UXHelper.sendStealthPipeSystemMessage(" - Try starting a new session again");
-                    UXHelper.sendStealthPipeSystemMessage(" - Try using a different Java Runtime at a different installation location");
-                    UXHelper.sendStealthPipeSystemMessage(" - Check your antivirus or firewall settings");
-                    UXHelper.sendStealthPipeSystemMessage(" - Try connecting to an alternative relay");
-                    UXHelper.sendStealthPipeSystemMessage(" - Try restarting your computer");
+                    UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.connectionFailed"));
+                    UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.troubleshooting"));
                     UXHelper.sendSystemMessageComponent(
-                            Component.literal("§a§nOpen Alternative Relays List")
+                            Component.translatable("text.stealthpipe.alternativeRelaysList.open")
                                     .withStyle(style -> style.withClickEvent(
                                             new ClickEvent.OpenUrl(URI.create("https://github.com/CariLT01/stealthpipe-mod/blob/main/ALTERNATIVE_RELAYS.md"))
                                     )),
                             ChatFormatting.WHITE
                     );
-                    UXHelper.sendStealthPipeSystemMessage("To help us fix the issue, please attach your Minecraft log file (latest.log) when reporting a problem.");
+                    UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.issueReport"));
                     UXHelper.sendSystemMessageComponent(
-                            Component.literal("§a§nOpen latest.log")
+                            Component.translatable("text.stealthpipe.logsOpen")
                                     .withStyle(style -> style.withClickEvent(
                                             new ClickEvent.OpenFile(logFile)
                                     )),
@@ -415,11 +391,9 @@ public class HostRelayConnector {
                         .GET()
                         .build();
 
-                ConnectionStatusInterface.setConnectionStatusText("§7Establishing SIGNAL WSS..", 1);
+                ConnectionStatusInterface.setConnectionStatusText(Component.translatable("status.stealthpipe.establishingSignal"), 1);
 
-                UXHelper.sendStealthPipeSystemMessage(
-                        "Creating WebSocket connection..."
-                );
+                UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.creatingWebsocket"));
 
                 establishConnection(request);
 
@@ -428,9 +402,7 @@ public class HostRelayConnector {
                 System.out.printf("An error occurred while trying to create room ID: %s%n", e.getMessage());
 
                 Minecraft.getInstance().execute(() -> {
-                    UXHelper.sendStealthPipeSystemMessage(
-                            String.format("§cAn error occurred while trying to create room ID: %s", e.getMessage())
-                    );
+                    UXHelper.sendStealthPipeSystemMessage(Component.translatable("text.stealthpipe.roomCreationFailed", e.getMessage()));
                 });
 
             }
