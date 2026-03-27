@@ -1,12 +1,76 @@
+
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
 	id 'maven-publish'
-	id("dev.kikugie.fletching-table.fabric") version "0.1.0-alpha.22"
 	id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
+// Have to use this cursed logic
+def isNewMc = sc.current.version >= "26.1"
+
+if (isNewMc) {
+	// For 26.1+ → use standard Loom (if available in your setup)
+	apply plugin: 'net.fabricmc.fabric-loom'
+} else {
+	// For older versions → use remap plugin
+	apply plugin: 'net.fabricmc.fabric-loom-remap'
+}
+
+
 version = "${project.mod_version}+${sc.current.version}"
 group = project.maven_group
+
+/* Java version for each Minecraft version */
+def javaVersionsInteger = [
+		"26.1": 25,
+		"1.21.11": 21,
+		"1.21.10": 21,
+		"1.21.9": 21,
+		"1.21.8": 21
+]
+
+def javaVersionsEnums = [
+		"26.1": JavaVersion.VERSION_25,
+		"1.21.11": JavaVersion.VERSION_21,
+		"1.21.10": JavaVersion.VERSION_21,
+		"1.21.9": JavaVersion.VERSION_21,
+		"1.21.8": JavaVersion.VERSION_21
+]
+
+/* Mod versions for each Minecraft version */
+def fabricVersions = [
+		"26.1": "0.144.0+26.1",
+		"1.21.11": "0.140.0+1.21.11",
+		"1.21.10": "0.138.4+1.21.10",
+		"1.21.9": "0.134.1+1.21.9",
+		"1.21.8": "0.136.1+1.21.8",
+
+]
+def clothConfigVersions = [
+		"26.1": "26.1.154",
+		"1.21.11": "21.11.153",
+		"1.21.10": "20.0.149",
+		"1.21.9": "20.0.149",
+		"1.21.8": "19.0.147",
+
+]
+def modMenuVersions = [
+		"26.1" : "18.0.0-alpha.8",
+		"1.21.11" : "17.0.0",
+		"1.21.10" : "16.0.1",
+		"1.21.9" : "16.0.1",
+		"1.21.8" : "15.0.2"
+]
+
+def modImplementationKwUsageVersions = [
+        "26.1": false,
+		"1.21.11": true,
+		"1.21.10": true,
+		"1.21.9": true,
+		"1.21.8": true
+]
+
+def shouldUseModImpl = modImplementationKwUsageVersions[sc.current.version]
 
 base {
 	archivesName = project.archives_base_name
@@ -54,28 +118,42 @@ loom {
 
 }
 
-var requiredFabric =
-	sc.current.version == "1.21.11" ? "0.140.0+1.21.11" :
-	sc.current.version == "1.21.10" ? "0.138.4+1.21.10" :
-			sc.current.version == "1.21.9" ? "0.134.1+1.21.9" :
-	sc.current.version == "1.21.8" ? "0.136.1+1.21.8" : ""
 
-var requiredClothConfig =
-		sc.current.version == "1.21.11" ? "21.11.153" :
-				sc.current.version == "1.21.10" ? "20.0.149" :
-						sc.current.version == "1.21.9" ? "20.0.149" :
-								sc.current.version == "1.21.8" ? "19.0.147" : ""
 
+var requiredFabric = fabricVersions[sc.current.version]
+
+
+var requiredClothConfig = clothConfigVersions[sc.current.version]
+
+
+
+var modMenuVersion = modMenuVersions[sc.current.version]
 
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${sc.current.version}"
-	mappings loom.officialMojangMappings()
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	if (!isNewMc) {
+		mappings loom.officialMojangMappings()
+	}
 
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${requiredFabric}"
+
+	if (shouldUseModImpl) {
+		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+
+		// Fabric API. This is technically optional, but you probably want it anyway.
+		modImplementation "net.fabricmc.fabric-api:fabric-api:${requiredFabric}"
+	} else {
+		implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+
+		// Fabric API. This is technically optional, but you probably want it anyway.
+		implementation "net.fabricmc.fabric-api:fabric-api:${requiredFabric}"
+	}
+
+
 
 	implementation "org.java-websocket:Java-WebSocket:1.5.3"
 	implementation "dev.onvoid.webrtc:webrtc-java:0.14.0"
@@ -93,16 +171,28 @@ dependencies {
 
 	include "org.java-websocket:Java-WebSocket:1.5.3"
 
-	modApi("me.shedaniel.cloth:cloth-config-fabric:${requiredClothConfig}") {
-		exclude(group: "net.fabricmc.fabric-api")
+	if (isNewMc) {
+		api("me.shedaniel.cloth:cloth-config-fabric:${requiredClothConfig}") {
+			exclude(group: "net.fabricmc.fabric-api")
+		}
+	} else {
+		modApi("me.shedaniel.cloth:cloth-config-fabric:${requiredClothConfig}") {
+			exclude(group: "net.fabricmc.fabric-api")
+		}
 	}
 
-	modCompileOnly fletchingTable.modrinth("modmenu", "${sc.current.version}")
-	// Actually puts the mod in your dev game
-	modRuntimeOnly fletchingTable.modrinth("modmenu", "${sc.current.version}")
 
 
-	modRuntimeOnly fletchingTable.modrinth("cloth-config", "${sc.current.version}")
+
+	def modMenuDep = "com.terraformersmc:modmenu:${modMenuVersion}"
+
+	if (sc.current.version == "26.1") {
+		implementation modMenuDep
+		runtimeOnly modMenuDep
+	} else {
+		modCompileOnly modMenuDep
+		modRuntimeOnly modMenuDep
+	}
 
 	implementation 'com.auth0:java-jwt:4.4.0'
 	include 'com.auth0:java-jwt:4.4.0'
@@ -138,8 +228,10 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = javaVersionsInteger[sc.current.version]
 }
+
+
 
 java {
 	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
@@ -147,8 +239,12 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(javaVersionsInteger[sc.current.version])
+	}
+
+	sourceCompatibility = javaVersionsEnums[sc.current.version]
+	targetCompatibility = javaVersionsEnums[sc.current.version]
 }
 
 jar {

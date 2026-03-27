@@ -2,7 +2,11 @@ package com.stealthpipe.ui;
 
 import com.stealthpipe.StealthPipe;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+/*? if >=26.1 { */
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+/*?} else { */
+/*import net.minecraft.client.gui.GuiGraphics;
+*//*?}*/
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +71,9 @@ public class ConnectionStatusInterface {
      *
      * @param guiGraphics GuiGraphics object provided by whatever callback or event was used.
      */
-    public static void renderConnectionStatusText(GuiGraphics guiGraphics) {
+
+    /*? if <= 1.21.11 {*/
+    /*public static void renderConnectionStatusText(GuiGraphics guiGraphics) {
         if (!StealthPipe.config.SHOW_CONNECT_INFO) return;
 
         // LOGGER.info("Render");
@@ -79,5 +85,20 @@ public class ConnectionStatusInterface {
         }
 
     }
+    *//*?} else {*/
+    public static void renderConnectionStatusText(GuiGraphicsExtractor guiGraphics) {
+        if (!StealthPipe.config.SHOW_CONNECT_INFO) return;
+
+        // LOGGER.info("Render");
+        int centerX = guiGraphics.guiWidth() / 2;
+        for (int i = 0; i < connectionStatuses.size(); i++) {
+            String text = connectionStatuses.get(i);
+            int yOffset = 20 + i * 12;
+            guiGraphics.centeredText(Minecraft.getInstance().font, Component.literal(text), centerX, yOffset, 0xFFFFFFFF);
+        }
+
+    }
+    /*?}*/
+
 
 }

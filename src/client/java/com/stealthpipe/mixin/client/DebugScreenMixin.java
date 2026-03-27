@@ -3,13 +3,17 @@ package com.stealthpipe.mixin.client;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
-import net.minecraft.client.gui.GuiGraphics;
+//? if <26.1
+//import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import java.time.Instant;
 import java.util.List;
@@ -81,8 +85,23 @@ public class DebugScreenMixin {
         list2.add("Using WebRTC: " + ModState.usingWebRTC.get());
     }
 
-    /*? if >=1.21.9 {*/
-    @Inject(
+    /*? if >=26.1 {*/
+    @ModifyArgs(
+            method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;extractLines(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Ljava/util/List;Z)V",
+                    ordinal = 1
+            )
+    )
+    public void extractRenderStateInject(Args args) {
+        List<String> rightLines = args.get(1);
+        this.updateDebugCounters();
+        this.addToDebugList(rightLines);
+    }
+
+    /*?} else if >=1.21.9 && < 26.1 {*/
+    /*@Inject(
             method = "render",
             at = @At(
                     value = "INVOKE",
@@ -94,7 +113,8 @@ public class DebugScreenMixin {
         this.updateDebugCounters();
         this.addToDebugList(list2);
     }
-    /*? } else { */
+
+    *//*? } else { */
     /*@Inject(
             method = "drawGameInformation",
             at = @At(
