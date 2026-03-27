@@ -3,10 +3,10 @@ package com.stealthpipe.ui;
 import com.stealthpipe.StealthPipe;
 import net.minecraft.client.Minecraft;
 /*? if >=26.1 { */
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-/*?} else { */
-/*import net.minecraft.client.gui.GuiGraphics;
-*//*?}*/
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*//*?} else { */
+import net.minecraft.client.gui.GuiGraphics;
+/*?}*/
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +73,7 @@ public class ConnectionStatusInterface {
      */
 
     /*? if <= 1.21.11 {*/
-    /*public static void renderConnectionStatusText(GuiGraphics guiGraphics) {
+    public static void renderConnectionStatusText(GuiGraphics guiGraphics) {
         if (!StealthPipe.config.SHOW_CONNECT_INFO) return;
 
         // LOGGER.info("Render");
@@ -85,8 +85,8 @@ public class ConnectionStatusInterface {
         }
 
     }
-    *//*?} else {*/
-    public static void renderConnectionStatusText(GuiGraphicsExtractor guiGraphics) {
+    /*?} else {*/
+    /*public static void renderConnectionStatusText(GuiGraphicsExtractor guiGraphics) {
         if (!StealthPipe.config.SHOW_CONNECT_INFO) return;
 
         // LOGGER.info("Render");
@@ -98,7 +98,7 @@ public class ConnectionStatusInterface {
         }
 
     }
-    /*?}*/
+    *//*?}*/
 
 
 }

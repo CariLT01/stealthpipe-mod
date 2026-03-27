@@ -8,23 +8,22 @@ public class UXHelper {
 
     private static void _sendMessageMultiVersion(Component component) {
         /*? if <26.1 { */
-        /*Minecraft.getInstance().player.displayClientMessage(
+        Minecraft.getInstance().player.displayClientMessage(
                     component,
                     false
         );
-        *//*? } else { */
-        Minecraft.getInstance().player.sendSystemMessage(
+        /*? } else { */
+        /*Minecraft.getInstance().player.sendSystemMessage(
                 component
 
         );
-        /*? } */
+        *//*? } */
     }
 
     public static void _sendSystemMessage(String message, ChatFormatting style) {
         assert Minecraft.getInstance().player != null;
         Minecraft.getInstance().execute(() -> {
             _sendMessageMultiVersion(Component.literal(message).withStyle(style));
-            /*?}*/
         });
 
 
