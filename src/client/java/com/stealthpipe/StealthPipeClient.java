@@ -6,15 +6,22 @@ import com.stealthpipe.enums.ConnectionDisconnectReason;
 import com.stealthpipe.ui.ConnectionStatusInterface;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StealthPipeClient implements ClientModInitializer {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
+
+	private static void renderOverlay(GuiGraphicsExtractor gui) {
+
+	}
 
 	@Override
 	public void onInitializeClient() {
@@ -27,15 +34,26 @@ public class StealthPipeClient implements ClientModInitializer {
 		LOGGER.info("Client initialized stealth");
 
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-			ScreenEvents.afterRender(screen).register((scr, guiGraphics, mouseX, mouseY, tickDelta) -> {
+			/*? if <=1.21.11 {*/
+			/*ScreenEvents.afterRender(screen).register((scr, guiGraphics, mouseX, mouseY, tickDelta) -> {
 				ConnectionStatusInterface.renderConnectionStatusText(guiGraphics);
 			});
+			*//*?} else if >=26.1 {*/
+			ScreenEvents.afterTick(screen).register((scr) -> {
+				ConnectionStatusInterface.renderConnectionStatusText(scr);
+			});
+			/*?} else {*/
+
+			/*? } */
 		});
 
-		HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> {
+		/*? if <= 1.21.11 {*/
+		/*HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> {
 			ConnectionStatusInterface.renderConnectionStatusText(guiGraphics);
 		});
-
+		*//*?} else {*/
+		HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Identifier.fromNamespaceAndPath(StealthPipe.MOD_ID, "connection_overlay"), StealthPipeClient::renderOverlay);
+		/*?} */
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 
 

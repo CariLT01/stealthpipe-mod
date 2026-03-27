@@ -1,6 +1,5 @@
 
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
 	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
 	id 'maven-publish'
 	id 'com.github.johnrengelman.shadow' version '8.1.1'
@@ -16,6 +15,7 @@ if (isNewMc) {
 	// For older versions → use remap plugin
 	apply plugin: 'net.fabricmc.fabric-loom-remap'
 }
+
 
 version = "${project.mod_version}+${sc.current.version}"
 group = project.maven_group
@@ -61,6 +61,16 @@ def modMenuVersions = [
 		"1.21.9" : "16.0.1",
 		"1.21.8" : "15.0.2"
 ]
+
+def modImplementationKwUsageVersions = [
+        "26.1": false,
+		"1.21.11": true,
+		"1.21.10": true,
+		"1.21.9": true,
+		"1.21.8": true
+]
+
+def shouldUseModImpl = modImplementationKwUsageVersions[sc.current.version]
 
 base {
 	archivesName = project.archives_base_name
@@ -122,15 +132,28 @@ var modMenuVersion = modMenuVersions[sc.current.version]
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${sc.current.version}"
+
 	if (!isNewMc) {
 		mappings loom.officialMojangMappings()
 	}
 
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${requiredFabric}"
+	if (shouldUseModImpl) {
+		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+
+		// Fabric API. This is technically optional, but you probably want it anyway.
+		modImplementation "net.fabricmc.fabric-api:fabric-api:${requiredFabric}"
+	} else {
+		implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+
+		// Fabric API. This is technically optional, but you probably want it anyway.
+		implementation "net.fabricmc.fabric-api:fabric-api:${requiredFabric}"
+	}
+
+
 
 	implementation "org.java-websocket:Java-WebSocket:1.5.3"
 	implementation "dev.onvoid.webrtc:webrtc-java:0.14.0"
@@ -148,16 +171,24 @@ dependencies {
 
 	include "org.java-websocket:Java-WebSocket:1.5.3"
 
-	modApi("me.shedaniel.cloth:cloth-config-fabric:${requiredClothConfig}") {
-		exclude(group: "net.fabricmc.fabric-api")
+	if (isNewMc) {
+		api("me.shedaniel.cloth:cloth-config-fabric:${requiredClothConfig}") {
+			exclude(group: "net.fabricmc.fabric-api")
+		}
+	} else {
+		modApi("me.shedaniel.cloth:cloth-config-fabric:${requiredClothConfig}") {
+			exclude(group: "net.fabricmc.fabric-api")
+		}
 	}
+
+
 
 
 	def modMenuDep = "com.terraformersmc:modmenu:${modMenuVersion}"
 
 	if (sc.current.version == "26.1") {
 		implementation modMenuDep
-		modRuntimeOnly modMenuDep
+		runtimeOnly modMenuDep
 	} else {
 		modCompileOnly modMenuDep
 		modRuntimeOnly modMenuDep
