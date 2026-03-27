@@ -18,7 +18,7 @@
   "text.stealthpipe.logsOpen": "§a§nOpen latest.log",
   "text.stealthpipe.creatingWebsocket": "Creating WebSocket connection...",
   "text.stealthpipe.roomCreationFailed": "§cAn error occurred while trying to create room ID: %s",
-  "text.stealthpipe.signalingDisconnected": "§8[StealthPipe§8] : \n§cSignaling connection to relay disconnected.\n\n§7%s\n§8(error code: %s)\n\n§aAttempting to reconnect...",
+  "text.stealthpipe.signalingDisconnected": "\n§cSignaling connection to relay disconnected.\n\n§7%s\n§8(error code: %s)\n\n§aAttempting to reconnect...",
 
   "screen.stealthpipe.connectionFailed": "§cStealthPipe failed to connect.\n\n§7%s\n§8(error code: %s)",
   "screen.stealthpipe.disconnected": "§cStealthPipe connection disconnected.\n\n§7%s\n§8(error code: %s)",
