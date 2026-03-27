@@ -6,13 +6,25 @@ import net.minecraft.network.chat.Component;
 
 public class UXHelper {
 
+    private static void _sendMessageMultiVersion(Component component) {
+        /*? if <26.1 { */
+        /*Minecraft.getInstance().player.displayClientMessage(
+                    component,
+                    false
+        );
+        *//*? } else { */
+        Minecraft.getInstance().player.sendSystemMessage(
+                component
+
+        );
+        /*? } */
+    }
+
     public static void _sendSystemMessage(String message, ChatFormatting style) {
         assert Minecraft.getInstance().player != null;
         Minecraft.getInstance().execute(() -> {
-            Minecraft.getInstance().player.displayClientMessage(
-                    Component.literal(message).withStyle(style),
-                    false
-            );
+            _sendMessageMultiVersion(Component.literal(message).withStyle(style));
+            /*?}*/
         });
 
 
@@ -30,10 +42,7 @@ public class UXHelper {
         }
 
         Minecraft.getInstance().execute(() -> {
-            Minecraft.getInstance().player.displayClientMessage(
-                    Component.literal(String.format("§8[StealthPipe] : §7%s", message)),
-                    false
-            );
+            _sendMessageMultiVersion(Component.literal(String.format("§8[StealthPipe] : §7%s", message)));
         });
     }
 
@@ -48,10 +57,7 @@ public class UXHelper {
     public static void sendSystemMessageComponent(Component message, ChatFormatting style) {
         if (Minecraft.getInstance().player == null) return;
         Minecraft.getInstance().execute(() -> {
-            Minecraft.getInstance().player.displayClientMessage(
-                    message,
-                    false
-            );
+            _sendMessageMultiVersion(message);
         });
 
 

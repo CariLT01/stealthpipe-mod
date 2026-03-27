@@ -6,6 +6,7 @@ import com.stealthpipe.enums.ConnectionDisconnectReason;
 import com.stealthpipe.ui.ConnectionStatusInterface;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
@@ -19,7 +20,7 @@ public class StealthPipeClient implements ClientModInitializer {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
-	private static void renderOverlay(GuiGraphicsExtractor gui) {
+	private static void renderOverlay() {
 
 	}
 
@@ -39,8 +40,8 @@ public class StealthPipeClient implements ClientModInitializer {
 				ConnectionStatusInterface.renderConnectionStatusText(guiGraphics);
 			});
 			*//*?} else if >=26.1 {*/
-			ScreenEvents.afterTick(screen).register((scr) -> {
-				ConnectionStatusInterface.renderConnectionStatusText(scr);
+			ScreenEvents.afterExtract(screen).register((scr, gui, a, b, c) -> {
+				ConnectionStatusInterface.renderConnectionStatusText(gui);
 			});
 			/*?} else {*/
 
@@ -52,7 +53,10 @@ public class StealthPipeClient implements ClientModInitializer {
 			ConnectionStatusInterface.renderConnectionStatusText(guiGraphics);
 		});
 		*//*?} else {*/
-		HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Identifier.fromNamespaceAndPath(StealthPipe.MOD_ID, "connection_overlay"), StealthPipeClient::renderOverlay);
+		HudElement myElement = (graphics, tracker) -> {
+			ConnectionStatusInterface.renderConnectionStatusText(graphics);
+		};
+		HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Identifier.fromNamespaceAndPath(StealthPipe.MOD_ID, "connection_overlay"), myElement);
 		/*?} */
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 

@@ -2,8 +2,11 @@ package com.stealthpipe.ui;
 
 import com.stealthpipe.StealthPipe;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+/*? if >=26.1 { */
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+/*?} else { */
+/*import net.minecraft.client.gui.GuiGraphics;
+*//*?}*/
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
