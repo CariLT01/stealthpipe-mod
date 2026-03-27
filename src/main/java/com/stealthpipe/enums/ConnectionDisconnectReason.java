@@ -8,7 +8,8 @@ public enum ConnectionDisconnectReason {
     SignalingWebRTCFailed("SIGN_WRTC_FAILED"),
     SignalingFinished("SIGN_FINISHED"),
     Unknown("UNKNOWN"),
-    SignalConnectionDisconnected("SIGNAL_DISCONNECTED");
+    SignalConnectionDisconnected("SIGNAL_DISCONNECTED"),
+    ConnectionDisconnectCalled("DISCONNECT_CALLED");
 
 
     private final String signalingDisconnectReason;

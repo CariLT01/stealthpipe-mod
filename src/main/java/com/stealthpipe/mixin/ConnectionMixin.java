@@ -2,10 +2,13 @@ package com.stealthpipe.mixin;
 
 import com.stealthpipe.*;
 import com.stealthpipe.connection.ConnectionHelper;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
 import io.netty.channel.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.network.Connection;
+import net.minecraft.network.DisconnectionDetails;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
 
 
@@ -70,6 +73,22 @@ public abstract class ConnectionMixin {
     }
     *//*? } */
 
+    @Inject(method = "disconnect(Lnet/minecraft/network/chat/Component;)V", at = @At("HEAD"))
+    private void injectDisconnect(Component reason, CallbackInfo ci) {
+        if (ModState.isStealthPipeConnection.get() && ModState.isClientConnectingToStealthServer.get()) {
+            if (ModState.relayClient.get() != null) {
+                ModState.relayClient.get().disconnectWithReason(ConnectionDisconnectReason.ConnectionDisconnectCalled);
+            }
+        }
+    }
 
+    @Inject(method = "disconnect(Lnet/minecraft/network/DisconnectionDetails;)V", at = @At("HEAD"))
+    private void injectDisconnect2(DisconnectionDetails details, CallbackInfo ci) {
+        if (ModState.isStealthPipeConnection.get() && ModState.isClientConnectingToStealthServer.get()) {
+            if (ModState.relayClient.get() != null) {
+                ModState.relayClient.get().disconnectWithReason(ConnectionDisconnectReason.ConnectionDisconnectCalled);
+            }
+        }
+    }
 
 }
