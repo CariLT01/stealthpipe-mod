@@ -4,9 +4,9 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
 //? if <26.1
-import net.minecraft.client.gui.GuiGraphics;
+//import net.minecraft.client.gui.GuiGraphics;
 //? if >= 26.1
-//import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -87,7 +87,7 @@ public class DebugScreenMixin {
     }
 
     /*? if >=26.1 {*/
-    /*@ModifyArgs(
+    @ModifyArgs(
             method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V",
             at = @At(
                     value = "INVOKE",
@@ -101,8 +101,8 @@ public class DebugScreenMixin {
         this.addToDebugList(rightLines);
     }
 
-    *//*?} else if >=1.21.9 && < 26.1 {*/
-    @Inject(
+    /*?} else if >=1.21.9 && < 26.1 {*/
+    /*@Inject(
             method = "render",
             at = @At(
                     value = "INVOKE",
@@ -115,7 +115,7 @@ public class DebugScreenMixin {
         this.addToDebugList(list2);
     }
 
-    /*? } else { */
+    *//*? } else { */
     /*@Inject(
             method = "drawGameInformation",
             at = @At(

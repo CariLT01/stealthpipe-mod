@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 //? if < 26.1
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+//import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
@@ -37,28 +37,28 @@ public class StealthPipeClient implements ClientModInitializer {
 
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
 			/*? if <=1.21.11 {*/
-			ScreenEvents.afterRender(screen).register((scr, guiGraphics, mouseX, mouseY, tickDelta) -> {
+			/*ScreenEvents.afterRender(screen).register((scr, guiGraphics, mouseX, mouseY, tickDelta) -> {
 				ConnectionStatusInterface.renderConnectionStatusText(guiGraphics);
 			});
-			/*?} else if >=26.1 {*/
-			/*ScreenEvents.afterExtract(screen).register((scr, gui, a, b, c) -> {
+			*//*?} else if >=26.1 {*/
+			ScreenEvents.afterExtract(screen).register((scr, gui, a, b, c) -> {
 				ConnectionStatusInterface.renderConnectionStatusText(gui);
 			});
-			*//*?} else {*/
+			/*?} else {*/
 
 			/*? } */
 		});
 
 		/*? if <= 1.21.11 {*/
-		HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> {
+		/*HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> {
 			ConnectionStatusInterface.renderConnectionStatusText(guiGraphics);
 		});
-		/*?} else {*/
-		/*HudElement myElement = (graphics, tracker) -> {
+		*//*?} else {*/
+		HudElement myElement = (graphics, tracker) -> {
 			ConnectionStatusInterface.renderConnectionStatusText(graphics);
 		};
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Identifier.fromNamespaceAndPath(StealthPipe.MOD_ID, "connection_overlay"), myElement);
-		*//*?} */
+		/*?} */
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 
 

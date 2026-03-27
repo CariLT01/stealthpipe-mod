@@ -14,7 +14,7 @@ import net.minecraft.network.protocol.PacketFlow;
 
 
 //? if =1.21.11
-import net.minecraft.server.network.EventLoopGroupHolder;
+//import net.minecraft.server.network.EventLoopGroupHolder;
 import net.minecraft.server.network.EventLoopGroupHolder;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,21 +45,21 @@ public abstract class ConnectionMixin {
     }
 
     /*? if =1.21.11 { */
-    @Inject(method = "connect", at = @At("HEAD"), cancellable = true)
-    private static void connect(InetSocketAddress inetSocketAddress, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
-        if (ModState.isStealthPipeConnection.get()) {
-            ConnectionHelper.connectToRelay(inetSocketAddress, eventLoopGroupHolder.eventLoopGroup().next(), connection, cir);
-        }
-    }
-    /*? } else if =26.1 { */
     /*@Inject(method = "connect", at = @At("HEAD"), cancellable = true)
     private static void connect(InetSocketAddress inetSocketAddress, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
         if (ModState.isStealthPipeConnection.get()) {
             ConnectionHelper.connectToRelay(inetSocketAddress, eventLoopGroupHolder.eventLoopGroup().next(), connection, cir);
         }
     }
+    *//*? } else if =26.1 { */
+    @Inject(method = "connect", at = @At("HEAD"), cancellable = true)
+    private static void connect(InetSocketAddress inetSocketAddress, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
+        if (ModState.isStealthPipeConnection.get()) {
+            ConnectionHelper.connectToRelay(inetSocketAddress, eventLoopGroupHolder.eventLoopGroup().next(), connection, cir);
+        }
+    }
 
-    *//*? } else { */
+    /*? } else { */
     /*@Inject(method = "connect", at = @At("HEAD"), cancellable = true)
     private static void injectConnect2(InetSocketAddress inetSocketAddress, boolean bl, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
         io.netty.channel.EventLoopGroup group;

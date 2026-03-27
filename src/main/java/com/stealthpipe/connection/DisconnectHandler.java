@@ -3,6 +3,7 @@ package com.stealthpipe.connection;
 import com.stealthpipe.ErrorMessages;
 import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
@@ -32,6 +33,12 @@ public class DisconnectHandler {
     }
 
     public static void showClientDisconnectMessage(boolean gotMessages, String reason) {
+
+        if (Objects.equals(reason, ConnectionDisconnectReason.ConnectionDisconnectCalled.getPacketType())) {
+            LOGGER.warn("Not warning {} disconnect type", ConnectionDisconnectReason.ConnectionDisconnectCalled);
+            return;
+        }
+
         String realReason = !Objects.equals(reason, "") ? reason : "None provided";
         String reasonPresented = ErrorMessages.errorReasonToMessage(reason);
 
