@@ -11,7 +11,7 @@
   "text.stealthpipe.longerAuthenticationNotice1": "L'authentification peut prendre un peu de temps. Veuillez patienter.",
   "text.stealthpipe.longerAuthenticationNotice2": "L'authentification peut prendre beaucoup plus de temps. Veuillez patienter.",
   "text.stealthpipe.connectionFailed": "§cImpossible de joindre le relais, la connexion a échoué. Vérifiez les logs pour plus d'infos.",
-  "text.stealthpipe.troubleshooting": "§r--- §nDépannage§r --\\nVeuillez essayer ce qui suit :\\n - Essayez de démarrer une nouvelle session\\n - Essayez d'utiliser un autre Java Runtime dans un dossier d'installation différent\\n - Vérifiez vos paramètres d'antivirus ou de pare-feu\\n - Essayez de vous connecter à un autre relais\\n - Essayez de redémarrer votre ordinateur",
+  "text.stealthpipe.troubleshooting": "§r--- §nDépannage§r --\nVeuillez essayer ce qui suit :\n - Essayez de démarrer une nouvelle session\n - Essayez d'utiliser un autre Java Runtime dans un dossier d'installation différent\n - Vérifiez vos paramètres d'antivirus ou de pare-feu\n - Essayez de vous connecter à un autre relais\n - Essayez de redémarrer votre ordinateur",
   "text.stealthpipe.alternativeRelaysList.open": "§a§nOuvrir la liste des relais alternatifs",
   "text.stealthpipe.issueReport": "Pour nous aider à corriger le problème, veuillez joindre votre fichier de log Minecraft (latest.log) lors de votre signalement.",
   "text.stealthpipe.logsOpen": "§a§nOuvrir latest.log",
@@ -20,7 +20,7 @@
   "text.stealthpipe.signalingDisconnected": "§8[StealthPipe§8] : \n§cConnexion de signalisation au relais déconnectée.\n\n§7%s\n§8(code d'erreur : %s)\n\n§aTentative de reconversion...",
 
   "screen.stealthpipe.connectionFailed": "§cÉchec de la connexion StealthPipe.\n\n§7%s\n§8(code d'erreur : %s)",
-  "screen.stealthpipe.disconnected": "§cConnexion StealthPipe interrompue.\\n\\n§7%s\\n§8(code d'erreur : %s)",
+  "screen.stealthpipe.disconnected": "§cConnexion StealthPipe interrompue.\n\n§7%s\n§8(code d'erreur : %s)",
 
   "status.stealthpipe.signalJoin": "§7Rejoint en tant qu'hôte (SIGNAL)",
   "status.stealthpipe.solvingPow": "Résolution de la preuve de travail (PoW)...",

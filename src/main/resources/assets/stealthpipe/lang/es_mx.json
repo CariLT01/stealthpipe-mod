@@ -11,7 +11,7 @@
   "text.stealthpipe.longerAuthenticationNotice1": "La autenticación puede tardar un poco. Por favor, espere.",
   "text.stealthpipe.longerAuthenticationNotice2": "La autenticación puede tardar mucho más. Por favor, espere.",
   "text.stealthpipe.connectionFailed": "§cError al contactar con el relay, la conexión falló. Revise los registros para más información.",
-  "text.stealthpipe.troubleshooting": "§r--- §nSolución de problemas§r --\\nPor favor, intente lo siguiente:\\n - Intente iniciar una nueva sesión\\n - Intente usar un Java Runtime diferente en una ubicación de instalación distinta\\n - Verifique la configuración de su antivirus o firewall\\n - Intente conectarse a un relay alternativo\\n - Intente reiniciar su computadora",
+  "text.stealthpipe.troubleshooting": "§r--- §nSolución de problemas§r --\nPor favor, intente lo siguiente:\n - Intente iniciar una nueva sesión\n - Intente usar un Java Runtime diferente en una ubicación de instalación distinta\n - Verifique la configuración de su antivirus o firewall\n - Intente conectarse a un relay alternativo\n - Intente reiniciar su computadora",
   "text.stealthpipe.alternativeRelaysList.open": "§a§nAbrir lista de relays alternativos",
   "text.stealthpipe.issueReport": "Para ayudarnos a solucionar el problema, adjunte su archivo de registro de Minecraft (latest.log) al informar un error.",
   "text.stealthpipe.logsOpen": "§a§nAbrir latest.log",
@@ -20,7 +20,7 @@
   "text.stealthpipe.signalingDisconnected": "§8[StealthPipe§8] : \n§cConexión de señalización al relay desconectada.\n\n§7%s\n§8(código de error: %s)\n\n§aIntentando reconectar...",
 
   "screen.stealthpipe.connectionFailed": "§cStealthPipe falló al conectar.\n\n§7%s\n§8(código de error: %s)",
-  "screen.stealthpipe.disconnected": "§cConexión de StealthPipe desconectada.\\n\\n§7%s\\n§8(código de error: %s)",
+  "screen.stealthpipe.disconnected": "§cConexión de StealthPipe desconectada.\n\n§7%s\n§8(código de error: %s)",
 
   "status.stealthpipe.signalJoin": "§7Uniéndose como anfitrión como SIGNAL",
   "status.stealthpipe.solvingPow": "Resolviendo prueba de trabajo (PoW)...",

@@ -11,7 +11,7 @@
   "text.stealthpipe.longerAuthenticationNotice1": "Аутентификация может занять больше времени. Пожалуйста, подождите.",
   "text.stealthpipe.longerAuthenticationNotice2": "Аутентификация может занять значительно больше времени. Пожалуйста, подождите.",
   "text.stealthpipe.connectionFailed": "§cНе удалось связаться с ретранслятором, соединение разорвано. Проверьте логи для получения дополнительной информации.",
-  "text.stealthpipe.troubleshooting": "§r--- §nУстранение неполадок§r --\\nПожалуйста, попробуйте следующее:\\n - Попробуйте создать новый сеанс еще раз\\n - Попробуйте использовать другую среду выполнения Java (JRE) в другом месте установки\\n - Проверьте настройки антивируса или брандмауэра\\n - Попробуйте подключиться к другому ретранслятору\\n - Попробуйте перезагрузить компьютер",
+  "text.stealthpipe.troubleshooting": "§r--- §nУстранение неполадок§r --\nПожалуйста, попробуйте следующее:\n - Попробуйте создать новый сеанс еще раз\n - Попробуйте использовать другую среду выполнения Java (JRE) в другом месте установки\n - Проверьте настройки антивируса или брандмауэра\n - Попробуйте подключиться к другому ретранслятору\n - Попробуйте перезагрузить компьютер",
   "text.stealthpipe.alternativeRelaysList.open": "§a§nОткрыть список альтернативных ретрансляторов",
   "text.stealthpipe.issueReport": "Чтобы помочь нам решить проблему, пожалуйста, приложите файл лога Minecraft (latest.log) при сообщении об ошибке.",
   "text.stealthpipe.logsOpen": "§a§nОткрыть latest.log",
@@ -20,7 +20,7 @@
   "text.stealthpipe.signalingDisconnected": "§8[StealthPipe§8] : \n§cСигнальное соединение с ретранслятором разорвано.\n\n§7%s\n§8(код ошибки: %s)\n\n§aПопытка переподключения...",
 
   "screen.stealthpipe.connectionFailed": "§cStealthPipe не удалось подключиться.\n\n§7%s\n§8(код ошибки: %s)",
-  "screen.stealthpipe.disconnected": "§cСоединение StealthPipe разорвано.\\n\\n§7%s\\n§8(код ошибки: %s)",
+  "screen.stealthpipe.disconnected": "§cСоединение StealthPipe разорвано.\n\n§7%s\n§8(код ошибки: %s)",
 
   "status.stealthpipe.signalJoin": "§7Присоединение в качестве хоста (SIGNAL)",
   "status.stealthpipe.solvingPow": "Решение Proof of Work...",

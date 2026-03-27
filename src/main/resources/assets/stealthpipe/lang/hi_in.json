@@ -11,7 +11,7 @@
   "text.stealthpipe.longerAuthenticationNotice1": "प्रमाणीकरण में अधिक समय लग सकता है। कृपया प्रतीक्षा करें।",
   "text.stealthpipe.longerAuthenticationNotice2": "प्रमाणीकरण में बहुत अधिक समय लग सकता है। कृपया प्रतीक्षा करें।",
   "text.stealthpipe.connectionFailed": "§cरिले तक पहुँचने में विफल, कनेक्शन टूट गया। अधिक जानकारी के लिए लॉग देखें।",
-  "text.stealthpipe.troubleshooting": "§r--- §nसमस्या निवारण§r --\\nकृपया निम्नलिखित प्रयास करें:\\n - फिर से एक नया सेशन शुरू करने का प्रयास करें\\n - एक अलग इंस्टालेशन स्थान पर भिन्न Java Runtime का उपयोग करें\\n - अपने एंटीवायरस या फ़ायरवॉल सेटिंग्स की जाँच करें\\n - किसी वैकल्पिक रिले से जुड़ने का प्रयास करें\\n - अपना कंप्यूटर पुनरारंभ करने का प्रयास करें",
+  "text.stealthpipe.troubleshooting": "§r--- §nसमस्या निवारण§r --\nकृपया निम्नलिखित प्रयास करें:\n - फिर से एक नया सेशन शुरू करने का प्रयास करें\n - एक अलग इंस्टालेशन स्थान पर भिन्न Java Runtime का उपयोग करें\n - अपने एंटीवायरस या फ़ायरवॉल सेटिंग्स की जाँच करें\n - किसी वैकल्पिक रिले से जुड़ने का प्रयास करें\n - अपना कंप्यूटर पुनरारंभ करने का प्रयास करें",
   "text.stealthpipe.alternativeRelaysList.open": "§a§nवैकल्पिक रिले सूची खोलें",
   "text.stealthpipe.issueReport": "समस्या को ठीक करने में हमारी सहायता के लिए, कृपया रिपोर्ट करते समय अपनी Minecraft लॉग फ़ाइल (latest.log) संलग्न करें।",
   "text.stealthpipe.logsOpen": "§a§nlatest.log खोलें",
@@ -20,7 +20,7 @@
   "text.stealthpipe.signalingDisconnected": "§8[StealthPipe§8] : \n§cरिले से सिग्नलिंग कनेक्शन टूट गया।\n\n§7%s\n§8(त्रुटि कोड: %s)\n\n§aपुनः कनेक्ट करने का प्रयास किया जा रहा है...",
 
   "screen.stealthpipe.connectionFailed": "§cStealthPipe कनेक्ट होने में विफल रहा।\n\n§7%s\n§8(त्रुटि कोड: %s)",
-  "screen.stealthpipe.disconnected": "§cStealthPipe कनेक्शन टूट गया।\\n\\n§7%s\\n§8(त्रुटि कोड: %s)",
+  "screen.stealthpipe.disconnected": "§cStealthPipe कनेक्शन टूट गया।\n\n§7%s\n§8(त्रुटि कोड: %s)",
 
   "status.stealthpipe.signalJoin": "§7SIGNAL के रूप में होस्ट बनकर जुड़ रहे हैं",
   "status.stealthpipe.solvingPow": "प्रूफ ऑफ वर्क (Proof of work) हल किया जा रहा है...",

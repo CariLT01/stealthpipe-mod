@@ -12,7 +12,7 @@
   "text.stealthpipe.longerAuthenticationNotice1": "Authentication may take longer. Please stand by.",
   "text.stealthpipe.longerAuthenticationNotice2": "Authentication may take a lot longer. Please stand by.",
   "text.stealthpipe.connectionFailed": "§cFailed to reach the relay, connection failed. Check the logs for more info.",
-  "text.stealthpipe.troubleshooting": "§r--- §nTroubleshooting§r --\\nPlease try the following:\\n - Try starting a new session again\\n - Try using a different Java Runtime at a different installation location\\n - Check your antivirus or firewall settings\\n - Try connecting to an alternative relay\\n - Try restarting your computer",
+  "text.stealthpipe.troubleshooting": "§r--- §nTroubleshooting§r --\nPlease try the following:\n - Try starting a new session again\n - Try using a different Java Runtime at a different installation location\n - Check your antivirus or firewall settings\n - Try connecting to an alternative relay\n - Try restarting your computer",
   "text.stealthpipe.alternativeRelaysList.open": "§a§nOpen Alternative Relays List",
   "text.stealthpipe.issueReport": "To help us fix the issue, please attach your Minecraft log file (latest.log) when reporting a problem.",
   "text.stealthpipe.logsOpen": "§a§nOpen latest.log",
@@ -21,7 +21,7 @@
   "text.stealthpipe.signalingDisconnected": "§8[StealthPipe§8] : \n§cSignaling connection to relay disconnected.\n\n§7%s\n§8(error code: %s)\n\n§aAttempting to reconnect...",
 
   "screen.stealthpipe.connectionFailed": "§cStealthPipe failed to connect.\n\n§7%s\n§8(error code: %s)",
-  "screen.stealthpipe.disconnected": "\"§cStealthPipe connection disconnected.\\n\\n§7%s\\n§8(error code: %s)",
+  "screen.stealthpipe.disconnected": "§cStealthPipe connection disconnected.\n\n§7%s\n§8(error code: %s)",
 
   "status.stealthpipe.signalJoin": "§7Joining as host as SIGNAL",
   "status.stealthpipe.solvingPow": "Solving proof of work...",
