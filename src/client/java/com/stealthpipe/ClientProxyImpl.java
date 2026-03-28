@@ -18,14 +18,14 @@ public class ClientProxyImpl implements ClientProxy {
     }
 
     @Override
-    public void sendStealthPipeMessage(String message) {
+    public void sendStealthPipeMessage(Component message) {
         Minecraft.getInstance().execute(() -> {
             UXHelper.sendStealthPipeSystemMessage(message);
         });
     }
 
     @Override
-    public void disconnectWithReason(String reason, int delayInMs) {
+    public void disconnectWithReason(Component reason, int delayInMs) {
         // Cursed way to show a disconnect message, please don't copy
         if (delayInMs > 0) {
             new Thread(() -> {
@@ -34,10 +34,10 @@ public class ClientProxyImpl implements ClientProxy {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                displayDisconnectScreen(reason);
+                displayDisconnectScreen(reason.getString());
             }).start();
         } else {
-            displayDisconnectScreen(reason);
+            displayDisconnectScreen(reason.getString());
         }
 
 
@@ -64,7 +64,7 @@ public class ClientProxyImpl implements ClientProxy {
     }
 
     @Override
-    public void setConnectionStatusIndex(String text, int index) {
+    public void setConnectionStatusIndex(Component text, int index) {
         ConnectionStatusInterface.setConnectionStatusText(text, index);
     }
 }

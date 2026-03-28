@@ -52,7 +52,7 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
         this.packetBatchingManager.queuePacket(packet);
     }
 
-    private void reportConnectionStatus(String text, int index) {
+    private void reportConnectionStatus(Component text, int index) {
         if (this.flow == PacketFlow.ClientToHost) {
             StealthPipe.CLIENT_PROXY.setConnectionStatusIndex(text, index);
         }
@@ -64,6 +64,23 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
         }
     }
 
+    private void simulateFailure() {
+        if (!StealthPipe.config.SIMULATE_ABNORMAL_DISCONNECT_HOST) return;
+        LOGGER.info("Simulating abnormal disconnect failure for game connection");
+
+        new Thread(() -> {
+            LOGGER.info("Starting abnormal failure...");
+            try {
+                Thread.sleep(StealthPipe.config.SIMULATED_FAILURE_DELAY * 1000L);
+                this.close(1006);
+            } catch (Exception e) {
+                LOGGER.error("Failed to simulate an abnormal disconnect: ", e);
+            } finally {
+                LOGGER.info("Successfully simulated an abnormal disconnect");
+            }
+        }).start();
+    }
+
     @Override
     protected void handleOpen(ServerHandshake handshake) {
         this.packetBatchingManager.run();
@@ -72,6 +89,7 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
 
         if (this.flow == PacketFlow.ClientToHost) {
             ModState.webSocketOpen.set(true);
+            this.simulateFailure();
         }
     }
 

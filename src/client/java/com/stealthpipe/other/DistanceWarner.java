@@ -45,12 +45,12 @@ public class DistanceWarner {
         LOGGER.info("Distance from relay is: {} km (based on approximate IP geolocation, calculated entirely on the client)", distance);
 
         if (distance > 4000) {
-            UXHelper.sendStealthPipeSystemMessage(
+            /* UXHelper.sendStealthPipeSystemMessage(
                     String.format(
                             "§eNotice: §6You are %.0f km away from the relay.\nExcept high ping. Host your own relay at a location closer to you for less lag! (Instructions on the Modrinth page).\n§8The distance was calculated entirely on the client based on the approximate location indicated by your IP address. No data was sent to StealthPipe's services or relays.",
                             distance
                     )
-            );
+            ); */
             UXHelper.sendSystemMessageComponent(
                     Component.literal("Hosting Instructions: ").append(
                             Component.literal("Open").withStyle(style -> style.withClickEvent(

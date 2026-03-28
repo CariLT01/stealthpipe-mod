@@ -11,6 +11,7 @@ import com.stealthpipe.enums.SignalingMessageType;
 import com.stealthpipe.enums.ConnectionDisconnectReason;
 import com.stealthpipe.enums.PacketFlow;
 import dev.onvoid.webrtc.*;
+import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,7 +100,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
 
     }
 
-    private void reportConnectionStatus(int index, String text) {
+    private void reportConnectionStatus(int index, Component text) {
         if (flow != PacketFlow.ClientToHost) {
             // Don't show any messages on the host-side when connecting via WebRTC
             return;
@@ -121,7 +122,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
     }
 
     private void updateIceCandidateCount() {
-        reportConnectionStatus(1, String.format("§7ICE negotiation: %s received, %s sent", iceCandidatesReceivedCount.get(), iceCandidatesSentCount.get()));
+        reportConnectionStatus(1, Component.translatable("status.stealthpipe.iceNegotiation", iceCandidatesReceivedCount.get(), iceCandidatesSentCount.get()));
     }
 
     public PacketBatchingManager getPacketBatchingManager() {
@@ -203,7 +204,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
                             @Override public void onSuccess(RTCSessionDescription description) {
                                 peerConnection.setLocalDescription(description, new SetSessionDescriptionObserver() {
                                     @Override public void onSuccess() {
-                                        reportConnectionStatus(1, "§7Reporting WebRTC answer");
+                                        reportConnectionStatus(1, Component.translatable("status.stealthpipe.reportingWrtcAnswer"));
                                         sendToSignaling("answer", Map.of("sdp", description.sdp));
                                     }
                                     @Override public void onFailure(String s) { connectionFuture.completeExceptionally(new RuntimeException(s)); }
@@ -295,7 +296,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
 
     public void connect() throws Exception {
         try {
-            reportConnectionStatus(0, "§7Connecting via WebRTC...");
+            reportConnectionStatus(0, Component.translatable("status.stealthpipe.wrtcConnecting"));
             if (this.flow == PacketFlow.ClientToHost) {
                 this.clientTryEstablishRTC(this.aGameID);
             } else {

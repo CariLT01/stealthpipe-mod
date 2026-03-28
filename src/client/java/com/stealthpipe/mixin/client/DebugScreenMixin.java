@@ -5,6 +5,7 @@ import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
 //? if <26.1
 //import net.minecraft.client.gui.GuiGraphics;
+//? if >= 26.1
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import org.spongepowered.asm.mixin.Mixin;

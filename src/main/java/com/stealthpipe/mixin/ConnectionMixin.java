@@ -46,7 +46,7 @@ public abstract class ConnectionMixin {
 
     /*? if =1.21.11 { */
     /*@Inject(method = "connect", at = @At("HEAD"), cancellable = true)
-    public static void connect(InetSocketAddress inetSocketAddress, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
+    private static void connect(InetSocketAddress inetSocketAddress, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
         if (ModState.isStealthPipeConnection.get()) {
             ConnectionHelper.connectToRelay(inetSocketAddress, eventLoopGroupHolder.eventLoopGroup().next(), connection, cir);
         }

@@ -23,11 +23,15 @@ public class StealthPipeConfig {
     public boolean CLIENT_ATTEMPT_WEBRTC = DefaultConfigValues.CLIENT_ATTEMPT_WEBRTC;
     public boolean HOST_ALLOW_WEBRTC_INBOUND = DefaultConfigValues.HOST_ALLOW_WEBRTC_INBOUND;
 
+    // Debug options
     public boolean SIMULATE_ICE_CANDIDATES_FAILURE = DefaultConfigValues.SIMULATE_ICE_CANDIDATES_FAILURE;
-
     public boolean LOG_WRTC_ICE_CANDIDATES = DefaultConfigValues.LOG_WRTC_ICE_CANDIDATES;
     public boolean SHOW_CONNECT_INFO = DefaultConfigValues.SHOW_CONNECT_INFO;
+    public boolean SIMULATE_ABNORMAL_DISCONNECT_HOST = DefaultConfigValues.SIMULATE_ABNORMAL_DISCONNECT_HOST;
+    public boolean SIMULATE_ABNORMAL_DISCONNECT_CLIENT = DefaultConfigValues.SIMULATE_ABNORMAL_DISCONNECT_CLIENT;
+    public int SIMULATED_FAILURE_DELAY = DefaultConfigValues.SIMULATED_FAILURE_DELAY;
 
+    // Readers
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("stealthpipe.json");
 

@@ -24,7 +24,6 @@ public class UXHelper {
         assert Minecraft.getInstance().player != null;
         Minecraft.getInstance().execute(() -> {
             _sendMessageMultiVersion(Component.literal(message).withStyle(style));
-            /*?}*/
         });
 
 
@@ -34,15 +33,15 @@ public class UXHelper {
      * Sends a message in the chat with the '[StealthPipe]:' prefix.
      * **Note**: this only works on the client
      *
-     * @param message The message to append
+     * @param translatedComponent The message (translated component) to append
      */
-    public static void sendStealthPipeSystemMessage(String message) {
+    public static void sendStealthPipeSystemMessage(Component translatedComponent) {
         if (Minecraft.getInstance().player == null) {
             return;
         }
 
         Minecraft.getInstance().execute(() -> {
-            _sendMessageMultiVersion(Component.literal(String.format("§8[StealthPipe] : §7%s", message)));
+            _sendMessageMultiVersion(Component.literal(String.format("§8[StealthPipe] : §7%s", translatedComponent.getString())));
         });
     }
 

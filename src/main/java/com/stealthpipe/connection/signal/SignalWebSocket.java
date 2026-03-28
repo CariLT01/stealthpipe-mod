@@ -16,6 +16,7 @@ import com.stealthpipe.interfaces.IConnectionInjector;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerConnectionListener;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
@@ -56,7 +57,7 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
         this.gameId = gameId;
     }
 
-    private void reportStatus(String text, int length) {
+    private void reportStatus(Component text, int length) {
         if (this.flow != SignalConnectionFlow.HostToRelay) return;
         StealthPipe.CLIENT_PROXY.setConnectionStatusIndex(text ,length);
     }
@@ -280,12 +281,30 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
         }
     }
 
+    private void simulateFailure() {
+        if (!StealthPipe.config.SIMULATE_ABNORMAL_DISCONNECT_HOST) return;
+        LOGGER.info("Simulating abnormal disconnect failure for host");
+
+        new Thread(() -> {
+            LOGGER.info("Starting abnormal failure...");
+            try {
+                Thread.sleep(StealthPipe.config.SIMULATED_FAILURE_DELAY * 1000L);
+                this.close(1006);
+            } catch (Exception e) {
+                LOGGER.error("Failed to simulate an abnormal disconnect: ", e);
+            } finally {
+                LOGGER.info("Successfully simulated an abnormal disconnect");
+            }
+        }).start();
+    }
+
     @Override
     protected void handleOpen(ServerHandshake handshake) {
         clearStatus();
         this.relayPingLoop();
         if (this.flow == SignalConnectionFlow.HostToRelay) {
             this.keepAliveLoop();
+            this.simulateFailure();
         }
     }
 
