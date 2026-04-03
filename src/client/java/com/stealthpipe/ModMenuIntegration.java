@@ -1,6 +1,7 @@
 package com.stealthpipe;
 
 import com.stealthpipe.config.DefaultConfigValues;
+import com.stealthpipe.connection.debug.LatencySpikeDirection;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -156,6 +157,30 @@ public class ModMenuIntegration implements ModMenuApi {
                             .setTooltip(
                                     Component.translatable("config.stealthpipe.failureDelay.description")
                             )
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.latencySpikes"), StealthPipe.config.LATENCY_SPIKES)
+                            .setDefaultValue(DefaultConfigValues.LATENCY_SPIKES)
+                            .setSaveConsumer(v -> StealthPipe.config.LATENCY_SPIKES = v)
+                            .setTooltip(Component.translatable("config.stealthpipe.latencySpikes.description"))
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startEnumSelector(Component.translatable("config.stealthpipe.latencySpikesDirection"), LatencySpikeDirection.class, StealthPipe.config.LATENCY_DIRECTION)
+                            .setDefaultValue(DefaultConfigValues.LATENCY_DIRECTION)
+                            .setSaveConsumer(v -> StealthPipe.config.LATENCY_DIRECTION = v)
+                            .setTooltip(Component.translatable("config.stealthpipe.latencySpikesDirection.description"))
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startIntField(Component.translatable("config.stealthpipe.latencyBaseline"), StealthPipe.config.LATENCY_BASELINE)
+                            .setDefaultValue(DefaultConfigValues.LATENCY_BASELINE)
+                            .setSaveConsumer(v -> StealthPipe.config.LATENCY_BASELINE = v)
+                            .setTooltip(Component.translatable("config.stealthpipe.latencyBaseline.description"))
                             .build()
             );
 

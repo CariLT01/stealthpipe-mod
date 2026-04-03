@@ -4,6 +4,8 @@ import com.stealthpipe.*;
 import com.stealthpipe.connection.AbstractStealthPipeWebSocketClient;
 import com.stealthpipe.connection.DisconnectHandler;
 import com.stealthpipe.connection.PacketBatchingManager;
+import com.stealthpipe.connection.debug.DataDirection;
+import com.stealthpipe.connection.debug.LatencySpikeTest;
 import com.stealthpipe.connection.game.GameConnectionInterface;
 import com.stealthpipe.connection.game.GameConnectionWebSocket;
 import com.stealthpipe.connection.game.WebRTCGameConnection;
@@ -197,10 +199,21 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
             Channel virtualChannel = this.createVirtualChannel();
 
             WebRTCGameConnection rtcClient = new WebRTCGameConnection((byte[] message) -> {
+                // yield
+                LatencySpikeTest.yield(DataDirection.RECEIVE);
                 List<byte[]> packets = PacketBatchingManager.unpackPacket(message);
-                for (byte[] packet : packets) {
-                    virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+                if (StealthPipe.config.USE_SAFE_INJECT) {
+                    virtualChannel.eventLoop().execute(() -> {
+                        for (byte[] packet : packets) {
+                            virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+                        }
+                    });
+                } else {
+                    for (byte[] packet : packets) {
+                        virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+                    }
                 }
+
 
             }, this::handleRTCDisconnect, PacketFlow.HostToClient, this, clientId);
 
@@ -305,6 +318,11 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
         if (this.flow == SignalConnectionFlow.HostToRelay) {
             this.keepAliveLoop();
             this.simulateFailure();
+        }
+
+        if (StealthPipe.config.LATENCY_SPIKES) {
+            LOGGER.warn("Starting artificial latency spikes");
+            LatencySpikeTest.run();
         }
     }
 

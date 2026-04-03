@@ -2,6 +2,7 @@ package com.stealthpipe.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.stealthpipe.connection.debug.LatencySpikeDirection;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.Reader;
@@ -23,13 +24,20 @@ public class StealthPipeConfig {
     public boolean CLIENT_ATTEMPT_WEBRTC = DefaultConfigValues.CLIENT_ATTEMPT_WEBRTC;
     public boolean HOST_ALLOW_WEBRTC_INBOUND = DefaultConfigValues.HOST_ALLOW_WEBRTC_INBOUND;
 
+    public boolean USE_SAFE_INJECT = DefaultConfigValues.USE_SAFE_INJECT;
+
     // Debug options
     public boolean SIMULATE_ICE_CANDIDATES_FAILURE = DefaultConfigValues.SIMULATE_ICE_CANDIDATES_FAILURE;
     public boolean LOG_WRTC_ICE_CANDIDATES = DefaultConfigValues.LOG_WRTC_ICE_CANDIDATES;
     public boolean SHOW_CONNECT_INFO = DefaultConfigValues.SHOW_CONNECT_INFO;
     public boolean SIMULATE_ABNORMAL_DISCONNECT_HOST = DefaultConfigValues.SIMULATE_ABNORMAL_DISCONNECT_HOST;
     public boolean SIMULATE_ABNORMAL_DISCONNECT_CLIENT = DefaultConfigValues.SIMULATE_ABNORMAL_DISCONNECT_CLIENT;
+    public boolean LATENCY_SPIKES = DefaultConfigValues.LATENCY_SPIKES;
+    public LatencySpikeDirection LATENCY_DIRECTION = DefaultConfigValues.LATENCY_DIRECTION;
     public int SIMULATED_FAILURE_DELAY = DefaultConfigValues.SIMULATED_FAILURE_DELAY;
+    public int LATENCY_BASELINE = DefaultConfigValues.LATENCY_BASELINE;
+
+
 
     // Readers
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

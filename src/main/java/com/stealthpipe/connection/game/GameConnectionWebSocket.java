@@ -4,6 +4,8 @@ import com.stealthpipe.*;
 import com.stealthpipe.connection.AbstractStealthPipeWebSocketClient;
 import com.stealthpipe.connection.DisconnectHandler;
 import com.stealthpipe.connection.PacketBatchingManager;
+import com.stealthpipe.connection.debug.DataDirection;
+import com.stealthpipe.connection.debug.LatencySpikeTest;
 import com.stealthpipe.enums.ConnectionDisconnectReason;
 import com.stealthpipe.enums.PacketFlow;
 import io.netty.buffer.Unpooled;
@@ -16,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient implements GameConnectionInterface {
     private final PacketFlow flow;
@@ -23,6 +26,7 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
     private final Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
     private final Channel gameChannel;
     private boolean gotMessages = false;
+
 
     private final PacketBatchingManager packetBatchingManager = new PacketBatchingManager(this::send);
 
@@ -143,16 +147,33 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
 
     @Override
     protected void handleOnMessage(byte[] data) {
+
+        // yield
+        LatencySpikeTest.yield(DataDirection.RECEIVE);
+
         this.gotMessages = true;
 
         List<byte[]> packets = this.packetBatchingManager.unpackPacket(data);
 
-        for (byte[] packet : packets) {
-            // In any case (either on Host or Client), the channel should be the player channel
-            // So we should only just need to fire a read
+        if (StealthPipe.config.USE_SAFE_INJECT) {
+            // Safely inject in the correct event loop
+            this.gameChannel.eventLoop().execute(() -> {
+                for (byte[] packet : packets) {
+                    // In any case (either on Host or Client), the channel should be the player channel
+                    // So we should only just need to fire a read
 
-            this.gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+                    this.gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+                }
+            });
+        } else {
+            for (byte[] packet : packets) {
+                // In any case (either on Host or Client), the channel should be the player channel
+                // So we should only just need to fire a read
+
+                this.gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
+            }
         }
+
 
     }
 

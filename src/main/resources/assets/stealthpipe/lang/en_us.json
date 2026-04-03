@@ -91,5 +91,13 @@
   "config.stealthpipe.abnormalDisconnectHost": "Abnormally Disconnect Host",
   "config.stealthpipe.abnormalDisconnectHost.description": "Simulates an abnormal disconnect as a host only",
   "config.stealthpipe.failureDelay": "Failure Delay",
-  "config.stealthpipe.failureDelay.description": "Number of seconds before initiating simulated failure"
+  "config.stealthpipe.failureDelay.description": "Number of seconds before initiating simulated failure",
+  "config.stealthpipe.latencySpikes": "Latency Spikes",
+  "config.stealthpipe.latencySpikes.description": "Simulates huge latency spikes (of 1 second) to aid in finding RACE conditions.",
+  "config.stealthpipe.latencySpikesDirection": "Latency Spikes Direction",
+  "config.stealthpipe.latencySpikesDirection.description": "Controls which direction the latency will spike in.",
+  "config.stealthpipe.latencyBaseline": "Baseline Latency",
+  "config.stealthpipe.latencyBaseline.description": "Controls the baseline latency for debugging",
+  "config.stealthpipe.safeInject": "Safe Injection",
+  "config.stealthpipe.safeInject.description": "Uses the channel's event loop to safely inject a packet.\nMay increase latency."
 }

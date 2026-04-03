@@ -2,6 +2,8 @@ package com.stealthpipe.connection;
 
 import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
+import com.stealthpipe.connection.debug.DataDirection;
+import com.stealthpipe.connection.debug.LatencySpikeTest;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
@@ -18,14 +20,14 @@ import java.util.function.Consumer;
 
 public class PacketBatchingManager {
 
-    private Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
+    private final Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     private final long BATCHING_INTERVAL = StealthPipe.config.PACKET_BATCHING_INTERVAL_MS * 1_000_000L;
 
     private boolean running = false;
 
-    private Consumer<byte[]> sendConsumer;
+    private final Consumer<byte[]> sendConsumer;
 
     public PacketBatchingManager(Consumer<byte[]> sendConsumer) {
         this.sendConsumer = sendConsumer;
@@ -101,6 +103,8 @@ public class PacketBatchingManager {
                     batchBuffer.readBytes(flatBatch);
 
                     ModState.outboundPPSCounter.getAndAdd(1);
+
+                    LatencySpikeTest.yield(DataDirection.SEND);
                     this.sendConsumer.accept(flatBatch);
                 }
             } catch (Exception e) {
@@ -137,6 +141,7 @@ public class PacketBatchingManager {
                     byte[] flat = new byte[composite.readableBytes()];
                     composite.readBytes(flat);
 
+                    LatencySpikeTest.yield(DataDirection.SEND);
                     this.sendConsumer.accept(flat);
                 }
             } finally {

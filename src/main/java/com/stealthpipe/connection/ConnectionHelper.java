@@ -2,6 +2,8 @@ package com.stealthpipe.connection;
 
 import com.stealthpipe.*;
 import com.stealthpipe.connection.adapters.StealthChannelOutboundHandlerAdapter;
+import com.stealthpipe.connection.debug.DataDirection;
+import com.stealthpipe.connection.debug.LatencySpikeTest;
 import com.stealthpipe.connection.game.GameConnectionWebSocket;
 import com.stealthpipe.connection.game.WebRTCGameConnection;
 import com.stealthpipe.mixin.ConnectionChannelAccessor;
@@ -148,10 +150,21 @@ public class ConnectionHelper {
 
     private static @NotNull WebRTCGameConnection getWebRTCClient(String gameId, Channel gameChannel) throws Exception {
         WebRTCGameConnection rtcClient = new WebRTCGameConnection((byte[] msg) -> {
+            // yield
+            LatencySpikeTest.yield(DataDirection.RECEIVE);
             List<byte[]> packets = PacketBatchingManager.unpackPacket(msg);
-            for (byte[] pck : packets) {
-                gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
+            if (StealthPipe.config.USE_SAFE_INJECT) {
+                gameChannel.eventLoop().execute(() -> {
+                    for (byte[] pck : packets) {
+                        gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
+                    }
+                });
+            } else {
+                for (byte[] pck : packets) {
+                    gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
+                }
             }
+
         }, (client) -> {
             handleWebRTCClientDisconnect(client, gameChannel);
         }, com.stealthpipe.enums.PacketFlow.ClientToHost, gameId);
