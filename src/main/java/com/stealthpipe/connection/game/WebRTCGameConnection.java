@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,7 +43,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
 
     private boolean isHost = false;
 
-    private final List<byte[]> queuedPackets = new ArrayList<>();
+    private final ConcurrentLinkedQueue<byte[]> queuedPackets = new ConcurrentLinkedQueue<>();
     private boolean open = false;
 
     private final Consumer<byte[]> onMessageHook;
@@ -149,7 +150,10 @@ public class WebRTCGameConnection implements GameConnectionInterface {
                     clearConnectionStatus();
                     ModState.webSocketOpen.set(true);
                     connectionFuture.complete(null);
-                    for (byte[] packet : queuedPackets) {
+                    byte[] packet;
+                    // poll() retrieves AND removes the head of the queue in one atomic step
+                    while ((packet = queuedPackets.poll()) != null) {
+                        LOGGER.debug("Sent {} queued bytes", packet.length);
                         try { onSendPacketInternal(packet); } catch (Exception e) { LOGGER.error("Queue flush failed", e); }
                     }
                     queuedPackets.clear();
