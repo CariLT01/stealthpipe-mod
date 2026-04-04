@@ -115,9 +115,8 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
         else {
             System.out.printf("%s: Unknown type: %s%n", label, msg.getClass().getName());
+            return false;
         }
-
-        return true;
     }
 
     @Override
