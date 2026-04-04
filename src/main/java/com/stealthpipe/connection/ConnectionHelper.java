@@ -1,6 +1,7 @@
 package com.stealthpipe.connection;
 
 import com.stealthpipe.*;
+import com.stealthpipe.connection.adapters.ChannelReader;
 import com.stealthpipe.connection.adapters.StealthChannelOutboundHandlerAdapter;
 import com.stealthpipe.connection.debug.DataDirection;
 import com.stealthpipe.connection.debug.LatencySpikeTest;
@@ -153,17 +154,7 @@ public class ConnectionHelper {
             // yield
             LatencySpikeTest.yield(DataDirection.RECEIVE);
             List<byte[]> packets = PacketBatchingManager.unpackPacket(msg);
-            if (StealthPipe.config.USE_SAFE_INJECT) {
-                gameChannel.eventLoop().execute(() -> {
-                    for (byte[] pck : packets) {
-                        gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
-                    }
-                });
-            } else {
-                for (byte[] pck : packets) {
-                    gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(pck));
-                }
-            }
+            ChannelReader.fireReadsSafer(gameChannel, packets);
 
         }, (client) -> {
             handleWebRTCClientDisconnect(client, gameChannel);

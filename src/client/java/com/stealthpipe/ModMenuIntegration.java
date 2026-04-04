@@ -83,6 +83,16 @@ public class ModMenuIntegration implements ModMenuApi {
                             .build()
             );
 
+            general.addEntry(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.safeInject"), StealthPipe.config.USE_SAFE_INJECT)
+                            .setDefaultValue(DefaultConfigValues.USE_SAFE_INJECT)
+                            .setSaveConsumer(v -> StealthPipe.config.USE_SAFE_INJECT = v)
+                            .setTooltip(
+                                    Component.translatable("config.stealthpipe.safeInject.description")
+                            )
+                            .build()
+            );
+
             // Add section "Optimization"
             var optimization = entryBuilder.startSubCategory(Component.translatable("config.stealthpipe.optimization"));
 

@@ -4,6 +4,7 @@ import com.stealthpipe.*;
 import com.stealthpipe.connection.AbstractStealthPipeWebSocketClient;
 import com.stealthpipe.connection.DisconnectHandler;
 import com.stealthpipe.connection.PacketBatchingManager;
+import com.stealthpipe.connection.adapters.ChannelReader;
 import com.stealthpipe.connection.debug.DataDirection;
 import com.stealthpipe.connection.debug.LatencySpikeTest;
 import com.stealthpipe.connection.game.GameConnectionInterface;
@@ -202,17 +203,7 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
                 // yield
                 LatencySpikeTest.yield(DataDirection.RECEIVE);
                 List<byte[]> packets = PacketBatchingManager.unpackPacket(message);
-                if (StealthPipe.config.USE_SAFE_INJECT) {
-                    virtualChannel.eventLoop().execute(() -> {
-                        for (byte[] packet : packets) {
-                            virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
-                        }
-                    });
-                } else {
-                    for (byte[] packet : packets) {
-                        virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
-                    }
-                }
+                ChannelReader.fireReadsSafer(virtualChannel, packets);
 
 
             }, this::handleRTCDisconnect, PacketFlow.HostToClient, this, clientId);

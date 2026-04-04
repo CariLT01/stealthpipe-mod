@@ -4,6 +4,7 @@ import com.stealthpipe.*;
 import com.stealthpipe.connection.AbstractStealthPipeWebSocketClient;
 import com.stealthpipe.connection.DisconnectHandler;
 import com.stealthpipe.connection.PacketBatchingManager;
+import com.stealthpipe.connection.adapters.ChannelReader;
 import com.stealthpipe.connection.debug.DataDirection;
 import com.stealthpipe.connection.debug.LatencySpikeTest;
 import com.stealthpipe.enums.ConnectionDisconnectReason;
@@ -153,26 +154,8 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
 
         this.gotMessages = true;
 
-        List<byte[]> packets = this.packetBatchingManager.unpackPacket(data);
-
-        if (StealthPipe.config.USE_SAFE_INJECT) {
-            // Safely inject in the correct event loop
-            this.gameChannel.eventLoop().execute(() -> {
-                for (byte[] packet : packets) {
-                    // In any case (either on Host or Client), the channel should be the player channel
-                    // So we should only just need to fire a read
-
-                    this.gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
-                }
-            });
-        } else {
-            for (byte[] packet : packets) {
-                // In any case (either on Host or Client), the channel should be the player channel
-                // So we should only just need to fire a read
-
-                this.gameChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
-            }
-        }
+        List<byte[]> packets = PacketBatchingManager.unpackPacket(data);
+        ChannelReader.fireReadsSafer(this.gameChannel, packets);
 
 
     }
