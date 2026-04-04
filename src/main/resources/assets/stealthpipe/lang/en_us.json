@@ -19,6 +19,7 @@
   "text.stealthpipe.creatingWebsocket": "Creating WebSocket connection...",
   "text.stealthpipe.roomCreationFailed": "§cAn error occurred while trying to create room ID: %s",
   "text.stealthpipe.signalingDisconnected": "\n§cSignaling connection to relay disconnected.\n\n§7%s\n§8(error code: %s)\n\n§aAttempting to reconnect...",
+  "text.stealthpipe.corruptedData": "§cCorrupted data received! §7Modify mod config to ignore these errors.",
 
   "screen.stealthpipe.connectionFailed": "§cStealthPipe failed to connect.\n\n§7%s\n§8(error code: %s)",
   "screen.stealthpipe.disconnected": "§cStealthPipe connection disconnected.\n\n§7%s\n§8(error code: %s)",
@@ -61,6 +62,7 @@
   "error.stealthpipe.outdatedClient": "Outdated client. Please update StealthPipe!",
   "error.stealthpipe.unsupportedClient": "The relay does not support this client.",
   "error.stealthpipe.roomRecentlyClosed": "This room was recently closed and no longer exists.",
+  "error.stealthpipe.corruptedData": "Received corrupted data.",
 
   "config.stealthpipe.title": "StealthPipe Configuration",
   "config.stealthpipe.general": "General",
@@ -99,5 +101,9 @@
   "config.stealthpipe.latencyBaseline": "Baseline Latency",
   "config.stealthpipe.latencyBaseline.description": "Controls the baseline latency for debugging",
   "config.stealthpipe.safeInject": "Safe Injection",
-  "config.stealthpipe.safeInject.description": "Uses the channel's event loop to safely inject a packet.\nMay increase latency."
+  "config.stealthpipe.safeInject.description": "Uses the channel's event loop to safely inject a packet.\nMay increase latency.",
+  "config.stealthpipe.warnCorruptedData": "Data Corruption Warnings",
+  "config.stealthpipe.warnCorruptedData.description": "If enabled, data corruption warnings will be shown in Chat.",
+  "config.stealthpipe.dataMisalignment": "Data Misalignment",
+  "config.stealthpipe.dataMisalignment.description": "Simulates misaligned data (corrupted data)"
 }

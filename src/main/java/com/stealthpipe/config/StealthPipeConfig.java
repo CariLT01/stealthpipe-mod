@@ -25,6 +25,7 @@ public class StealthPipeConfig {
     public boolean HOST_ALLOW_WEBRTC_INBOUND = DefaultConfigValues.HOST_ALLOW_WEBRTC_INBOUND;
 
     public boolean USE_SAFE_INJECT = DefaultConfigValues.USE_SAFE_INJECT;
+    public boolean WARN_CORRUPTED_DATA = DefaultConfigValues.WARN_CORRUPTED_DATA;
 
     // Debug options
     public boolean SIMULATE_ICE_CANDIDATES_FAILURE = DefaultConfigValues.SIMULATE_ICE_CANDIDATES_FAILURE;
@@ -36,6 +37,7 @@ public class StealthPipeConfig {
     public LatencySpikeDirection LATENCY_DIRECTION = DefaultConfigValues.LATENCY_DIRECTION;
     public int SIMULATED_FAILURE_DELAY = DefaultConfigValues.SIMULATED_FAILURE_DELAY;
     public int LATENCY_BASELINE = DefaultConfigValues.LATENCY_BASELINE;
+    public boolean SIMULATE_DATA_MISALIGNMENT = DefaultConfigValues.SIMULATE_DATA_MISALIGNMENT;
 
 
 

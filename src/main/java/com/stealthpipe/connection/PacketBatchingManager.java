@@ -4,9 +4,12 @@ import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
 import com.stealthpipe.connection.debug.DataDirection;
 import com.stealthpipe.connection.debug.LatencySpikeTest;
+import com.stealthpipe.connection.signal.SignalWebSocket;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
+import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +49,26 @@ public class PacketBatchingManager {
         this.queuedSendPackets.add(packet);
     }
 
+    private static void onCorruptedDataReceived() {
+        if (ModState.isClientConnectingToStealthServer.get()) {
+            if (ModState.relayClient.get() != null) {
+                ModState.relayClient.get().disconnectWithReason(ConnectionDisconnectReason.CorruptedData);
+                if (ModState.relayClient.get() instanceof SignalWebSocket) {
+                    // Is WebRTC signaling client
+                    if (ModState.relayClientChannel.get() != null) {
+                        LOGGER.info("disconnect channel with corrupted data reason");
+                        ModState.relayClientChannel.get().disconnect();
+                    }
+                }
+                DisconnectHandler.showClientDisconnectMessage(true, ConnectionDisconnectReason.CorruptedData.getPacketType());
+            }
+        } else {
+            if (StealthPipe.config.WARN_CORRUPTED_DATA) {
+                StealthPipe.CLIENT_PROXY.sendStealthPipeMessage(Component.translatable("text.stealthpipe.corruptedData"));
+            }
+        }
+    }
+
     public static List<byte[]> unpackPacket(byte[] packedData) {
         List<byte[]> packets = new ArrayList<>();
         ByteBuffer buffer = ByteBuffer.wrap(packedData);
@@ -54,7 +77,10 @@ public class PacketBatchingManager {
             int packetLength = buffer.getInt();
 
             if (packetLength < 0 || packetLength > buffer.remaining()) {
-                LOGGER.error("Failed to parse packet batch: invalid packet length");
+                LOGGER.error("CORRUPTED DATA: Failed to parse packet batch: invalid packet length");
+
+                onCorruptedDataReceived();
+
                 break;
             }
 
@@ -62,6 +88,11 @@ public class PacketBatchingManager {
             buffer.get(packetData);
 
             packets.add(packetData);
+        }
+
+        if (buffer.hasRemaining()) {
+            LOGGER.error("Detected remaining data in buffer!");
+            onCorruptedDataReceived();
         }
 
         return packets;
@@ -99,8 +130,24 @@ public class PacketBatchingManager {
 
                 if (batchBuffer.readableBytes() > 0) {
                     // Flatten once for the WebSocket send
-                    byte[] flatBatch = new byte[batchBuffer.readableBytes()];
-                    batchBuffer.readBytes(flatBatch);
+                    int originalLength = batchBuffer.readableBytes();
+                    byte[] flatBatch = new byte[originalLength];
+
+                    if (StealthPipe.config.SIMULATE_DATA_MISALIGNMENT) {
+                        // Increase array size by 1 to accommodate the junk byte
+                        flatBatch = new byte[originalLength + 1];
+
+                        // 1. Inject the junk byte at the start
+                        flatBatch[0] = (byte) (Math.random() * 256);
+
+                        // 2. Read the actual data into the array starting at index 1
+                        batchBuffer.readBytes(flatBatch, 1, originalLength);
+                    } else {
+                        // Standard behavior
+                        flatBatch = new byte[originalLength];
+                        batchBuffer.readBytes(flatBatch);
+                    }
+
 
                     ModState.outboundPPSCounter.getAndAdd(1);
 

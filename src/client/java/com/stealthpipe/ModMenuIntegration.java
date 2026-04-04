@@ -93,6 +93,16 @@ public class ModMenuIntegration implements ModMenuApi {
                             .build()
             );
 
+            general.addEntry(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.warnCorruptedData"), StealthPipe.config.WARN_CORRUPTED_DATA)
+                            .setDefaultValue(DefaultConfigValues.WARN_CORRUPTED_DATA)
+                            .setSaveConsumer(v -> StealthPipe.config.WARN_CORRUPTED_DATA = v)
+                            .setTooltip(
+                                    Component.translatable("config.stealthpipe.warnCorruptedData.description")
+                            )
+                            .build()
+            );
+
             // Add section "Optimization"
             var optimization = entryBuilder.startSubCategory(Component.translatable("config.stealthpipe.optimization"));
 
@@ -191,6 +201,14 @@ public class ModMenuIntegration implements ModMenuApi {
                             .setDefaultValue(DefaultConfigValues.LATENCY_BASELINE)
                             .setSaveConsumer(v -> StealthPipe.config.LATENCY_BASELINE = v)
                             .setTooltip(Component.translatable("config.stealthpipe.latencyBaseline.description"))
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.dataMisalignment"), StealthPipe.config.SIMULATE_DATA_MISALIGNMENT)
+                            .setDefaultValue(DefaultConfigValues.SIMULATE_DATA_MISALIGNMENT)
+                            .setSaveConsumer(v -> StealthPipe.config.SIMULATE_DATA_MISALIGNMENT = v)
+                            .setTooltip(Component.translatable("config.stealthpipe.dataMisalignment.description"))
                             .build()
             );
 

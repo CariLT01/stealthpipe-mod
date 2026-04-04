@@ -54,7 +54,7 @@ public class LatencySpikeTest {
     public static void yield(DataDirection flow) {
         try {
             Thread.sleep(StealthPipe.config.LATENCY_BASELINE);
-        } catch (Exception _) {}
+        } catch (Exception ignored) {}
 
         if (flow == DataDirection.SEND && (StealthPipe.config.LATENCY_DIRECTION == LatencySpikeDirection.DIRECTION_SEND_ONLY || StealthPipe.config.LATENCY_DIRECTION == LatencySpikeDirection.DIRECTION_BOTH)) {
             yieldLock.readLock().lock();

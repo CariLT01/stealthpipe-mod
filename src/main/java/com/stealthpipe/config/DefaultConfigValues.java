@@ -17,6 +17,7 @@ public class DefaultConfigValues {
 
     // Preferences
     public static final boolean SHOW_CONNECT_INFO = true;
+    public static final boolean WARN_CORRUPTED_DATA = true;
 
     // Messages
     public static final boolean HAS_SHOWN_WEBRTC_PRIVACY_NOTE = false;
@@ -30,6 +31,7 @@ public class DefaultConfigValues {
     public static final LatencySpikeDirection LATENCY_DIRECTION = LatencySpikeDirection.DIRECTION_BOTH;
     public static final int SIMULATED_FAILURE_DELAY = 10;
     public static final int LATENCY_BASELINE = 0;
+    public static final boolean SIMULATE_DATA_MISALIGNMENT = false;
 
 
     // public static final String RELAY_IP = "http://127.0.0.1:7860";
