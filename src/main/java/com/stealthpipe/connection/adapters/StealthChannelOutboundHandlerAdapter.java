@@ -179,9 +179,15 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
             if (wsClient != null) {
                 LOGGER.info("2: Connection closed, detected channel inactive");
                 wsClient.disconnectWithReason(ConnectionDisconnectReason.NettyChannelInactiveServer);
+
+                ModState.channelToGameConnection.remove(ctx.channel());
+                LOGGER.info("Removed channel from map");
             } else {
                 LOGGER.info("Destination not found, no client to close");
             }
+
+            // Delete it from the map
+
 
 
         }
