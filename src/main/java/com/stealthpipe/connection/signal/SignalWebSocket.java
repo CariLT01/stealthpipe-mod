@@ -166,8 +166,6 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
             }
             return false;
         });
-
-        LOGGER.warn("Could not disconnect channel; WebRTC client not found");
     }
 
     private Channel createVirtualChannel() {
