@@ -130,6 +130,8 @@ public class GameConnectionWebSocket extends AbstractStealthPipeWebSocketClient 
 
         // In any case, the channel represents the player connection. Disconnect it.
         this.gameChannel.disconnect();
+        this.packetBatchingManager.stop();
+
         // Display a message on the client
         if (this.flow == PacketFlow.ClientToHost) {
             if (Objects.equals(reason, ConnectionDisconnectReason.NettyChannelInactiveClient.getPacketType())) {
