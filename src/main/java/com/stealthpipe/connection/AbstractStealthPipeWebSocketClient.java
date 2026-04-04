@@ -13,12 +13,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient {
     public boolean connected = false;
-    private final List<byte[]> queuedPackets = new ArrayList<>();
+    private final ConcurrentLinkedQueue<byte[]> queuedPackets = new ConcurrentLinkedQueue<>();
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
@@ -36,11 +37,11 @@ public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient
     }
 
     private void sendQueuedPackets() {
-        for (byte[] packet : this.queuedPackets) {
+        byte[] packet;
+        while ((packet = this.queuedPackets.poll()) != null) {
             LOGGER.debug("Sent {} queued bytes", packet.length);
             this.send(packet);
         }
-        this.queuedPackets.clear();
     }
 
     public void disconnectWithReason(ConnectionDisconnectReason reason) {
