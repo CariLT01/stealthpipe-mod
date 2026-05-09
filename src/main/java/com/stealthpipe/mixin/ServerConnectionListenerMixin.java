@@ -5,6 +5,7 @@ import com.stealthpipe.interfaces.IConnectionInjector;
 import com.stealthpipe.connection.adapters.StealthChannelOutboundHandlerAdapter;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import net.minecraft.network.Connection;
 import net.minecraft.network.RateKickingConnection;
@@ -35,7 +36,7 @@ public class ServerConnectionListenerMixin implements IConnectionInjector {
     private List<Connection> connections;
 
     @Unique
-    public void injectVirtualConnection(Channel virtualChannel) {
+    public void injectVirtualConnection(EmbeddedChannel virtualChannel) {
 
         int rateLimit = this.server.getRateLimitPacketsPerSecond();
         Connection connection = (rateLimit > 0)

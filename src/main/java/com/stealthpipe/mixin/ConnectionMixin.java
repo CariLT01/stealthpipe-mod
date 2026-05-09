@@ -51,7 +51,7 @@ public abstract class ConnectionMixin {
             ConnectionHelper.connectToRelay(inetSocketAddress, eventLoopGroupHolder.eventLoopGroup().next(), connection, cir);
         }
     }
-    *//*? } else if =26.1 { */
+    *//*? } else if >=26.1 { */
     @Inject(method = "connect", at = @At("HEAD"), cancellable = true)
     private static void connect(InetSocketAddress inetSocketAddress, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
         if (ModState.isStealthPipeConnection.get()) {
@@ -81,6 +81,7 @@ public abstract class ConnectionMixin {
             }
         }
     }
+
 
     @Inject(method = "disconnect(Lnet/minecraft/network/DisconnectionDetails;)V", at = @At("HEAD"))
     private void injectDisconnect2(DisconnectionDetails details, CallbackInfo ci) {

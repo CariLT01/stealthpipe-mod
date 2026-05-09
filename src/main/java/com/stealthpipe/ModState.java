@@ -3,6 +3,7 @@ package com.stealthpipe;
 import com.stealthpipe.connection.game.GameConnectionInterface;
 import com.stealthpipe.connection.signal.SignalWebSocket;
 import io.netty.channel.Channel;
+import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,7 +40,7 @@ public class ModState {
     /**
      *  Netty channel to a Game Connection map. Host only
      */
-    public static ConcurrentHashMap<Channel, GameConnectionInterface> channelToGameConnection = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<EmbeddedChannel, GameConnectionInterface> channelToGameConnection = new ConcurrentHashMap<>();
 
     // Allows client executor to be accessible in common code
     public static AtomicReference<Executor> clientThreadExecutor = new AtomicReference<>(null);

@@ -22,6 +22,8 @@ group = project.maven_group
 
 /* Java version for each Minecraft version */
 def javaVersionsInteger = [
+		"26.1.2": 25,
+		"26.1.1": 25,
 		"26.1": 25,
 		"1.21.11": 21,
 		"1.21.10": 21,
@@ -30,6 +32,8 @@ def javaVersionsInteger = [
 ]
 
 def javaVersionsEnums = [
+		"26.1.2": JavaVersion.VERSION_25,
+		"26.1.1": JavaVersion.VERSION_25,
 		"26.1": JavaVersion.VERSION_25,
 		"1.21.11": JavaVersion.VERSION_21,
 		"1.21.10": JavaVersion.VERSION_21,
@@ -39,6 +43,8 @@ def javaVersionsEnums = [
 
 /* Mod versions for each Minecraft version */
 def fabricVersions = [
+		"26.1.2": "0.147.0+26.1.2",
+		"26.1.1": "0.147.0+26.1.2",
 		"26.1": "0.144.0+26.1",
 		"1.21.11": "0.140.0+1.21.11",
 		"1.21.10": "0.138.4+1.21.10",
@@ -47,6 +53,8 @@ def fabricVersions = [
 
 ]
 def clothConfigVersions = [
+		"26.1.2": "26.1.154",
+		"26.1.1": "26.1.154",
 		"26.1": "26.1.154",
 		"1.21.11": "21.11.153",
 		"1.21.10": "20.0.149",
@@ -55,6 +63,8 @@ def clothConfigVersions = [
 
 ]
 def modMenuVersions = [
+		"26.1.2": "18.0.0-alpha.8",
+		"26.1.1": "18.0.0-alpha.8",
 		"26.1" : "18.0.0-alpha.8",
 		"1.21.11" : "17.0.0",
 		"1.21.10" : "16.0.1",
@@ -63,11 +73,23 @@ def modMenuVersions = [
 ]
 
 def modImplementationKwUsageVersions = [
+		"26.1.2": false,
+		"26.1.1": false,
         "26.1": false,
 		"1.21.11": true,
 		"1.21.10": true,
 		"1.21.9": true,
 		"1.21.8": true
+]
+
+def isPrettyNew = [
+        "26.1.2": true,
+		"26.1.1": true,
+		"26.1": true,
+		"1.21.11": false,
+		"1.21.10": false,
+		"1.21.9": false,
+		"1.21.8": false
 ]
 
 def shouldUseModImpl = modImplementationKwUsageVersions[sc.current.version]
@@ -186,7 +208,7 @@ dependencies {
 
 	def modMenuDep = "com.terraformersmc:modmenu:${modMenuVersion}"
 
-	if (sc.current.version == "26.1") {
+	if (isPrettyNew[sc.current.version]) {
 		implementation modMenuDep
 		runtimeOnly modMenuDep
 	} else {

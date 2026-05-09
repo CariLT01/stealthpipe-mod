@@ -534,7 +534,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
             // 2. Close the Peer Connection
             if (peerConnection != null) {
                 peerConnection.close();
-                // peerConnection.(); // Cleans up the C++ backend
+                // peerConnection.(); .dispose() doesn't exist here
             }
 
             LOGGER.info("Disconnected WebRTC P2P");
