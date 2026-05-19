@@ -68,6 +68,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
     private final AtomicInteger iceCandidatesSentCount = new AtomicInteger(0);
     private final AtomicBoolean connectionDone = new AtomicBoolean(false); // Responsible to prevent lingering status text
 
+    private final Consumer<byte[]> signalMessageConsumer = this::handleSignalMessage;
 
 
     public WebRTCGameConnection(Consumer<byte[]> onMessage, Consumer<WebRTCGameConnection> onClosed, PacketFlow flow, String gameId) {
@@ -274,6 +275,12 @@ public class WebRTCGameConnection implements GameConnectionInterface {
             return;
         }
 
+        byte clientId = message[1];
+        if (clientId != this.clientId) {
+            LOGGER.warn("Ignoring message not matching client ID: {}" ,clientId);
+            return;
+        }
+
         if (messageType == SignalingMessageType.WebRTC_ConnectionFailed.getPacketType()) {
             LOGGER.warn("Other recipient refused WebRTC connection");
             connectionFuture.completeExceptionally(new RuntimeException("host refused WebRTC connection"));
@@ -397,7 +404,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
     }
 
     private void hookMessage() {
-        signalingClient.hookOnMessage(this::handleSignalMessage);
+        signalingClient.hookOnMessage(signalMessageConsumer);
     }
 
     private void clientTryEstablishRTC(String gameId) throws Exception {
@@ -411,6 +418,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
         signalingClient.connect();
         CompletableFuture<Void> readyFuture = new CompletableFuture<>();
         signalingClient.hookOnMessage((byte[] data) -> {
+            if (data.length >= 2 && data[1] != this.clientId) return;
             if (data[0] == SignalingMessageType.WebRTC_ConnectionReady.getPacketType()) {
                 LOGGER.info("Other side reported RTC negotiation start ready status");
                 readyFuture.complete(null);
@@ -507,7 +515,7 @@ public class WebRTCGameConnection implements GameConnectionInterface {
     private void onMessageRTC(byte[] data) {
         // LOGGER.info("WebRTC pipe received {} bytes of data", data.length);
         this.gotMessages = true;
-        ModState.inboundPPSCounter.getAndAdd(1);
+        ModState.inboundPPS.getAndAdd(1);
         this.onMessageHook.accept(data);
 
     }
@@ -524,6 +532,10 @@ public class WebRTCGameConnection implements GameConnectionInterface {
 
     private void disconnectWebRTC() {
         try {
+            if (signalingClient != null) {
+                signalingClient.unhookOnMessage(signalMessageConsumer);
+            }
+
             // 1. Close the Data Channel first
             if (dataChannel != null) {
                 dataChannel.unregisterObserver(); // Stop listening to 170k PPS

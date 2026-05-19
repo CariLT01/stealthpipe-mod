@@ -36,6 +36,10 @@ public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient
         this.hookedEvents.add(consumer);
     }
 
+    public void unhookOnMessage(Consumer<byte[]> consumer) {
+        this.hookedEvents.remove(consumer);
+    }
+
     private void sendQueuedPackets() {
         byte[] packet;
         while ((packet = this.queuedPackets.poll()) != null) {
@@ -65,8 +69,9 @@ public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient
             writeLock.lock();
             super.send(data);
             writeLock.unlock();
-            ModState.outboundPPSCounter.getAndAdd(1);
-            ModState.outboundBandwidthCounter.getAndAdd(data.length);
+
+            ModState.inboundPPS.getAndAdd(1);
+            ModState.outboundBandwidth.getAndAdd(data.length);
             ModState.outboundData.getAndAdd(data.length);
         } else {
             LOGGER.debug("Queued {} bytes for sending", data.length);
@@ -98,8 +103,8 @@ public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient
 
 
         ModState.inboundData.getAndAdd(data.length);
-        ModState.inboundBandwidthCounter.getAndAdd(data.length);
-        ModState.inboundPPSCounter.getAndAdd(1);
+        ModState.inboundBandwidth.getAndAdd(data.length);
+        ModState.inboundPPS.getAndAdd(1);
 
         // LOGGER.info("Added to counter: {}", ModState.inboundData.get());
 

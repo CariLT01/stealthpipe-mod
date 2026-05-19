@@ -26,6 +26,8 @@ public class StealthPipeConfig {
 
     public boolean USE_SAFE_INJECT = DefaultConfigValues.USE_SAFE_INJECT;
     public boolean WARN_CORRUPTED_DATA = DefaultConfigValues.WARN_CORRUPTED_DATA;
+    public boolean PARK_CPU = DefaultConfigValues.PARK_CPU;
+    public int THREAD_PRIORITY = DefaultConfigValues.THREAD_PRIORITY;
 
     // Debug options
     public boolean SIMULATE_ICE_CANDIDATES_FAILURE = DefaultConfigValues.SIMULATE_ICE_CANDIDATES_FAILURE;

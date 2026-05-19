@@ -2,6 +2,7 @@ package com.stealthpipe;
 
 import com.stealthpipe.connection.game.GameConnectionInterface;
 import com.stealthpipe.connection.signal.SignalWebSocket;
+import com.stealthpipe.debug.StatisticCounter;
 import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.server.MinecraftServer;
@@ -45,20 +46,13 @@ public class ModState {
     // Allows client executor to be accessible in common code
     public static AtomicReference<Executor> clientThreadExecutor = new AtomicReference<>(null);
 
+
     public static AtomicInteger outboundData = new AtomicInteger(0);
     public static AtomicInteger inboundData = new AtomicInteger(0);
-
-    public static AtomicInteger inboundBandwidthCounter = new AtomicInteger(0);
-    public static AtomicInteger outboundBandwidthCounter = new AtomicInteger(0);
-
-    public static AtomicInteger inboundBandwidth = new AtomicInteger(0);
-    public static AtomicInteger outboundBandwidth = new AtomicInteger(0);
-
-    public static AtomicInteger inboundPPSCounter = new AtomicInteger(0);
-    public static AtomicInteger outboundPPSCounter = new AtomicInteger(0);
-
-    public static AtomicInteger inboundPPSd = new AtomicInteger(0);
-    public static AtomicInteger outboundPPSd = new AtomicInteger(0);
+    public static StatisticCounter inboundBandwidth = new StatisticCounter();
+    public static StatisticCounter outboundBandwidth = new StatisticCounter();
+    public static StatisticCounter inboundPPS = new StatisticCounter();
+    public static StatisticCounter outboundPPS = new StatisticCounter();
 
     public static AtomicBoolean isStealthPipeConnection = new AtomicBoolean(false);
 

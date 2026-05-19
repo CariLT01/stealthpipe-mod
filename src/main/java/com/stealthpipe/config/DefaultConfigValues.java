@@ -8,12 +8,17 @@ public class DefaultConfigValues {
     public static final String RELAY_IP = "https://mcpipeservice-go.onrender.com";
     public static final int RELAY_PING_ATTEMPTS = 5;
     public static final boolean ONLINE_MODE = true;
-    public static final boolean ENABLE_BATCHED_PACKETS = true;
-    public static final int PACKET_BATCHING_INTERVAL_MS = 1;
+
     public static final boolean CLIENT_ATTEMPT_WEBRTC = true;
     public static final boolean HOST_ALLOW_WEBRTC_INBOUND = true;
 
     public static final boolean USE_SAFE_INJECT = false;
+
+    // Performance / optimization
+    public static final boolean PARK_CPU = true;
+    public static final boolean ENABLE_BATCHED_PACKETS = true;
+    public static final int PACKET_BATCHING_INTERVAL_MS = 1;
+    public static final int THREAD_PRIORITY = 5;
 
     // Preferences
     public static final boolean SHOW_CONNECT_INFO = true;

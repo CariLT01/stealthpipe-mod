@@ -149,7 +149,7 @@ public class PacketBatchingManager {
                     }
 
 
-                    ModState.outboundPPSCounter.getAndAdd(1);
+                    ModState.outboundPPS.getAndAdd(1);
 
                     LatencySpikeTest.yield(DataDirection.SEND);
                     this.sendConsumer.accept(flatBatch);
@@ -200,23 +200,31 @@ public class PacketBatchingManager {
 
     private void sendLoop() {
         LOGGER.info("Starting send loop");
-        new Thread(() -> {
+        Thread sendLoopThread = new Thread(() -> {
             while (this.running) {
                 long start = System.nanoTime();
                 this.sendQueuedSendPackets();
                 long elapsed = System.nanoTime() - start;
                 long toWait = this.BATCHING_INTERVAL - elapsed;
-                if (toWait > 0) {
-                    if (toWait > 2_000_000L) { // >2ms -> park to save CPU
-                        LockSupport.parkNanos(toWait - 500_000L); // park most of it
-                    }
-                    // short busy-spin to improve precision for the remaining nanos
-                    while (System.nanoTime() - start < this.BATCHING_INTERVAL) {
-                        Thread.onSpinWait();
+                if (StealthPipe.config.PARK_CPU) {
+                    LockSupport.parkNanos(toWait);
+                } else {
+                    if (toWait > 0) {
+                        if (toWait > 2_000_000L) { // >2ms -> park to save CPU
+                            LockSupport.parkNanos(toWait - 500_000L); // park most of it
+                        }
+                        // short busy-spin to improve precision for the remaining nanos
+                        while (System.nanoTime() - start < this.BATCHING_INTERVAL) {
+                            Thread.onSpinWait();
+                        }
                     }
                 }
+
             }
-        }).start();
+        });
+
+        sendLoopThread.setPriority(StealthPipe.config.THREAD_PRIORITY);
+        sendLoopThread.start();
     }
 
 

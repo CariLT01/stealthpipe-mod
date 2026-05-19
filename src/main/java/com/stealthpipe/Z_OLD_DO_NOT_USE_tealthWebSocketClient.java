@@ -213,7 +213,7 @@ public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
 
                     this.writeLock.lock();
                     try {
-                        ModState.outboundPPSCounter.getAndAdd(1);
+                        ModState.outboundPPS.getAndAdd(1);
                         super.send(flatBatch);
                     } finally {
                         this.writeLock.unlock();
@@ -627,8 +627,8 @@ public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
         }
 
         ModState.inboundData.getAndAdd(data.length);
-        ModState.inboundBandwidthCounter.getAndAdd(data.length);
-        ModState.inboundPPSCounter.getAndAdd(1);
+        ModState.inboundBandwidth.getAndAdd(data.length);
+        ModState.inboundPPS.getAndAdd(1);
 
 
         // LOGGER.info("Server received: {}", newString);
@@ -760,7 +760,7 @@ public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
     public void send(byte[] data) {
 
         ModState.outboundData.getAndAdd(data.length);
-        ModState.outboundBandwidthCounter.getAndAdd(data.length);
+        ModState.outboundBandwidth.getAndAdd(data.length);
 
 
 
@@ -776,7 +776,7 @@ public class Z_OLD_DO_NOT_USE_tealthWebSocketClient extends WebSocketClient {
 
             if (this.relayType == WebsocketClientType.RELAY_SIGNALING || this.relayType == WebsocketClientType.CLIENT_SIGNALING) {
                 // Don't batch signaling data
-                ModState.outboundPPSCounter.getAndAdd(1);
+                ModState.outboundPPS.getAndAdd(1);
                 super.send(data);
             } else {
                 this.sendPacket(data);

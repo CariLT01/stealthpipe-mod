@@ -126,6 +126,24 @@ public class ModMenuIntegration implements ModMenuApi {
                             .build()
             );
 
+            optimization.add(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.parkCpu"), StealthPipe.config.PARK_CPU)
+                            .setDefaultValue(DefaultConfigValues.PARK_CPU)
+                            .setSaveConsumer(newValue -> StealthPipe.config.PARK_CPU = newValue)
+                            .setTooltip(Component.translatable("config.stealthpipe.parkCpu.description"))
+                            .build()
+            );
+
+            optimization.add(
+                    entryBuilder.startIntField(Component.translatable("config.stealthpipe.threadPriority"), StealthPipe.config.THREAD_PRIORITY)
+                            .setDefaultValue(DefaultConfigValues.THREAD_PRIORITY)
+                            .setMin(1)
+                            .setMax(10)
+                            .setSaveConsumer(newValue -> StealthPipe.config.THREAD_PRIORITY = newValue)
+                            .setTooltip(Component.translatable("config.stealthpipe.threadPriority.description"))
+                            .build()
+            );
+
             general.addEntry(optimization.build());
 
 
