@@ -5,6 +5,7 @@ import com.stealthpipe.connection.HostRelayConnector;
 import com.stealthpipe.connection.game.GameConnectionInterface;
 import com.stealthpipe.enums.ConnectionDisconnectReason;
 import io.netty.channel.Channel;
+import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.world.level.GameType;
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ public class IntegratedServerMixin {
             }
         }
 
-        for (Map.Entry<Channel, GameConnectionInterface> entry : ModState.channelToGameConnection.entrySet()) {
+        for (Map.Entry<EmbeddedChannel, GameConnectionInterface> entry : ModState.channelToGameConnection.entrySet()) {
             LOGGER.info("Disconnected Connection, local server stopped");
             entry.getValue().disconnectWithReason(ConnectionDisconnectReason.LocalServerStopped);
         }

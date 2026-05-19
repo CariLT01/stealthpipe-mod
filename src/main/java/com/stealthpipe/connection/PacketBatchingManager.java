@@ -2,9 +2,14 @@ package com.stealthpipe.connection;
 
 import com.stealthpipe.ModState;
 import com.stealthpipe.StealthPipe;
+import com.stealthpipe.connection.debug.DataDirection;
+import com.stealthpipe.connection.debug.LatencySpikeTest;
+import com.stealthpipe.connection.signal.SignalWebSocket;
+import com.stealthpipe.enums.ConnectionDisconnectReason;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
+import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,14 +23,14 @@ import java.util.function.Consumer;
 
 public class PacketBatchingManager {
 
-    private Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
+    private final Queue<byte[]> queuedSendPackets = new ConcurrentLinkedQueue<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
     private final long BATCHING_INTERVAL = StealthPipe.config.PACKET_BATCHING_INTERVAL_MS * 1_000_000L;
 
     private boolean running = false;
 
-    private Consumer<byte[]> sendConsumer;
+    private final Consumer<byte[]> sendConsumer;
 
     public PacketBatchingManager(Consumer<byte[]> sendConsumer) {
         this.sendConsumer = sendConsumer;
@@ -44,6 +49,26 @@ public class PacketBatchingManager {
         this.queuedSendPackets.add(packet);
     }
 
+    private static void onCorruptedDataReceived() {
+        if (ModState.isClientConnectingToStealthServer.get()) {
+            if (ModState.relayClient.get() != null) {
+                ModState.relayClient.get().disconnectWithReason(ConnectionDisconnectReason.CorruptedData);
+                if (ModState.relayClient.get() instanceof SignalWebSocket) {
+                    // Is WebRTC signaling client
+                    if (ModState.relayClientChannel.get() != null) {
+                        LOGGER.info("disconnect channel with corrupted data reason");
+                        ModState.relayClientChannel.get().disconnect();
+                    }
+                }
+                DisconnectHandler.showClientDisconnectMessage(true, ConnectionDisconnectReason.CorruptedData.getPacketType());
+            }
+        } else {
+            if (StealthPipe.config.WARN_CORRUPTED_DATA) {
+                StealthPipe.CLIENT_PROXY.sendStealthPipeMessage(Component.translatable("text.stealthpipe.corruptedData"));
+            }
+        }
+    }
+
     public static List<byte[]> unpackPacket(byte[] packedData) {
         List<byte[]> packets = new ArrayList<>();
         ByteBuffer buffer = ByteBuffer.wrap(packedData);
@@ -52,7 +77,10 @@ public class PacketBatchingManager {
             int packetLength = buffer.getInt();
 
             if (packetLength < 0 || packetLength > buffer.remaining()) {
-                LOGGER.error("Failed to parse packet batch: invalid packet length");
+                LOGGER.error("CORRUPTED DATA: Failed to parse packet batch: invalid packet length");
+
+                onCorruptedDataReceived();
+
                 break;
             }
 
@@ -60,6 +88,11 @@ public class PacketBatchingManager {
             buffer.get(packetData);
 
             packets.add(packetData);
+        }
+
+        if (buffer.hasRemaining()) {
+            LOGGER.error("Detected remaining data in buffer!");
+            onCorruptedDataReceived();
         }
 
         return packets;
@@ -97,10 +130,28 @@ public class PacketBatchingManager {
 
                 if (batchBuffer.readableBytes() > 0) {
                     // Flatten once for the WebSocket send
-                    byte[] flatBatch = new byte[batchBuffer.readableBytes()];
-                    batchBuffer.readBytes(flatBatch);
+                    int originalLength = batchBuffer.readableBytes();
+                    byte[] flatBatch = new byte[originalLength];
 
-                    ModState.outboundPPSCounter.getAndAdd(1);
+                    if (StealthPipe.config.SIMULATE_DATA_MISALIGNMENT) {
+                        // Increase array size by 1 to accommodate the junk byte
+                        flatBatch = new byte[originalLength + 1];
+
+                        // 1. Inject the junk byte at the start
+                        flatBatch[0] = (byte) (Math.random() * 256);
+
+                        // 2. Read the actual data into the array starting at index 1
+                        batchBuffer.readBytes(flatBatch, 1, originalLength);
+                    } else {
+                        // Standard behavior
+                        flatBatch = new byte[originalLength];
+                        batchBuffer.readBytes(flatBatch);
+                    }
+
+
+                    ModState.outboundPPS.getAndAdd(1);
+
+                    LatencySpikeTest.yield(DataDirection.SEND);
                     this.sendConsumer.accept(flatBatch);
                 }
             } catch (Exception e) {
@@ -137,6 +188,7 @@ public class PacketBatchingManager {
                     byte[] flat = new byte[composite.readableBytes()];
                     composite.readBytes(flat);
 
+                    LatencySpikeTest.yield(DataDirection.SEND);
                     this.sendConsumer.accept(flat);
                 }
             } finally {
@@ -148,23 +200,31 @@ public class PacketBatchingManager {
 
     private void sendLoop() {
         LOGGER.info("Starting send loop");
-        new Thread(() -> {
+        Thread sendLoopThread = new Thread(() -> {
             while (this.running) {
                 long start = System.nanoTime();
                 this.sendQueuedSendPackets();
                 long elapsed = System.nanoTime() - start;
                 long toWait = this.BATCHING_INTERVAL - elapsed;
-                if (toWait > 0) {
-                    if (toWait > 2_000_000L) { // >2ms -> park to save CPU
-                        LockSupport.parkNanos(toWait - 500_000L); // park most of it
-                    }
-                    // short busy-spin to improve precision for the remaining nanos
-                    while (System.nanoTime() - start < this.BATCHING_INTERVAL) {
-                        Thread.onSpinWait();
+                if (StealthPipe.config.PARK_CPU) {
+                    LockSupport.parkNanos(toWait);
+                } else {
+                    if (toWait > 0) {
+                        if (toWait > 2_000_000L) { // >2ms -> park to save CPU
+                            LockSupport.parkNanos(toWait - 500_000L); // park most of it
+                        }
+                        // short busy-spin to improve precision for the remaining nanos
+                        while (System.nanoTime() - start < this.BATCHING_INTERVAL) {
+                            Thread.onSpinWait();
+                        }
                     }
                 }
+
             }
-        }).start();
+        });
+
+        sendLoopThread.setPriority(StealthPipe.config.THREAD_PRIORITY);
+        sendLoopThread.start();
     }
 
 

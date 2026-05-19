@@ -9,7 +9,8 @@ public enum ConnectionDisconnectReason {
     SignalingFinished("SIGN_FINISHED"),
     Unknown("UNKNOWN"),
     SignalConnectionDisconnected("SIGNAL_DISCONNECTED"),
-    ConnectionDisconnectCalled("DISCONNECT_CALLED");
+    ConnectionDisconnectCalled("DISCONNECT_CALLED"),
+    CorruptedData("CORRUPTED_DATA");
 
 
     private final String signalingDisconnectReason;

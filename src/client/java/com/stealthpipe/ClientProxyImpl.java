@@ -1,5 +1,6 @@
 package com.stealthpipe;
 
+import com.stealthpipe.connection.DisconnectHandler;
 import com.stealthpipe.connection.HostRelayConnector;
 import com.stealthpipe.interfaces.ClientProxy;
 import com.stealthpipe.other.UXHelper;
@@ -66,6 +67,11 @@ public class ClientProxyImpl implements ClientProxy {
     @Override
     public void setConnectionStatusIndex(Component text, int index) {
         ConnectionStatusInterface.setConnectionStatusText(text, index);
+    }
+
+    @Override
+    public void showDisconnectScreen(Component message) {
+        DisconnectHandler.showClientDisconnectMessage(true, message.getString());
     }
 }
 

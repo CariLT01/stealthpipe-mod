@@ -54,20 +54,12 @@ public class DebugScreenMixin {
 
     @Unique
     private void updateDebugCounters() {
-        if (Instant.now().toEpochMilli() - ModState.lastBandwidthTick.get() > 1000) {
 
-            ModState.inboundBandwidth.set(ModState.inboundBandwidthCounter.get());
-            ModState.outboundBandwidth.set(ModState.outboundBandwidthCounter.get());
-            ModState.inboundPPSd.set(ModState.inboundPPSCounter.get());
-            ModState.outboundPPSd.set(ModState.outboundPPSCounter.get());
+        ModState.inboundBandwidth.update();
+        ModState.outboundBandwidth.update();
+        ModState.inboundPPS.update();
+        ModState.outboundPPS.update();
 
-            ModState.inboundBandwidthCounter.set(0);
-            ModState.outboundBandwidthCounter.set(0);
-            ModState.inboundPPSCounter.set(0);
-            ModState.outboundPPSCounter.set(0);
-            ModState.lastBandwidthTick.set(Instant.now().toEpochMilli());
-
-        }
     }
 
     @Unique
@@ -79,7 +71,7 @@ public class DebugScreenMixin {
                 String.format("Ping/RTT: %s%s", this.getColorFromPing(ModState.ping.get()), ModState.ping.get() + "ms")
         );
 
-        list2.add("PPS in out: " + ModState.inboundPPSd.get() + "/s " + ModState.outboundPPSd.get() + "/s");
+        list2.add("PPS in out: " + ModState.inboundPPS.get() + "/s " + ModState.outboundPPS.get() + "/s");
         list2.add("Is Client: " + ModState.isClientConnectingToStealthServer.get());
         list2.add("WS Open: " + ModState.webSocketOpen.get());
         list2.add("Game open to LAN: " + ModState.gameOpenToLan.get());

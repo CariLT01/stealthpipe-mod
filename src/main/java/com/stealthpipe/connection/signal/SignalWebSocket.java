@@ -4,6 +4,9 @@ import com.stealthpipe.*;
 import com.stealthpipe.connection.AbstractStealthPipeWebSocketClient;
 import com.stealthpipe.connection.DisconnectHandler;
 import com.stealthpipe.connection.PacketBatchingManager;
+import com.stealthpipe.connection.adapters.ChannelReader;
+import com.stealthpipe.connection.debug.DataDirection;
+import com.stealthpipe.connection.debug.LatencySpikeTest;
 import com.stealthpipe.connection.game.GameConnectionInterface;
 import com.stealthpipe.connection.game.GameConnectionWebSocket;
 import com.stealthpipe.connection.game.WebRTCGameConnection;
@@ -163,11 +166,9 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
             }
             return false;
         });
-
-        LOGGER.warn("Could not disconnect channel; WebRTC client not found");
     }
 
-    private Channel createVirtualChannel() {
+    private EmbeddedChannel createVirtualChannel() {
         MinecraftServer server = ModState.minecraftServer.get();
 
         EmbeddedChannel virtualChannel = new EmbeddedChannel();
@@ -194,13 +195,14 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
                 return;
             }
 
-            Channel virtualChannel = this.createVirtualChannel();
+            EmbeddedChannel virtualChannel = this.createVirtualChannel();
 
             WebRTCGameConnection rtcClient = new WebRTCGameConnection((byte[] message) -> {
+                // yield
+                LatencySpikeTest.yield(DataDirection.RECEIVE);
                 List<byte[]> packets = PacketBatchingManager.unpackPacket(message);
-                for (byte[] packet : packets) {
-                    virtualChannel.pipeline().fireChannelRead(Unpooled.wrappedBuffer(packet));
-                }
+                ChannelReader.fireReadsSafer(virtualChannel, packets);
+
 
             }, this::handleRTCDisconnect, PacketFlow.HostToClient, this, clientId);
 
@@ -231,7 +233,7 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
 
         String newString = new String(data, StandardCharsets.UTF_8);
 
-        Channel virtualChannel = this.createVirtualChannel();
+        EmbeddedChannel virtualChannel = this.createVirtualChannel();
 
         String url = String.format(StealthPipe.config.RELAY_IP.replace("http://", "ws://").replace("https://", "wss://") + "/join?id=%s&host=true&request=%s&version=%s", this.gameId, newString, StealthPipe.MOD_VERSION);
 
@@ -306,6 +308,11 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
             this.keepAliveLoop();
             this.simulateFailure();
         }
+
+        if (StealthPipe.config.LATENCY_SPIKES) {
+            LOGGER.warn("Starting artificial latency spikes");
+            LatencySpikeTest.run();
+        }
     }
 
     @Override
@@ -340,7 +347,7 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
 
             // Do disconnect WebSocket connections
             // This is done on the relay-side too, but it's better to do it on the client just for redundancy
-            for (Map.Entry<Channel, GameConnectionInterface> client : ModState.channelToGameConnection.entrySet()) {
+            for (Map.Entry<EmbeddedChannel, GameConnectionInterface> client : ModState.channelToGameConnection.entrySet()) {
                 if (client.getValue() instanceof GameConnectionWebSocket) {
                     LOGGER.info("Disconnected WebSocket client");
                     client.getValue().disconnectWithReason(ConnectionDisconnectReason.SignalConnectionDisconnected);
@@ -355,7 +362,7 @@ public class SignalWebSocket extends AbstractStealthPipeWebSocketClient {
             // the room because it thinks it's empty. Should provide a better user experience.
             if (Objects.equals(reason, ConnectionDisconnectReason.FabricEventDisconnectClient.getPacketType()) ||
                     Objects.equals(reason, ConnectionDisconnectReason.LocalServerStopped.getPacketType())) {
-                for (Map.Entry<Channel, GameConnectionInterface> client : ModState.channelToGameConnection.entrySet()) {
+                for (Map.Entry<EmbeddedChannel, GameConnectionInterface> client : ModState.channelToGameConnection.entrySet()) {
                     if (client.getValue() instanceof WebRTCGameConnection) {
                         LOGGER.info("Disconnecting WebRTC client");
                         client.getValue().disconnectWithReason(ConnectionDisconnectReason.SignalConnectionDisconnected);

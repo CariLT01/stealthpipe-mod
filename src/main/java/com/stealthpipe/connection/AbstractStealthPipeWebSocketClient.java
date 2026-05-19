@@ -13,12 +13,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient {
     public boolean connected = false;
-    private final List<byte[]> queuedPackets = new ArrayList<>();
+    private final ConcurrentLinkedQueue<byte[]> queuedPackets = new ConcurrentLinkedQueue<>();
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(StealthPipe.MOD_ID);
 
@@ -35,12 +36,16 @@ public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient
         this.hookedEvents.add(consumer);
     }
 
+    public void unhookOnMessage(Consumer<byte[]> consumer) {
+        this.hookedEvents.remove(consumer);
+    }
+
     private void sendQueuedPackets() {
-        for (byte[] packet : this.queuedPackets) {
+        byte[] packet;
+        while ((packet = this.queuedPackets.poll()) != null) {
             LOGGER.debug("Sent {} queued bytes", packet.length);
             this.send(packet);
         }
-        this.queuedPackets.clear();
     }
 
     public void disconnectWithReason(ConnectionDisconnectReason reason) {
@@ -64,8 +69,9 @@ public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient
             writeLock.lock();
             super.send(data);
             writeLock.unlock();
-            ModState.outboundPPSCounter.getAndAdd(1);
-            ModState.outboundBandwidthCounter.getAndAdd(data.length);
+
+            ModState.inboundPPS.getAndAdd(1);
+            ModState.outboundBandwidth.getAndAdd(data.length);
             ModState.outboundData.getAndAdd(data.length);
         } else {
             LOGGER.debug("Queued {} bytes for sending", data.length);
@@ -97,8 +103,8 @@ public abstract class AbstractStealthPipeWebSocketClient extends WebSocketClient
 
 
         ModState.inboundData.getAndAdd(data.length);
-        ModState.inboundBandwidthCounter.getAndAdd(data.length);
-        ModState.inboundPPSCounter.getAndAdd(1);
+        ModState.inboundBandwidth.getAndAdd(data.length);
+        ModState.inboundPPS.getAndAdd(1);
 
         // LOGGER.info("Added to counter: {}", ModState.inboundData.get());
 

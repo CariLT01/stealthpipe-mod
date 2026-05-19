@@ -1,6 +1,7 @@
 package com.stealthpipe;
 
 import com.stealthpipe.config.DefaultConfigValues;
+import com.stealthpipe.connection.debug.LatencySpikeDirection;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -82,6 +83,26 @@ public class ModMenuIntegration implements ModMenuApi {
                             .build()
             );
 
+            general.addEntry(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.safeInject"), StealthPipe.config.USE_SAFE_INJECT)
+                            .setDefaultValue(DefaultConfigValues.USE_SAFE_INJECT)
+                            .setSaveConsumer(v -> StealthPipe.config.USE_SAFE_INJECT = v)
+                            .setTooltip(
+                                    Component.translatable("config.stealthpipe.safeInject.description")
+                            )
+                            .build()
+            );
+
+            general.addEntry(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.warnCorruptedData"), StealthPipe.config.WARN_CORRUPTED_DATA)
+                            .setDefaultValue(DefaultConfigValues.WARN_CORRUPTED_DATA)
+                            .setSaveConsumer(v -> StealthPipe.config.WARN_CORRUPTED_DATA = v)
+                            .setTooltip(
+                                    Component.translatable("config.stealthpipe.warnCorruptedData.description")
+                            )
+                            .build()
+            );
+
             // Add section "Optimization"
             var optimization = entryBuilder.startSubCategory(Component.translatable("config.stealthpipe.optimization"));
 
@@ -102,6 +123,24 @@ public class ModMenuIntegration implements ModMenuApi {
                             .setTooltip(
                                     Component.translatable("config.stealthpipe.packetBatchingInterval.description")
                             )
+                            .build()
+            );
+
+            optimization.add(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.parkCpu"), StealthPipe.config.PARK_CPU)
+                            .setDefaultValue(DefaultConfigValues.PARK_CPU)
+                            .setSaveConsumer(newValue -> StealthPipe.config.PARK_CPU = newValue)
+                            .setTooltip(Component.translatable("config.stealthpipe.parkCpu.description"))
+                            .build()
+            );
+
+            optimization.add(
+                    entryBuilder.startIntField(Component.translatable("config.stealthpipe.threadPriority"), StealthPipe.config.THREAD_PRIORITY)
+                            .setDefaultValue(DefaultConfigValues.THREAD_PRIORITY)
+                            .setMin(1)
+                            .setMax(10)
+                            .setSaveConsumer(newValue -> StealthPipe.config.THREAD_PRIORITY = newValue)
+                            .setTooltip(Component.translatable("config.stealthpipe.threadPriority.description"))
                             .build()
             );
 
@@ -156,6 +195,38 @@ public class ModMenuIntegration implements ModMenuApi {
                             .setTooltip(
                                     Component.translatable("config.stealthpipe.failureDelay.description")
                             )
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.latencySpikes"), StealthPipe.config.LATENCY_SPIKES)
+                            .setDefaultValue(DefaultConfigValues.LATENCY_SPIKES)
+                            .setSaveConsumer(v -> StealthPipe.config.LATENCY_SPIKES = v)
+                            .setTooltip(Component.translatable("config.stealthpipe.latencySpikes.description"))
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startEnumSelector(Component.translatable("config.stealthpipe.latencySpikesDirection"), LatencySpikeDirection.class, StealthPipe.config.LATENCY_DIRECTION)
+                            .setDefaultValue(DefaultConfigValues.LATENCY_DIRECTION)
+                            .setSaveConsumer(v -> StealthPipe.config.LATENCY_DIRECTION = v)
+                            .setTooltip(Component.translatable("config.stealthpipe.latencySpikesDirection.description"))
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startIntField(Component.translatable("config.stealthpipe.latencyBaseline"), StealthPipe.config.LATENCY_BASELINE)
+                            .setDefaultValue(DefaultConfigValues.LATENCY_BASELINE)
+                            .setSaveConsumer(v -> StealthPipe.config.LATENCY_BASELINE = v)
+                            .setTooltip(Component.translatable("config.stealthpipe.latencyBaseline.description"))
+                            .build()
+            );
+
+            debug.add(
+                    entryBuilder.startBooleanToggle(Component.translatable("config.stealthpipe.dataMisalignment"), StealthPipe.config.SIMULATE_DATA_MISALIGNMENT)
+                            .setDefaultValue(DefaultConfigValues.SIMULATE_DATA_MISALIGNMENT)
+                            .setSaveConsumer(v -> StealthPipe.config.SIMULATE_DATA_MISALIGNMENT = v)
+                            .setTooltip(Component.translatable("config.stealthpipe.dataMisalignment.description"))
                             .build()
             );
 

@@ -88,28 +88,35 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
 
 
         if (msg instanceof HiddenByteBuf buf) {
-            ByteBuf byteBuf = buf.contents();
-            byte[] bytes = new byte[byteBuf.readableBytes()];
-            byteBuf.getBytes(byteBuf.readerIndex(), bytes);
+            buf.retain();
+            try {
+                ByteBuf byteBuf = buf.contents();
+                byte[] bytes = new byte[byteBuf.readableBytes()];
+                byteBuf.getBytes(byteBuf.readerIndex(), bytes);
 
-
-            return this.forwardDataToRelay(bytes, destination);
+                return this.forwardDataToRelay(bytes, destination);
+            } finally {
+                buf.release();
+            }
 
 
         } else if (msg instanceof ByteBuf buf) {
 
-            byte[] bytes = new byte[buf.readableBytes()];
-            buf.getBytes(buf.readerIndex(), bytes);
+            buf.retain();
+            try {
+                byte[] bytes = new byte[buf.readableBytes()];
+                buf.getBytes(buf.readerIndex(), bytes);
 
-            return this.forwardDataToRelay(bytes, destination);
-
+                return this.forwardDataToRelay(bytes, destination);
+            } finally {
+                buf.release();
+            }
         }
 
         else {
             System.out.printf("%s: Unknown type: %s%n", label, msg.getClass().getName());
+            return false;
         }
-
-        return true;
     }
 
     @Override
@@ -126,9 +133,8 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
         if (ModState.isClientConnectingToStealthServer.get() || isWSConnected) { // Temporary fix
             boolean success = handleRelayForwarding(label, msg, id);
 
-
-
             if (success) {
+                io.netty.util.ReferenceCountUtil.release(msg);
                 promise.setSuccess();
                 return;
             }
@@ -173,9 +179,15 @@ public class StealthChannelOutboundHandlerAdapter extends ChannelDuplexHandler {
             if (wsClient != null) {
                 LOGGER.info("2: Connection closed, detected channel inactive");
                 wsClient.disconnectWithReason(ConnectionDisconnectReason.NettyChannelInactiveServer);
+
+                ModState.channelToGameConnection.remove(ctx.channel());
+                LOGGER.info("Removed channel from map");
             } else {
                 LOGGER.info("Destination not found, no client to close");
             }
+
+            // Delete it from the map
+
 
 
         }

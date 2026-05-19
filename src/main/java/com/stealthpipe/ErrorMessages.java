@@ -32,7 +32,8 @@ public class ErrorMessages {
             entry("INVALID_VERSION", Component.translatable("error.stealthpipe.invalidVersion").getString()),
             entry("OUTDATED_CLIENT", Component.translatable("error.stealthpipe.outdatedClient").getString()),
             entry("UNSUPPORTED_CLIENT", Component.translatable("error.stealthpipe.unsupportedClient").getString()),
-            entry("ROOM_RECENTLY_CLOSED", Component.translatable("error.stealthpipe.roomRecentlyClosed").getString())
+            entry("ROOM_RECENTLY_CLOSED", Component.translatable("error.stealthpipe.roomRecentlyClosed").getString()),
+            entry("CORRUPTED_DATA", Component.translatable("error.stealthpipe.corruptedData").getString())
     );
     public static final String DEFAULT_MESSAGE = "Disconnected.";
 

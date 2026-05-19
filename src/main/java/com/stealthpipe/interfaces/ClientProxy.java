@@ -10,4 +10,6 @@ public interface ClientProxy {
     void setConnectionStatusIndex(Component text, int index);
     void resizeConnectionStatusList(int newSize);
 
+    void showDisconnectScreen(Component message);
+
 }
